@@ -28,7 +28,7 @@ classdef Cdiff < time.Timestepper
             obj.E = E;
             obj.S = S;
             obj.k = k;
-            obj.t = t0+k;
+            obj.t = t0;
             obj.v = v;
             obj.v_prev = v_prev;
         end

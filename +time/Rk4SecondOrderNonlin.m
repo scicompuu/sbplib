@@ -16,6 +16,8 @@ classdef Rk4SecondOrderNonlin < time.Timestepper
 
     methods
         function obj = Rk4SecondOrderNonlin(D, E, S, k, t0, v0, v0t)
+            default_arg('S',0);
+            default_arg('E',0);
 
             if S == 0
                 S = @(v,t)0;
