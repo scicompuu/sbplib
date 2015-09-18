@@ -46,18 +46,30 @@ classdef Timestepper < handle
         end
 
         function evolve_with_progress(obj, tend)
-            dt = tend-obj.t;
-            n = floor(dt/obj.k);
-            n1000 = floor(n/1000);
+            FRAME_RATE = 20;
 
-            i = 0;
+            dt = tend-obj.t;
+
+            steps_to_update = 1;
+            steps_since_update = 0;
+            last_update = tic();
             s = util.replace_string('','   %d %%',0);
             while obj.t < tend - obj.k/100
                 obj.step();
 
-                i = i + 1;
-                if mod(i,n1000) == 0
-                    s = util.replace_string(s,'   %.2f %%',i/n*100);
+                steps_since_update = steps_since_update + 1;
+
+                if steps_since_update >= steps_to_update
+                    s = util.replace_string(s,'   %.2f %%',obj.t/tend*100);
+
+                    time_since_update = toc(last_update);
+                    time_error = time_since_update - 1/FRAME_RATE;
+                    time_per_step = time_since_update/steps_since_update;
+
+                    steps_to_update = max(steps_to_update - 0.9*time_error/time_per_step ,1);
+
+                    steps_since_update = 0;
+                    last_update = tic();
                 end
             end
 
