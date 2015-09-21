@@ -1,10 +1,12 @@
 function b = yesnoQuestion(question, defaultAnswer)
-    default_arg('defaultAnswer','y');
+    default_arg('defaultAnswer','nodefault');
 
     yesAnswer = {'y','Y','yes','Yes','YES'};
     noAnswer = {'n','N','no','No','NO'};
 
     switch defaultAnswer
+        case 'nodefault'
+            optionString = '[y/n]';
         case yesAnswer
             optionString = '[Y/n]';
             yesAnswer{end+1} = '';
@@ -17,7 +19,7 @@ function b = yesnoQuestion(question, defaultAnswer)
 
     b = [];
     while isempty(b)
-        answer = input([question ' ' optionString ':'],'s');
+        answer = input([question ' ' optionString ': '],'s');
         switch answer
             case yesAnswer
                 b = true;
