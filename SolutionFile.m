@@ -1,0 +1,155 @@
+classdef SolutionFile < handle
+    properties
+        filename
+        matfile
+        % keyHeaders
+        keys % Cell array of keys. Each key is a structure
+        % entries
+    end
+
+    methods
+        function obj = SolutionFile(filename)
+
+            obj.filename = filename;
+
+            is_new_file = ~exist(filename,'file');
+
+            obj.matfile = matfile(filename,'Writable',true);
+
+            if is_new_file
+                obj.matfile.keys = {};
+                obj.matfile.entries = {};
+            end
+
+            % obj.keyHeaders = obj.matfile.keyHeaders;
+            obj.keys = obj.matfile.keys;
+
+        end
+
+        function list(obj, show_syntax)
+            default_arg('show_syntax',false);
+            for i = 1:length(obj.keys)
+                fprintf('[%d]: %s', i, struct2string(obj.keys{i}));
+
+                if show_syntax
+                    fprintf('\t%s',struct2syntax(obj.keys{i}));
+                end
+
+                fprintf('\n');
+            end
+        end
+
+        % Returns the index for a key. Returns 0 if the key doesn't exist
+        function I = getIndex(obj, key)
+            I = 0;
+
+            for i = 1:length(obj.keys)
+                if isequal(key,obj.keys{i});
+                    I = i;
+                    return
+                end
+            end
+        end
+
+        function b = isKey(obj, key)
+            I = obj.getIndex(key);
+
+            if I == 0
+                b = false;
+            else
+                b = true;
+            end
+        end
+
+        % Gets entries where key match exactly.
+        function e = get(obj, key)
+            if ~obj.isKey(key);
+                error('No such key: %s', struct2string(key));
+            end
+
+            I = obj.getIndex(key);
+            e = getEntryByIndex(I); % unpack the cell array
+        end
+
+
+        % Handles indexing weirdness of matfile class
+        function e = getEntryByIndex(obj, I)
+            e = obj.matfile.entries(1,I);
+            e = e{1};
+        end
+
+        function e = deleteByIndex(obj, I)
+            obj.keys(I) = [];
+            obj.matfile.keys = obj.keys;
+
+            entries = obj.matfile.entries;
+            entries(I) = [];
+            obj.matfile.entries = entries;
+        end
+
+        % Handles indexing weirdness of matfile class
+        function setEntryByIndex(obj,I, entry, force_flag)
+            default_arg('force_flag',false);
+            if ~force_flag && ( I < 1 || I > length(obj.keys))
+                error('I is out of range. I = %d',I);
+            end
+            obj.matfile.entries(1,I) = {entry};
+        end
+
+        function store(obj, key, entry)
+            if obj.isKey(key);
+                I = obj.getIndex(key);
+            else
+                I = length(obj.keys) + 1;
+            end
+
+            obj.keys{I} = key;
+            obj.matfile.keys = obj.keys;
+            obj.setEntryByIndex(I,entry,true);
+        end
+
+        function delete(obj, key)
+            if ~obj.isKey(key);
+                error('No such key: %s', struct2string(key));
+            end
+            I = obj.getIndex(key);
+            obj.deleteByIndex(I);
+        end
+
+
+
+        % Gets entries where the defined parts of partial_key matches the key of the entry
+        function [keys, entries] = find(obj,partial_key)
+            keys = {};
+            entries = {};
+            for i = 1:length(obj.keys)
+                if structIsSubset(partial_key,obj.keys{i})
+                    i
+                    obj.keys{i}
+                    keys{end + 1}    = obj.keys{i};
+                    entries{end + 1} = obj.getEntryByIndex(i);
+                end
+            end
+
+
+            % Returns true if the the fields of struct a exists in A and have the same values
+            function b = structIsSubset(a,A)
+                fn = fieldnames(a);
+
+                b = true; % if a has no filds
+                for j = 1:length(fn)
+                    fname = fn{j};
+                    value = a.(fname);
+                    if isfield(A,fname) && a.(fname) == A.(fname)
+                        b = true;
+                        continue;
+                    else
+                        b = false;
+                        break;
+                    end
+                end
+            end
+        end
+    end
+
+end
