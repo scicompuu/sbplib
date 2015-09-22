@@ -47,6 +47,7 @@ classdef Rk4SecondOrderNonlin < time.Timestepper
             obj.E = E;
             obj.S = S;
             obj.m = m;
+            obj.n = 0;
         end
 
         function [v,t] = getV(obj)

@@ -20,6 +20,7 @@ classdef Rungekutta4SecondOrder < time.Timestepper
             obj.E = E;
             obj.S = S;
             obj.m = length(v0);
+            obj.n = 0;
 
             I = speye(obj.m);
             O = sparse(obj.m,obj.m);

@@ -18,6 +18,7 @@ classdef Rungekutta4 < time.Timestepper
             obj.t = t0;
             obj.v = v0;
             obj.m = length(v0);
+            obj.n = 0;
 
             if S == 0
                 obj.S = zeros(obj.m,1);

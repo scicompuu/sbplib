@@ -13,6 +13,7 @@ classdef Timestepper < handle
 
     methods
         function [v,t] = stepN(obj,n,progress_bar)
+            default_arg('progress_bar',false);
 
             if progress_bar && n > 1500
                 n1000 = floor(n/1000);
