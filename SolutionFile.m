@@ -68,7 +68,7 @@ classdef SolutionFile < handle
             end
 
             I = obj.getIndex(key);
-            e = getEntryByIndex(I); % unpack the cell array
+            e = obj.getEntryByIndex(I); % unpack the cell array
         end
 
 

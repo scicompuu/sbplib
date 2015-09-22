@@ -45,7 +45,7 @@ function [] = calculateSolution(filename, discrHand, method, m, T, order)
             if T(1) == 0
                 v = discr.v0;
                 t = 0;
-                saveToFile(sf, method, order(i), m(j),T(1), v, t, NaN, NaN);
+                saveToFile(sf, method, order(i), m(j),T(1), v, t, NaN, NaN, discrHand);
                 T(1) = [];
             end
 
@@ -63,7 +63,7 @@ function [] = calculateSolution(filename, discrHand, method, m, T, order)
                     clock_start = tic();
                     [v,t] = ts.stepN(end_step-ts.n,true);
                     runtime = runtime + toc(clock_start);
-                    saveToFile(sf, method, order(i), m(j),T(l), v, t, runtime, k);
+                    saveToFile(sf, method, order(i), m(j),T(l), v, t, runtime, k, discrHand);
                     fprintf('Done! (%.3fs)\n',runtime);
                 end
             else
@@ -75,7 +75,7 @@ function [] = calculateSolution(filename, discrHand, method, m, T, order)
                     clock_start = tic();
                     [v,t] = ts.stepN(N-ts.n,true);
                     runtime = toc(clock_start);
-                    saveToFile(sf, method, order(i), m(j),T(l), v, t, runtime, k);
+                    saveToFile(sf, method, order(i), m(j),T(l), v, t, runtime, k, discrHand);
                     fprintf('Done! (%.3fs)\n',runtime);
                 end
 
@@ -86,7 +86,7 @@ function [] = calculateSolution(filename, discrHand, method, m, T, order)
 end
 
 
-function saveToFile(sf, method, order, m, T, v, t, runtime, k)
+function saveToFile(sf, method, order, m, T, v, t, runtime, k, discrHand)
     key.method = method;
     key.order  = order;
     key.m      = m;
@@ -96,6 +96,7 @@ function saveToFile(sf, method, order, m, T, v, t, runtime, k)
     entry.t = t;
     entry.runtime = runtime;
     entry.k = k;
+    entry.discrHand = discrHand;
 
     sf.store(key,entry);
 end
