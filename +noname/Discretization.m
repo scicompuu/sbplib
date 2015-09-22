@@ -16,9 +16,18 @@ classdef Discretization < handle
         %     method is a string that states which timestepping method should be used.
         %          The implementation should switch on the string and deliver
         %          the appropriate timestepper. It should also provide a default value.
-        %     time_align is a time that the timesteps should align with so that for some
-        %                integer number of timesteps we end up exactly on time_align
-        ts = getTimestepper(obj,method,time_align,cfl) %% ???
+        %     k is a desired timestep
+        %     cfl is a choses cfl constant used to set the timestep. ignored if k is set.
+        ts = getTimestepper(obj,method,k,cfl)
+
+        % Calculates a timestep for the discretization and a given timestepping method.
+        % Can take order, differnt types of scaling in h, or other parameters in Discr into
+        % account.
+        %   method -- time stepping method for which to give a timestep.
+        %   cfl    -- [optioanal] a cfl constant to use to calculate the timetep.
+        %             if skipped getTimestep should use a precomputed value.
+        k = getTimestep(obj, method, cfl)
+
 
         % Sets up movie recording to a given file.
         %     saveFrame is a function_handle with no inputs that records the current state
