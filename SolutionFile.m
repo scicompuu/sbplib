@@ -152,4 +152,24 @@ classdef SolutionFile < handle
         end
     end
 
+    methods(Static)
+        function merge(fn1, fn2, fnNew)
+            sf1 = SolutionFile(fn1);
+            sf2 = SolutionFile(fn2);
+
+            sfNew = SolutionFile(fnNew);
+
+            sfNew.keys = sf1.keys;
+            sfNew.matfile.keys = sf1.keys;
+            sfNew.matfile.entries = sf1.matfile.entries;
+
+            for i = 1:length(sf2.keys)
+                if sfNew.isKey(sf2.keys{i})
+                    warning('Key ''%s'' exists in both files!',struct2string(sf2.keys{i}));
+                end
+                sfNew.store(sf2.keys{i},sf2.getEntryByIndex(i));
+            end
+        end
+    end
+
 end
