@@ -25,7 +25,7 @@ function hand = animate(dirname,discretization,Tend, time_modifier,time_method)
     ts = discretization.getTimestepper(time_method);
     fprintf(' - done  %fs\n', toc())
 
-    [update, figure_handle] = discretization.setupPlot();
+    [update, figure_handle] = discretization.setupPlot('animation');
 
     if makemovies
         save_frame = anim.setup_fig_mov(figure_handle,dirname);
@@ -37,7 +37,8 @@ function hand = animate(dirname,discretization,Tend, time_modifier,time_method)
     % Loop function
     function next_t = G(next_t)
         ts.evolve(next_t);
-        update(ts);
+        sol = discretization.getTimeSnapshot(ts);
+        update(sol);
         % waitforbuttonpress
         if makemovies
             save_frame();
@@ -46,7 +47,8 @@ function hand = animate(dirname,discretization,Tend, time_modifier,time_method)
         str = util.replace_string(str,'t = %.2f',ts.t);
 
     end
-    update(ts);
+    sol = discretization.getTimeSnapshot(0);
+    update(sol);
 
     fprintf('Using time step k = %.6f\n',ts.k)
     fprintf('System size: %d\n',size(discretization))

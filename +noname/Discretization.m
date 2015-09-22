@@ -28,6 +28,10 @@ classdef Discretization < handle
         %             if skipped getTimestep should use a precomputed value.
         k = getTimestep(obj, method, cfl)
 
+        % getTimeSnapshot returns a struct which represents the solution in ts at current time.
+        % if ts is empty or 0 a representation of the initial conditions be returned.
+        repr = getTimeSnapshot(obj,ts)
+
 
         % Sets up movie recording to a given file.
         %     saveFrame is a function_handle with no inputs that records the current state
@@ -37,7 +41,8 @@ classdef Discretization < handle
         % Sets up a plot of the discretisation
         %     update is a function_handle accepting a timestepper that updates the plot to the
         %            state of the timestepper
-        [update,hand] = setupPlot(obj)
+        %     type allows for different kinds of plots. Some special values are used by the lib. 'animate' and 'plot' for example
+        [update,hand] = setupPlot(obj, type)
 
     end
 

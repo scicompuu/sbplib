@@ -43,9 +43,8 @@ function [] = calculateSolution(filename, discrHand, method, m, T, order)
 
             % Do we want to to save the initial conditions?
             if T(1) == 0
-                v = discr.v0;
-                t = 0;
-                saveToFile(sf, method, order(i), m(j),T(1), v, t, NaN, NaN, discrHand);
+                snapshot = discr.getTimeSnapshot(0);
+                saveToFile(sf, method, order(i), m(j),T(1), snapshot, NaN, NaN, discrHand);
                 T(1) = [];
             end
 
@@ -61,9 +60,10 @@ function [] = calculateSolution(filename, discrHand, method, m, T, order)
                     end_step = N * time_multiples(l);
                     fprintf('[order = %-*d, m = %-*d, T = %-*d]: ',orderWidth,order(i),mWidth,m(j),TWidth,T(l));
                     clock_start = tic();
-                    [v,t] = ts.stepN(end_step-ts.n,true);
+                    ts.stepN(end_step-ts.n,true);
                     runtime = runtime + toc(clock_start);
-                    saveToFile(sf, method, order(i), m(j),T(l), v, t, runtime, k, discrHand);
+                    snapshot = discr.getTimeSnapshot(ts);
+                    saveToFile(sf, method, order(i), m(j),T(l), snapshot, runtime, k, discrHand);
                     fprintf('Done! (%.3fs)\n',runtime);
                 end
             else
@@ -75,7 +75,8 @@ function [] = calculateSolution(filename, discrHand, method, m, T, order)
                     clock_start = tic();
                     [v,t] = ts.stepN(N-ts.n,true);
                     runtime = toc(clock_start);
-                    saveToFile(sf, method, order(i), m(j),T(l), v, t, runtime, k, discrHand);
+                    snapshot = discr.getTimeSnapshot(ts);
+                    saveToFile(sf, method, order(i), m(j),T(l), snapshot, runtime, k, discrHand);
                     fprintf('Done! (%.3fs)\n',runtime);
                 end
 
@@ -86,14 +87,13 @@ function [] = calculateSolution(filename, discrHand, method, m, T, order)
 end
 
 
-function saveToFile(sf, method, order, m, T, v, t, runtime, k, discrHand)
+function saveToFile(sf, method, order, m, T, snapshot, runtime, k, discrHand)
     key.method = method;
     key.order  = order;
     key.m      = m;
     key.T      = T;
 
-    entry.v = v;
-    entry.t = t;
+    entry.repr = snapshot;
     entry.runtime = runtime;
     entry.k = k;
     entry.discrHand = discrHand;
