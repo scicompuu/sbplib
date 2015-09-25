@@ -3,6 +3,7 @@ classdef Discretization < handle
         name         %Short description
         description  %Longer description
         order        %Order of accuracy
+        h            % scalar desciribing the grid spacing.. (IS THIS THE RIGHT PLACE FOR THIS?)
     end
 
     methods (Abstract)
@@ -44,13 +45,5 @@ classdef Discretization < handle
         %     type allows for different kinds of plots. Some special values are used by the lib. 'animate' and 'plot' for example
         [update,hand] = setupPlot(obj, type)
 
-    end
-
-    methods(Abstract,Static)
-        % Compare two functions u and v in the discrete l2 norm.
-        e = compareSolutions(u, v)
-
-        % Compare the functions u to the analytical function g in the discrete l2 norm.
-        e = compareSolutionsAnalytical(u, g)
     end
 end

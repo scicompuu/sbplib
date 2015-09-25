@@ -28,9 +28,6 @@ classdef Scheme < handle
         m = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
         N = size(obj) % Returns the number of degrees of freedom.
 
-        e = compareSolution(obj, p,v, p_ref, v_ref, errorFunction) % Use ismemeber(p,p_ref,'rows') and vector2cell() for winning
-        e = compareSolutionAnalytical(obj, p, v, v_ref, errorFunction)
-
     end
 
     methods(Static)
