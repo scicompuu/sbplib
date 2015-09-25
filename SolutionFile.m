@@ -151,6 +151,21 @@ classdef SolutionFile < handle
                 sfNew.store(sf2.keys{i},sf2.getEntryByIndex(i));
             end
         end
+
+
+        function b = keyIsEqual(key1,key2)
+            b = isequal(key1, key2);
+        end
+
+        function b = keyIsIn(key,keys)
+            b = false;
+            for i = 1:length(keys)
+                b = isequal(key, keys{i});
+                if b
+                    return
+                end
+            end
+        end
     end
 
 end
