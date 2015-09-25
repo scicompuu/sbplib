@@ -44,7 +44,7 @@ function [] = calculateSolution(filename, discrHand, method, m, T, order)
             % Do we want to to save the initial conditions?
             if T(1) == 0
                 snapshot = discr.getTimeSnapshot(0);
-                saveToFile(sf, method, order(i), m(j),T(1), snapshot, NaN, NaN, discrHand);
+                saveToFile(sf, method, order(i), m(j),T(1), snapshot, NaN, NaN, discr);
                 T(1) = [];
             end
 
@@ -63,7 +63,7 @@ function [] = calculateSolution(filename, discrHand, method, m, T, order)
                     ts.stepN(end_step-ts.n,true);
                     runtime = runtime + toc(clock_start);
                     snapshot = discr.getTimeSnapshot(ts);
-                    saveToFile(sf, method, order(i), m(j),T(l), snapshot, runtime, k, discrHand);
+                    saveToFile(sf, method, order(i), m(j),T(l), snapshot, runtime, k, discr);
                     fprintf('Done! (%.3fs)\n',runtime);
                 end
             else
@@ -76,7 +76,7 @@ function [] = calculateSolution(filename, discrHand, method, m, T, order)
                     [v,t] = ts.stepN(N-ts.n,true);
                     runtime = toc(clock_start);
                     snapshot = discr.getTimeSnapshot(ts);
-                    saveToFile(sf, method, order(i), m(j),T(l), snapshot, runtime, k, discrHand);
+                    saveToFile(sf, method, order(i), m(j),T(l), snapshot, runtime, k, discr);
                     fprintf('Done! (%.3fs)\n',runtime);
                 end
 
@@ -87,7 +87,7 @@ function [] = calculateSolution(filename, discrHand, method, m, T, order)
 end
 
 
-function saveToFile(sf, method, order, m, T, snapshot, runtime, k, discrHand)
+function saveToFile(sf, method, order, m, T, snapshot, runtime, k, discr)
     key.method = method;
     key.order  = order;
     key.m      = m;
@@ -96,7 +96,7 @@ function saveToFile(sf, method, order, m, T, snapshot, runtime, k, discrHand)
     entry.repr = snapshot;
     entry.runtime = runtime;
     entry.k = k;
-    entry.discrHand = discrHand;
+    entry.discr = discr;
 
     sf.store(key,entry);
 end
