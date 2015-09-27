@@ -25,11 +25,13 @@ classdef Wave2dCurve < scheme.Scheme
         du_s, dv_s
         du_n, dv_n
         gamm_u, gamm_v
+        lambda
     end
 
     methods
         function obj = Wave2dCurve(m,ti,order,c,opSet)
             default_arg('opSet',@sbp.Variable);
+            default_arg('c', 1);
 
             if length(m) == 1
                 m = [m m];
@@ -150,6 +152,7 @@ classdef Wave2dCurve < scheme.Scheme
             obj.Y = Y;
             obj.x = X(:);
             obj.y = Y(:);
+            obj.lambda = lambda;
 
             obj.gamm_u = h_u*ops_u.borrowing.M.S;
             obj.gamm_v = h_v*ops_v.borrowing.M.S;
@@ -230,11 +233,17 @@ classdef Wave2dCurve < scheme.Scheme
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
             tuning = 1.2;
-            [e_u, d_n_u, d_t_u, coeff_n_u, coeff_t_u, s_u, gamm_u, halfnorm_inv_u_n, halfnorm_inv_u_t, halfnorm_u_t] = obj.get_boundary_ops(boundary);
-            [e_v, d_n_v, d_t_v, coeff_n_v, coeff_t_v, s_v, gamm_v, halfnorm_inv_v_n, halfnorm_inv_v_t, halfnorm_v_t] = neighbour_scheme.get_boundary_ops(boundary);
+            % tuning = 20.2;
+            [e_u, d_n_u, d_t_u, coeff_n_u, coeff_t_u, s_u, gamm_u, halfnorm_inv_u_n, halfnorm_inv_u_t, halfnorm_u_t, a_n_u, a_t_u] = obj.get_boundary_ops(boundary);
+            [e_v, d_n_v, d_t_v, coeff_n_v, coeff_t_v, s_v, gamm_v, halfnorm_inv_v_n, halfnorm_inv_v_t, halfnorm_v_t, a_n_v, a_t_v] = neighbour_scheme.get_boundary_ops(boundary);
 
-            F_u = s_u * a_n_u * d_n_u' + s_u * a_t_u*d_t_u';
-            F_v = s_v * a_n_v * d_n_v' + s_v * a_t_v*d_t_v';
+            a_n_u = spdiag(coeff_n_u);
+            a_t_u = spdiag(coeff_t_u);
+            a_n_v = spdiag(coeff_n_v);
+            a_t_v = spdiag(coeff_t_v);
+
+            F_u = (s_u * a_n_u * d_n_u' + s_u * a_t_u*d_t_u')';
+            F_v = (s_v * a_n_v * d_n_v' + s_v * a_t_v*d_t_v')';
 
             u = obj;
             v = neighbour_scheme;
@@ -245,13 +254,13 @@ classdef Wave2dCurve < scheme.Scheme
             b2_v = gamm_v*v.lambda./v.a22.^2;
 
 
-            tau  = -1./(4*b1_u) -1/(4*b1_v) -1/(4*b2_u) -1/(4*b2_v);
+            tau  = -1./(4*b1_u) -1./(4*b1_v) -1./(4*b2_u) -1./(4*b2_v);
             m_tot = obj.m(1)*obj.m(2);
-            tau = tuning * spdiags(tau(:),0,m_tot,m_tot);
+            tau = tuning * spdiag(tau(:));
             sig1 = 1/2;
-            sig2 = -1/2;
+            sig2 = -1/2*s_u;
 
-            penalty_parameter_1 = s_u*halfnorm_inv_u_n*(tau + sig1*halfnorm_inv_u_t*F_u'*halfnorm_u_t)*e_u;
+            penalty_parameter_1 = halfnorm_inv_u_n*(tau + sig1*halfnorm_inv_u_t*F_u*e_u'*halfnorm_u_t)*e_u;
             penalty_parameter_2 = halfnorm_inv_u_n * sig2 * e_u;
 
 
@@ -261,7 +270,7 @@ classdef Wave2dCurve < scheme.Scheme
 
         % Ruturns the boundary ops and sign for the boundary specified by the string boundary.
         % The right boundary is considered the positive boundary
-        function [e, d_n, d_t, coeff_n, coeff_t, s, gamm, halfnorm_inv_n, halfnorm_inv_t, halfnorm_t] = get_boundary_ops(obj,boundary)
+        function [e, d_n, d_t, coeff_n, coeff_t, s, gamm, halfnorm_inv_n, halfnorm_inv_t, halfnorm_t,a_n, a_t] = get_boundary_ops(obj,boundary)
             switch boundary
                 case 'w'
                     e = obj.e_w;
@@ -305,11 +314,15 @@ classdef Wave2dCurve < scheme.Scheme
                     halfnorm_inv_t = obj.Hiv;
                     halfnorm_t = obj.Hv;
                     gamm = obj.gamm_u;
+                    a_n = obj.a11;
+                    a_t = obj.a12;
                 case {'s','n'}
                     halfnorm_inv_n = obj.Hiv;
                     halfnorm_inv_t = obj.Hiu;
                     halfnorm_t = obj.Hu;
                     gamm = obj.gamm_v;
+                    a_n = obj.a22;
+                    a_t = obj.a12;
             end
         end
 
