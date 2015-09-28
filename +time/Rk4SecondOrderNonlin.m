@@ -19,12 +19,12 @@ classdef Rk4SecondOrderNonlin < time.Timestepper
             default_arg('S',0);
             default_arg('E',0);
 
-            if isnumeric(S) && S == 0
-                S = @(v,t)0;
+            if isnumeric(S)
+                S = @(v,t)S;
             end
 
-            if isnumeric(E) && E == 0
-                E = @(v,t)0;
+            if isnumeric(E)
+                E = @(v)E;
             end
 
             obj.k = k;

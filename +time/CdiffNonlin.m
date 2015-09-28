@@ -14,8 +14,16 @@ classdef CdiffNonlin < time.Timestepper
     methods
         function obj = CdiffNonlin(D, E, S, k, t0,n0, v, v_prev)
             m = size(D(v),1);
-            default_arg('E',@(v)sparse(m,m));
-            default_arg('S',@(v,t)sparse(m,1));
+            default_arg('E',0);
+            default_arg('S',0);
+
+            if isnumeric(S)
+                S = @(v,t)S;
+            end
+
+            if isnumeric(E)
+                E = @(v)E;
+            end
 
 
             % m = size(D,1);
@@ -45,7 +53,7 @@ classdef CdiffNonlin < time.Timestepper
         function obj = step(obj)
             D = obj.D(obj.v);
             E = obj.E(obj.v);
-            S = obj.S(obj.v);
+            S = obj.S(obj.v,obj.t);
 
             m = size(D,1);
             I = speye(m);
