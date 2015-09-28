@@ -67,16 +67,23 @@ classdef CdiffNonlin < time.Timestepper
             %% Calculate matrices need for the timestep
             % Before optimization:  A =  1/k^2 * I - 1/(2*k)*E;
             k = obj.k;
+
             Aj = 1/k^2 * I(j,j) - 1/(2*k)*E(j,j);
             B =  2/k^2 * I + D;
             C = -1/k^2 * I - 1/(2*k)*E;
 
             %% Take the timestep
             v = obj.v;
+            v_prev = obj.v_prev;
 
-            % Before optimization:  obj.v = A\(B*v + C*v_prev + S);
-            obj.v(i) = k^2*(B(i,i)*v(i)   -1/k^2*obj.v_prev(i) + S(i));
-            obj.v(j) =  Aj\(B(j,j)*v(j) + C(j,j)*obj.v_prev(j) + S(j));
+            % Want to solve the seq A*v_next = b where
+            b = (B*v + C*v_prev + S);
+
+            % Before optimization:  obj.v = A\b;
+
+            obj.v(i) = k^2*b(i);
+            obj.v(j) =  Aj\b(j);
+
             obj.v_prev = v;
 
             %% Update state of the timestepper
