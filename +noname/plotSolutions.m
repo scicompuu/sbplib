@@ -17,8 +17,7 @@ function plotSolutions(filename, figename_prefix, plot_type)
         repr    = entry.repr;
         runtime = entry.runtime;
         k       = entry.k;
-
-        discr = entry.discrHand(m,order);
+        discr = entry.discr;
 
         [update, hand] = discr.setupPlot(plot_type);
         update(repr);

@@ -2,7 +2,6 @@ classdef SolutionFile < handle
     properties
         filename
         matfile
-        % keyHeaders
         keys % Cell array of keys. Each key is a structure
         % entries
     end
@@ -14,16 +13,33 @@ classdef SolutionFile < handle
 
             is_new_file = ~exist(filename,'file');
 
-            obj.matfile = matfile(filename,'Writable',true);
+            % obj.matfile = matfile(filename,'Writable',true);
+            fprintf('MATLAB SUCKS!!!!\n')
 
             if is_new_file
                 obj.matfile.keys = {};
                 obj.matfile.entries = {};
+            else
+                matObj = matfile(filename,'Writable',true);
+                obj.matfile.keys = matObj.keys;
+                obj.matfile.entries = matObj.entries;
             end
 
-            % obj.keyHeaders = obj.matfile.keyHeaders;
             obj.keys = obj.matfile.keys;
 
+        end
+
+        function stupidSave(obj)
+            matObj = matfile(obj.filename,'Writable',true);
+
+            keys = obj.matfile.keys;
+            entries = obj.matfile.entries;
+
+            delete(obj.filename);
+
+            matObj = matfile(obj.filename,'Writable',true);
+            matObj.keys = keys;
+            matObj.entries = entries;
         end
 
         function list(obj, show_syntax)

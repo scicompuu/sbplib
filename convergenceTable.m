@@ -10,7 +10,6 @@ function convergenceTable(methodName, T, orders, m, e, q, tableType)
 end
 
 function plainTextTable(methodName, T, orders, m, e, q)
-    description = sprintf('method: %s\nT: %d\n');
 
 
     eW = 0;
@@ -24,6 +23,7 @@ function plainTextTable(methodName, T, orders, m, e, q)
     mW = findFieldWidth('%d',m);
     orderHeaderWidth = eW + qW + 1;
 
+    fprintf('method: %s\nT: %d\n',methodName, T);
 
     % Print order headers
     fprintf(' %*s |',mW,'')
@@ -56,10 +56,16 @@ function plainTextTable(methodName, T, orders, m, e, q)
     for i = 1:length(m)
         fprintf(' %*d |',mW,m(i));
         for j = 1:length(orders)
-            fprintf(' %*.2f %*.2f |', eW, log_e{j}(i), qW, q{j}(i));
+            if i == 1
+                fprintf(' %*.2f %*s |', eW, log_e{j}(i), qW, '');
+            else
+                fprintf(' %*.2f %*.2f |', eW, log_e{j}(i), qW, q{j}(i-1));
+            end
         end
         fprintf('\n');
     end
+
+    fprintf('\n');
 
 end
 

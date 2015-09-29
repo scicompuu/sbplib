@@ -5,9 +5,10 @@
 %    order     -- order of accuracy of the approximtion
 %    T         -- time to calculate solution for
 %    input paramters m, t, order may all be vectors.
-function [] = calculateSolution(filename, discrHand, method, m, T, order)
+function [] = calculateSolution(filename, discrHand, method, m, T, order, force_flag)
+    default_arg('force_flag',false);
 
-    if exist(filename,'file')
+    if exist(filename,'file') && ~force_flag
         fprintf('File ''%s'' already exist.',filename);
         do_append = yesnoQuestion('Do you want to append to it?');
         if ~do_append
@@ -81,7 +82,7 @@ function [] = calculateSolution(filename, discrHand, method, m, T, order)
                 end
 
             end
-
+            sf.stupidSave();
         end
     end
 end
