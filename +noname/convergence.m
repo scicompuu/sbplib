@@ -1,13 +1,8 @@
 % Reference is either a key or a function handle
-function [q, e, h] = convergence(filename, errorFunc, reference, method, order, m, T)
+function [q, e, h, runtime] = convergence(filename, errorFunc, reference, method, order, m, T)
     default_arg('errorFunc', @scheme.error1d);
 
     sf = SolutionFile(filename);
-
-    analytical_ref = isa(reference,'function_handle');
-    if ~analytical_ref
-        reference = sf.get(reference);
-    end
 
 
     % Generate convergence, error, and efficiency plots for each search key with more than one entry.
@@ -20,6 +15,7 @@ function [q, e, h] = convergence(filename, errorFunc, reference, method, order, 
         entry = sf.get(key);
 
         [e(i),h(i)] = errorForEntry(key, entry, errorFunc, reference,T);
+        runtime(i) = entry.runtime;
 
     end
     q = convergence(e,h);
@@ -42,6 +38,9 @@ function [e, h] = errorForEntry(key,entry, errorFunc, reference,T)
         x_ref = reference.x;
 
         [~,I] = ismember(x,x_ref,'rows');
+        if any(I == 0)
+            error('Solution and reference solution seem to be on different grids.');
+        end
         v_ref = reference.v(I);
     end
 

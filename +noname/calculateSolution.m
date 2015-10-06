@@ -22,16 +22,6 @@ function [] = calculateSolution(filename, discrHand, method, m, T, order, force_
     % Make sure times are sorted
     T = sort(T);
 
-    % Find out if times to be calulated are integer multiples of the smallest one.
-    time_multiples = T/T(1);
-    is_int_multiples = all(time_multiples == int64(time_multiples));
-
-    if is_int_multiples
-        fprintf('Calculating time series in increments\n');
-    else
-        fprintf('Restarting for each time in timeseries\n');
-    end
-
 
     orderWidth = findFieldWidth('%d',order);
     mWidth = findFieldWidth('%d',m);
@@ -47,6 +37,17 @@ function [] = calculateSolution(filename, discrHand, method, m, T, order, force_
                 snapshot = discr.getTimeSnapshot(0);
                 saveToFile(sf, method, order(i), m(j),T(1), snapshot, NaN, NaN, discr);
                 T(1) = [];
+            end
+
+            % Find out if times to be calulated are integer multiples of the smallest one.
+            time_multiples = T/T(1);
+
+            is_int_multiples = all(time_multiples == int64(time_multiples));
+
+            if is_int_multiples
+                fprintf('Calculating time series in increments\n');
+            else
+                fprintf('Restarting for each time in timeseries\n');
             end
 
             % T now contains all the times we need to step to,
