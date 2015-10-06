@@ -20,9 +20,13 @@ classdef SolutionFile < handle
                 obj.matfile.keys = {};
                 obj.matfile.entries = {};
             else
-                matObj = matfile(filename,'Writable',true);
-                obj.matfile.keys = matObj.keys;
-                obj.matfile.entries = matObj.entries;
+                loadStruct = load(filename);
+                obj.matfile.keys = loadStruct.keys;
+                obj.matfile.entries = loadStruct.entries;
+
+                % matObj = matfile(filename,'Writable',true);
+                % obj.matfile.keys = matObj.keys;
+                % obj.matfile.entries = matObj.entries;
             end
 
             obj.keys = obj.matfile.keys;
@@ -35,7 +39,9 @@ classdef SolutionFile < handle
             keys = obj.matfile.keys;
             entries = obj.matfile.entries;
 
-            delete(obj.filename);
+            if exist(obj.filename,'file')
+                delete(obj.filename);
+            end
 
             matObj = matfile(obj.filename,'Writable',true);
             matObj.keys = keys;
@@ -80,6 +86,7 @@ classdef SolutionFile < handle
         % Gets entries where key match exactly.
         function e = get(obj, key)
             if ~obj.isKey(key);
+                key
                 error('No such key: %s', struct2string(key));
             end
 
