@@ -7,5 +7,7 @@ classdef Color
         green     = [0.466 0.674 0.188];
         lightblue = [0.301 0.745 0.933];
         darkred   = [0.635 0.078 0.184];
+        black     = [0.000 0.000 0.000];
+        white     = [1.000 1.000 1.000];
     end
 end
