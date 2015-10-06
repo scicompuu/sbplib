@@ -20,6 +20,6 @@ function str  = valueString(value)
     if ischar(value)
         str = ['''' value ''''];
     else
-        str = num2str(value);
+        str = mat2str(value);
     end
 end

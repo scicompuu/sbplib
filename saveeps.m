@@ -30,12 +30,15 @@ function correct_stupid_matlab_bug(filename)
     pagel = findPrefix(lines,'%%Pages:');
     boundl = findPrefix(lines,'%%BoundingBox:');
 
+
     if ~(length(pagel) == 2 && length(boundl) == 2)
-        error('Undexpected number of found lines');
+        warning('Undexpected number of found lines: %d , %d\nNot correcting the file',pagel, boundl);
+        return
     end
 
     if ~(strcmp(lines{pagel(1)},'%%Pages: (atend)') && strcmp(lines{boundl(1)},'%%BoundingBox: (atend)'))
-        error('Does the file really contain the error?');
+        warning('Does the file really contain the error?\nNot correcting the file');
+        return
     end
 
     % Overwrite the nasty lines with the nice ones.
