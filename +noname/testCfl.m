@@ -1,6 +1,7 @@
-function testCfl(discr, timestepper_method, T, alpha0, tol,threshold)
+function testCfl(discr, timestepper_method, T, alpha0, tol,threshold, silentFlag)
     default_arg('tol',0.00005);
     default_arg('threshold',1e2);
+    default_arg('silentFlag', false);
 
     alpha0(2) = alpha0(1)+2*(alpha0(2)-alpha0(1));
 
@@ -23,8 +24,9 @@ function testCfl(discr, timestepper_method, T, alpha0, tol,threshold)
             alpha0(1) = alpha;
         end
 
-        fprintf('[%.3e,%.3e]: a = %.3e, max= %.2e\n',alpha0(1),alpha0(2), alpha,max_val);
-
+        if ~silentFlag
+            fprintf('[%.3e,%.3e]: a = %.3e, max= %.2e\n',alpha0(1),alpha0(2), alpha,max_val);
+        end
     end
 
     fprintf('T = %-3d dof = %-4d order = %d: clf = %.4e\n',T, discr.size(), discr.order, alpha0(1));
