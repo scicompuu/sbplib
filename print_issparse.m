@@ -1,4 +1,5 @@
 function print_issparse(A)
+    warning('Deprecated! Use printExpr() instead!');
     b = issparse(A);
     if b
         s = 'true';

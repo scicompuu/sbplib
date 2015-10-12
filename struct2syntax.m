@@ -1,4 +1,5 @@
 function str = struct2syntax(s)
+    warning('Deprecated! Use toString() instead!');
     fn = fieldnames(s);
 
     if length(fn) == 0

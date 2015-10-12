@@ -1,4 +1,5 @@
 function str = struct2string(s)
+    warning('Deprecated! Use toString() instead!');
     fn = fieldnames(s);
 
     if length(fn) == 0
@@ -16,10 +17,12 @@ function str = struct2string(s)
     str = [str sprintf('%s: %s}',fn{end}, valueString(value))];
 end
 
-function str  = valueString(value)
-    if ischar(value)
-        str = ['''' value ''''];
-    else
+function str  = value2string(value)
+    if isnumeric(value) || ischar(value)
         str = mat2str(value);
+    elseif isstruct(value)
+        str = struct2string(value);
+    else
+        str = 'NO_STR_REP';
     end
 end

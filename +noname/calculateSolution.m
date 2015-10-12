@@ -5,7 +5,7 @@
 %    order     -- order of accuracy of the approximtion
 %    T         -- time to calculate solution for
 %    input paramters m, t, order may all be vectors.
-function [] = calculateSolution(filename, discrHand, method, m, T, order, force_flag)
+function [] = calculateSolution(filename, discrHand, method, m, T_in, order, force_flag)
     default_arg('force_flag',false);
 
     if exist(filename,'file') && ~force_flag
@@ -19,16 +19,16 @@ function [] = calculateSolution(filename, discrHand, method, m, T, order, force_
 
     sf = SolutionFile(filename);
 
-    % Make sure times are sorted
-    T = sort(T);
 
 
     orderWidth = findFieldWidth('%d',order);
     mWidth = findFieldWidth('%d',m);
-    TWidth = findFieldWidth('%d',T);
+    TWidth = findFieldWidth('%d',T_in);
 
     for i = 1:length(order)
         for j = 1:length(m)
+            T = sort(T_in); % Make sure times are sorted
+
             discr = discrHand(m(j),order(i));
             k_max = discr.getTimestep(method);
 
