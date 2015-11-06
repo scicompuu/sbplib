@@ -11,13 +11,13 @@ function str = toString(value, syntaxFlag)
 end
 
 function str  = value2string(value)
-    if isnumeric(value) || ischar(value)
+    if isnumeric(value) || ischar(value) || islogical(value)
         str = mat2str(value);
     elseif isstruct(value)
         str = struct2string(value);
     elseif iscell(value)
         str = cell2string(value);
-    elseif isa('function_hande')
+    elseif isa(value,'function_hande')
         str = func2str(value);
     else
         warning('No string representation for class ''%s''', class(value))

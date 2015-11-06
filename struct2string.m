@@ -11,10 +11,10 @@ function str = struct2string(s)
 
     for i = 1:length(fn) - 1
         value = s.(fn{i});
-        str = [str sprintf('%s: %s, ',fn{i}, valueString(value))];
+        str = [str sprintf('%s: %s, ',fn{i}, toString(value))];
     end
     value = s.(fn{end});
-    str = [str sprintf('%s: %s}',fn{end}, valueString(value))];
+    str = [str sprintf('%s: %s}',fn{end}, toString(value))];
 end
 
 function str  = value2string(value)
