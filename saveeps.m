@@ -1,4 +1,5 @@
-% Saves a figure to an .eos file with corrected bounding box.
+% Saves a figure to an .eps file with corrected bounding box.
+%    e.g. saveeps(gcf,'myfig.eps')
 function saveeps(handle,filename)
     if length(filename) < 4 || ~strcmp(filename(end-3:end),'.eps')
         filename = [filename '.eps'];
