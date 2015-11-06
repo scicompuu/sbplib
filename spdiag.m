@@ -1,4 +1,4 @@
-function A = spdiag(a)
+function A = spdiag(a,i)
     n = length(a);
-    A = spdiags(a,0,n,n);
+    A = spdiags(a,i,n,n);
 end
