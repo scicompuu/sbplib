@@ -1,4 +1,4 @@
-classdef SchmBeam2d < noname.Scheme
+classdef Euler1d < scheme.Scheme
     properties
         m % Number of points in each direction, possibly a vector
         N % Number of points total
@@ -8,52 +8,75 @@ classdef SchmBeam2d < noname.Scheme
         order % Order accuracy for the approximation
 
         D % non-stabalized scheme operator
+        Fx
         M % Derivative norm
-        alpha
+        gamma
+
+        T
+        p
+
 
         H % Discrete norm
         Hi
-        e_l, e_r
+        e_l, e_r, e_L, e_R;
 
     end
 
     methods
-        function obj = SchmBeam2d(m,xlim,order,gamma,opsGen)
+        function obj = Euler1d(m,xlim,order,gama,opsGen,do_upwind)
             default_arg('opsGen',@sbp.Ordinary);
-            default_arg('gamma', 1.4);
+            default_arg('gama', 1.4);
+            default_arg('do_upwind', false);
+            gamma = gama;
 
-            [x, h] = util.get_grid(xlim{:},m_x);
+            [x, h] = util.get_grid(xlim{:},m);
 
-            ops = opsGen(m_x,h_x,order);
+            if do_upwind
+                ops = spb.Upwind(m,h,order);
+                Dp = ops.derivatives.Dp;
+                Dm = ops.derivatives.Dm;
 
-            I_x = speye(m);
-            I_3 = speye(3);
+                printExpr('issparse(Dp)');
+                printExpr('issparse(Dm)');
 
-            D1 = sparse(ops.derivatives.D1);
+                D1 = (Dp + Dm)/2;
+            else
+                ops = opsGen(m,h,order);
+                D1 = sparse(ops.derivatives.D1);
+            end
+
             H =  sparse(ops.norms.H);
             Hi = sparse(ops.norms.HI);
             e_l = sparse(ops.boundary.e_1);
             e_r = sparse(ops.boundary.e_m);
 
+            I_x = speye(m);
+            I_3 = speye(3);
+
+
             D1 = kr(D1, I_3);
+            if do_upwind
+                Ddisp = kr(Ddisp,I_3);
+            end
 
             % Norms
             obj.H = kr(H,I_3);
+            obj.Hi = kr(Hi,I_3);
 
             % Boundary operators
-            obj.e_l  = kr(e_l,I_3);
-            obj.e_r  = kr(e_r,I_3);
+            obj.e_l  = e_l;
+            obj.e_r  = e_r;
+            obj.e_L  = kr(e_l,I_3);
+            obj.e_R  = kr(e_r,I_3);
 
             obj.m = m;
             obj.h = h;
             obj.order = order;
 
-
             % Man har Q_t+F_x=0 i 1D Euler, där
             % q=[rho, rho*u, e]^T
             % F=[rho*u, rho*u^2+p, (e+p)*u] ^T
-            % p=(gamma-1)*(e-rho/2*u^2);
-
+            % p=(gamma-1)*(e-rho*u^2/2);
 
             %Solving on form q_t + F_x = 0
             function o = F(q)
@@ -65,15 +88,16 @@ classdef SchmBeam2d < noname.Scheme
                 o = (gamma-1)*(q(3)-q(2).^2/q(1)/2);
             end
 
-
             % R =
             % [sqrt(2*(gamma-1))*rho      , rho                                , rho           ;
             %  sqrt(2*(gamma-1))*rho*u    , rho*(u+c)                          , rho*(u-c)     ;
             %  sqrt(2*(gamma-1))*rho*u^2/2, e+(gamma-1)*(e-rho*u^2/2)+rho*u*c, e+(gamma-1)*(e-rho*u^2/2)-rho*u*c]);
-            function o = R(q)
+            function o = T(q)
                 rho = q(1);
                 u = q(2)/q(1);
                 e = q(3);
+
+                c = sqrt(gamma*p(q)/rho);
 
                 sqrt2gamm = sqrt(2*(gamma-1));
 
@@ -82,6 +106,7 @@ classdef SchmBeam2d < noname.Scheme
                      sqrt2gamm*rho*u    , rho*(u+c)                         , rho*(u-c)                         ;
                      sqrt2gamm*rho*u^2/2, e+(gamma-1)*(e-rho*u^2/2)+rho*u*c , e+(gamma-1)*(e-rho*u^2/2)-rho*u*c
                     ];
+                    % Devide columns by stuff to get rid of extra comp?
             end
 
             function o = Fx(q)
@@ -89,82 +114,184 @@ classdef SchmBeam2d < noname.Scheme
                 for i = 1:3:3*m
                     o(i:i+2) = F(q(i:i+2));
                 end
+                o = D1*o;
             end
-
 
 
             % A=R*Lambda*inv(R), där Lambda=diag(u, u+c, u-c)     (c är ljudhastigheten)
             % c^2=gamma*p/rho
             % function o = A(rho,u,e)
             % end
+            if do_upwind
+                obj.D = @(q)-Fx(q) + Ddisp*(1)*u;
+            else
+                obj.D = @(q)-Fx(q);
+            end
 
-
-            obj.D = @Fx;
+            obj.Fx = @Fx;
+            obj.T = @T;
             obj.u = x;
             obj.x = kr(x,ones(3,1));
+            obj.p = @p;
+            obj.gamma = gamma;
         end
 
 
-        % Closure functions return the opertors applied to the own doamin to close the boundary
-        % Penalty functions return the opertors to force the solution. In the case of an interface it returns the operator applied to the other doamin.
-        %       boundary            is a string specifying the boundary e.g. 'l','r' or 'e','w','n','s'.
-        %       type                is a string specifying the type of boundary condition if there are several.
-        %       data                is a function returning the data that should be applied at the boundary.
-        %       neighbour_scheme    is an instance of Scheme that should be interfaced to.
-        %       neighbour_boundary  is a string specifying which boundary to interface to.
-        function [closure, penalty] = boundary_condition(obj,boundary, alpha,data)
-            default_arg('alpha',0);
-            default_arg('data',0);
+        % Enforces the boundary conditions
+        %  w+ = R*w- + g(t)
+        function closure = boundary_condition(obj,boundary, type, varargin)
+            [e_s,e_S,s] = obj.get_boundary_ops(boundary);
 
             % Boundary condition on form
-            %   w_in = w_out + g,       where g is data
+            %   w_in = R*w_out + g,       where g is data
 
-            [e,s] = obj.get_boundary_ops(boundary);
+            % How to handle when the number of BC we want to set changes
+            % How to handel u = 0 as an example
 
-            tuning = 1; % ?????????????????????????
+            % Måste sätta in s och fixa tecken som de ska vara
 
-            tau = R(q)*lambda(q)*tuning;     % SHOULD THIS BE abs(lambda)?????
+            % Kanske ska man tala om vilka karakteristikor som är in och ut i anropet
+            % Man kan sen kolla om det stämmer (men hur blir det med u=0?)
+            % Och antingen tillåta att man skickar in flera alternativ och väljer automatiskt
+            % eller låta koden utanför bestämma vilken penalty som ska appliceras.
 
-            function closure_fun(q,t)
-                q_b = e * q;
-            end
-
-            function penalty_fun(q,t)
-            end
-
-
-
-
-
-            % tau1 < -alpha^2/gamma
-
-            tau1 = tuning * alpha/delt;
-            tau4 = s*alpha;
-
-            sig2 = tuning * alpha/gamm;
-            sig3 = -s*alpha;
-
-            tau = tau1*e+tau4*d3;
-            sig = sig2*d1+sig3*d2;
-
-            closure = halfnorm_inv*(tau*e' + sig*d1');
-
-            pp_e = halfnorm_inv*tau;
-            pp_d = halfnorm_inv*sig;
-            switch class(data)
-                case 'double'
-                    penalty_e = pp_e*data;
-                    penalty_d = pp_d*data;
-                case 'function_handle'
-                    penalty_e = @(t)pp_e*data(t);
-                    penalty_d = @(t)pp_d*data(t);
+            switch type
+                case 'wall'
+                    closure = obj.boundary_condition_wall(boundary);
                 otherwise
-                    error('Wierd data argument!')
+                    error('Unsupported bc type: %s', type);
             end
 
+            % T = obj.T(e_S*v);
+
+            % c = sqrt(gamma*p/rho);
+            % l = [u, u+c, u-c];
+
+            % p_in = find(s*l <= 0);
+            % p_ot = find(s*l >  0);
+
+            % p = [p_in, p_ot] % Permutation to sort
+            % pt(p) = 1:length(p); % Inverse permutation
+
+            % L_in = diag(abs(l(p_in)));
+            % L_ot = diag(abs(l(p_ot)));
+
+            % Lambda = diag(u, u+c, u-c);
+
+            % tau = -e_S*sparse(T*[L_in; R'*L_in]); % Något med pt
+
+
+            % w_s = T'*(e_S*v);
+            % w_in = w_s(p_in);
+            % w_ot = w_s(p_ot);
+
+
+            % function closure_fun(q,t)
+            %     obj.Hi * tau * (w_in - R*w_ot - g(t));
+            % end
+
+            % function closure_fun_indep(q,t)
+            %     obj.Hi * tau * (w_in - R*w_ot - g;
+            % end
+
+
+            % switch class(g)
+            %     case 'double'
+            %         closure = @closure_fun;
+            %     case 'function_handle'
+            %         closure = @closure_fun_indep;
+            %     otherwise
+            %         error('Wierd data argument!');
+            % end
+
+        end
+
+        % Set wall boundary condition v = 0.
+        function closure = boundary_condition_wall(obj,boundary)
+            [e_s,e_S,s] = obj.get_boundary_ops(boundary);
+
+            % v = 0 corresponds to
+            % L = [0 1 0];
+            % g = 0
+            %
+            % Tp =
+            % R = -(u-c)/(u+c)
+
+            % tau = alpha * (u+c)
+            % (alpha+1)(u+c) + 1/4* alpha^2|u-c| <= 0
+            % 4*(alpha+1)(u+c) + alpha^2|u-c| <= 0
+            % 4 * (alpha+1)(u+c) + alpha^2|u| + alpha^2*c <= 0
+            % |u|*(sgn(u)*4 + sgn(u)*4*alpha + alpha^2) + c*(4 + 4alpha + alpha^2) <= 0
+            % |u|*(alpha^2 + 4*sgn(u)*alpha + 4*sgn(u)) + c*(alpha+2)^2 <= 0
+            % |u|*[(alpha + 2*sgn(u))^2 - 4*(sgn(u)-1)] + c*(alpha+2)^2 <= 0
+
+
+            % om vi låtsas att u = 0:
+            % (alpha+1)c + 1/4 * alpha^2*c <= 0
+            % alpha^2 +  4*alpha +4 <= 0
+            % (alpha + 2)^2 <= 0
+            % alpha = -2   gives tau = -2*c;
+
+
+            % Vill vi sätta penalty på karateristikan som är nära noll också eller vill
+            % vi låta den vara fri?
+
+
+            switch s
+                case -1
+                    p_in = 2;
+                    p_zero = 1;
+                    p_ot = 3;
+                case 1
+                    p_in = 3;
+                    p_zero = 1;
+                    p_ot = 2;
+                otherwise
+                    error();
+            end
+
+            p = [p_in, p_zero, p_ot]; % Permutation to sort
+            pt(p) = 1:length(p); % Inverse permutation
+
+            function o = closure_fun(q)
+                p = obj.p(q);
+
+                q_s = e_S'*q;
+                rho = q_s(1);
+                u = q_s(2)/rho;
+                c = sqrt(obj.gamma*p/rho);
+
+                T = obj.T(q_s);
+                R = -(u-c)/(u+c);
+                % l = [u, u+c, u-c];
+
+                % p_in = find(s*l <= 0);
+                % p_ot = find(s*l >  0);
+
+
+                tau1 = -2*c;
+                tau2 = [0; 0]; % Penalty only on ingoing char.
+
+                % L_in = diag(abs(l(p_in)));
+                % L_ot = diag(abs(l(p_ot)));
+
+                tauHat = [tau1; tau2];
+                tau = -s*e_S*sparse(T*tauHat(pt));
+
+                w_s = inv(T)*q_s;
+                % w_s = T\q_s;
+                % w_s = Tinv * q_s; % Med analytisk matris
+                w_in = w_s(p_in);
+                w_ot = w_s(p_ot);
+
+                o = obj.Hi * tau * (w_in - R*w_ot);
+            end
+
+            closure = @closure_fun;
         end
 
         function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
+            error('NOT DONE')
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
             [e_u,d1_u,d2_u,d3_u,s_u,gamm_u,delt_u, halfnorm_inv] = obj.get_boundary_ops(boundary);
@@ -197,44 +324,16 @@ classdef SchmBeam2d < noname.Scheme
 
         % Ruturns the boundary ops and sign for the boundary specified by the string boundary.
         % The right boundary is considered the positive boundary
-        function [e,d1,d2,d3,s,gamm, delt, halfnorm_inv] = get_boundary_ops(obj,boundary)
+        function [e,E,s] = get_boundary_ops(obj,boundary)
             switch boundary
-                case 'w'
-                    e  = obj.e_w;
-                    d1 = obj.d1_w;
-                    d2 = obj.d2_w;
-                    d3 = obj.d3_w;
+                case 'l'
+                    e  = obj.e_l;
+                    E  = obj.e_L;
                     s = -1;
-                    gamm = obj.gamm_x;
-                    delt = obj.delt_x;
-                    halfnorm_inv = obj.Hix;
-                case 'e'
-                    e  = obj.e_e;
-                    d1 = obj.d1_e;
-                    d2 = obj.d2_e;
-                    d3 = obj.d3_e;
+                case 'r'
+                    e  = obj.e_r;
+                    E  = obj.e_R;
                     s = 1;
-                    gamm = obj.gamm_x;
-                    delt = obj.delt_x;
-                    halfnorm_inv = obj.Hix;
-                case 's'
-                    e  = obj.e_s;
-                    d1 = obj.d1_s;
-                    d2 = obj.d2_s;
-                    d3 = obj.d3_s;
-                    s = -1;
-                    gamm = obj.gamm_y;
-                    delt = obj.delt_y;
-                    halfnorm_inv = obj.Hiy;
-                case 'n'
-                    e  = obj.e_n;
-                    d1 = obj.d1_n;
-                    d2 = obj.d2_n;
-                    d3 = obj.d3_n;
-                    s = 1;
-                    gamm = obj.gamm_y;
-                    delt = obj.delt_y;
-                    halfnorm_inv = obj.Hiy;
                 otherwise
                     error('No such boundary: boundary = %s',boundary);
             end
