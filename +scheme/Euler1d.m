@@ -14,6 +14,7 @@ classdef Euler1d < scheme.Scheme
 
         T
         p
+        c
 
 
         H % Discrete norm
@@ -79,14 +80,22 @@ classdef Euler1d < scheme.Scheme
             % p=(gamma-1)*(e-rho*u^2/2);
 
             %Solving on form q_t + F_x = 0
-            function o = F(q)
-                o = [q(2); q(2).^2/q(1) + p(q); (q(3)+p(q))*q(2)/q(1)];
+            function o = F(Q)
+                % Flux: f = [q2; q2.^2/q1 + p(q); (q3+p(q))*q2/q1];
+                o = [Q(2,:); Q(2,:).^2/Q(1,:) + p(Q); (Q(3,:)+p(Q)).*Q(2,:)./Q(1,:)];
             end
 
             % Equation of state
-            function o = p(q)
-                o = (gamma-1)*(q(3)-q(2).^2/q(1)/2);
+            function o = p(Q)
+                % Pressure p = (gamma-1)*(q3-q2.^2/q1/2)
+                o = (gamma-1)*(Q(3,:)-Q(2,:).^2/Q(1,:)/2);
             end
+
+            function o = c(Q)
+                % Speed of light c = sqrt(obj.gamma*p/rho);
+                o = sqrt(gamma*p(Q)./Q(1,:));
+            end
+
 
             % R =
             % [sqrt(2*(gamma-1))*rho      , rho                                , rho           ;
@@ -110,10 +119,8 @@ classdef Euler1d < scheme.Scheme
             end
 
             function o = Fx(q)
-                o = zeros(size(q));
-                for i = 1:3:3*m
-                    o(i:i+2) = F(q(i:i+2));
-                end
+                Q = reshape(q,3,m);
+                o = reshape(F(Q),3*m,1);
                 o = D1*o;
             end
 
@@ -133,6 +140,7 @@ classdef Euler1d < scheme.Scheme
             obj.u = x;
             obj.x = kr(x,ones(3,1));
             obj.p = @p;
+            obj.c = @c;
             obj.gamma = gamma;
         end
 
@@ -254,12 +262,11 @@ classdef Euler1d < scheme.Scheme
             pt(p) = 1:length(p); % Inverse permutation
 
             function o = closure_fun(q)
-                p = obj.p(q);
 
                 q_s = e_S'*q;
                 rho = q_s(1);
                 u = q_s(2)/rho;
-                c = sqrt(obj.gamma*p/rho);
+                c = obj.c(q_s);
 
                 T = obj.T(q_s);
                 R = -(u-c)/(u+c);
