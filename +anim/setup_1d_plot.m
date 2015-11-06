@@ -1,7 +1,11 @@
-function [update_data,figure_handle,plot_handles] = setup_1d_plot(x,y_lim,yfun)
+function [update_data,plot_handles] = setup_1d_plot(x,y_lim,yfun)
     default_arg('yfun',{@(y)y});
 
-    figure_handle = figure;
+    if isa(yfun,'function_handle')
+        yfun = {yfun};
+    end
+
+    figure_handle = gcf;
     plot_handles(1) = plot(x,0*x);
     hold on
     for i = 2:length(yfun)
