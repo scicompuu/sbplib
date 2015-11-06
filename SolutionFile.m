@@ -51,7 +51,7 @@ classdef SolutionFile < handle
         function list(obj, show_syntax)
             default_arg('show_syntax',false);
             for i = 1:length(obj.keys)
-                fprintf('[%d]: %s', i, struct2string(obj.keys{i}));
+                fprintf('[%d]: %s', i, toString(obj.keys{i}));
 
                 if show_syntax
                     fprintf('\t%s',struct2syntax(obj.keys{i}));
