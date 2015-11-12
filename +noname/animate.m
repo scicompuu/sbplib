@@ -10,7 +10,7 @@ function hand = animate(dirname,discretization,Tend, time_modifier,time_method)
         dirname = ['mov/' dirname];
     end
 
-    default_arg('Tend',5*60);
+    default_arg('Tend',Inf);
     default_arg('time_modifier',1);
     default_arg('time_method',[]);
 
