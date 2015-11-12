@@ -1,4 +1,4 @@
-classdef SchmWave2d < noname.Scheme
+classdef Wave2d < scheme.Scheme
     properties
         m % Number of points in each direction, possibly a vector
         h % Grid spacing
@@ -22,8 +22,11 @@ classdef SchmWave2d < noname.Scheme
     end
 
     methods
-        function obj = SchmWave2d(m,xlim,ylim,order,alpha)
-            default_arg('a',1);
+        function obj = Wave2d(m,lim,order,alpha)
+            default_arg('alpha',1);
+
+            xlim = lim{1};
+            ylim = lim{2};
 
             if length(m) == 1
                 m = [m m];

@@ -234,8 +234,8 @@ classdef Wave2dCurve < scheme.Scheme
             % v denotes the solution in the neighbour domain
             tuning = 1.2;
             % tuning = 20.2;
-            [e_u, d_n_u, d_t_u, coeff_n_u, coeff_t_u, s_u, gamm_u, halfnorm_inv_u_n, halfnorm_inv_u_t, halfnorm_u_t, a_n_u, a_t_u] = obj.get_boundary_ops(boundary);
-            [e_v, d_n_v, d_t_v, coeff_n_v, coeff_t_v, s_v, gamm_v, halfnorm_inv_v_n, halfnorm_inv_v_t, halfnorm_v_t, a_n_v, a_t_v] = neighbour_scheme.get_boundary_ops(boundary);
+            [e_u, d_n_u, d_t_u, coeff_n_u, coeff_t_u, s_u, gamm_u, halfnorm_inv_u_n, halfnorm_inv_u_t, halfnorm_u_t] = obj.get_boundary_ops(boundary);
+            [e_v, d_n_v, d_t_v, coeff_n_v, coeff_t_v, s_v, gamm_v, halfnorm_inv_v_n, halfnorm_inv_v_t, halfnorm_v_t] = neighbour_scheme.get_boundary_ops(boundary);
 
             a_n_u = spdiag(coeff_n_u);
             a_t_u = spdiag(coeff_t_u);
@@ -314,15 +314,11 @@ classdef Wave2dCurve < scheme.Scheme
                     halfnorm_inv_t = obj.Hiv;
                     halfnorm_t = obj.Hv;
                     gamm = obj.gamm_u;
-                    a_n = obj.a11;
-                    a_t = obj.a12;
                 case {'s','n'}
                     halfnorm_inv_n = obj.Hiv;
                     halfnorm_inv_t = obj.Hiu;
                     halfnorm_t = obj.Hu;
                     gamm = obj.gamm_v;
-                    a_n = obj.a22;
-                    a_t = obj.a12;
             end
         end
 
