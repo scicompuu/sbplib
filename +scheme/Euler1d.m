@@ -33,14 +33,12 @@ classdef Euler1d < scheme.Scheme
             [x, h] = util.get_grid(xlim{:},m);
 
             if do_upwind
-                ops = spb.Upwind(m,h,order);
+                ops = sbp.Upwind(m,h,order);
                 Dp = ops.derivatives.Dp;
                 Dm = ops.derivatives.Dm;
 
-                printExpr('issparse(Dp)');
-                printExpr('issparse(Dm)');
-
                 D1 = (Dp + Dm)/2;
+                Ddisp = (Dp - Dm)/2;
             else
                 ops = opsGen(m,h,order);
                 D1 = sparse(ops.derivatives.D1);
@@ -53,7 +51,6 @@ classdef Euler1d < scheme.Scheme
 
             I_x = speye(m);
             I_3 = speye(3);
-
 
             D1 = kr(D1, I_3);
             if do_upwind
@@ -96,12 +93,9 @@ classdef Euler1d < scheme.Scheme
                 o = sqrt(gamma*p(Q)./Q(1,:));
             end
 
-
-            % R =
-            % [sqrt(2*(gamma-1))*rho      , rho                                , rho           ;
-            %  sqrt(2*(gamma-1))*rho*u    , rho*(u+c)                          , rho*(u-c)     ;
-            %  sqrt(2*(gamma-1))*rho*u^2/2, e+(gamma-1)*(e-rho*u^2/2)+rho*u*c, e+(gamma-1)*(e-rho*u^2/2)-rho*u*c]);
             function o = T(q)
+                % T is the transformation such that A = T*Lambda*inv(T)
+                % where Lambda=diag(u, u+c, u-c)
                 rho = q(1);
                 u = q(2)/q(1);
                 e = q(3);
@@ -113,9 +107,9 @@ classdef Euler1d < scheme.Scheme
                 o = [
                      sqrt2gamm*rho      , rho                               , rho                               ;
                      sqrt2gamm*rho*u    , rho*(u+c)                         , rho*(u-c)                         ;
-                     sqrt2gamm*rho*u^2/2, e+(gamma-1)*(e-rho*u^2/2)+rho*u*c , e+(gamma-1)*(e-rho*u^2/2)-rho*u*c
-                    ];
-                    % Devide columns by stuff to get rid of extra comp?
+                     sqrt2gamm*rho*u^2/2, e+(gamma-1)*(e-rho*u^2/2)+rho*u*c , e+(gamma-1)*(e-rho*u^2/2)-rho*u*c ;
+                ];
+                % Devide columns by stuff to get rid of extra comp?
             end
 
             function o = Fx(q)
@@ -124,13 +118,25 @@ classdef Euler1d < scheme.Scheme
                 o = D1*o;
             end
 
+            function o = Fx_disp(q)
+                Q = reshape(q,3,m);
+                f = reshape(F(Q),3*m,1);
 
-            % A=R*Lambda*inv(R), där Lambda=diag(u, u+c, u-c)     (c är ljudhastigheten)
-            % c^2=gamma*p/rho
-            % function o = A(rho,u,e)
-            % end
+                c = c(Q);
+                lambda_max = c+abs(Q(2,:)./Q(1,:));
+                % lambda_max = max(lambda_max);
+
+                lamb_Q(1,:) = lambda_max.*Q(1,:);
+                lamb_Q(2,:) = lambda_max.*Q(2,:);
+                lamb_Q(3,:) = lambda_max.*Q(3,:);
+
+                lamb_q = reshape(lamb_Q,3*m, 1);
+
+                o = -D1*f + Ddisp*lamb_q;
+            end
+
             if do_upwind
-                obj.D = @(q)-Fx(q) + Ddisp*(1)*u;
+                obj.D = @Fx_disp;
             else
                 obj.D = @(q)-Fx(q);
             end
@@ -153,64 +159,136 @@ classdef Euler1d < scheme.Scheme
             % Boundary condition on form
             %   w_in = R*w_out + g,       where g is data
 
-            % How to handle when the number of BC we want to set changes
-            % How to handel u = 0 as an example
-
-            % Måste sätta in s och fixa tecken som de ska vara
-
-            % Kanske ska man tala om vilka karakteristikor som är in och ut i anropet
-            % Man kan sen kolla om det stämmer (men hur blir det med u=0?)
-            % Och antingen tillåta att man skickar in flera alternativ och väljer automatiskt
-            % eller låta koden utanför bestämma vilken penalty som ska appliceras.
-
             switch type
                 case 'wall'
                     closure = obj.boundary_condition_wall(boundary);
+                case 'inflow'
+                    closure = obj.boundary_condition_inflow(boundary,varargin{:});
+                case 'outflow'
+                    closure = obj.boundary_condition_outflow(boundary,varargin{:});
                 otherwise
                     error('Unsupported bc type: %s', type);
             end
 
-            % T = obj.T(e_S*v);
+        end
 
-            % c = sqrt(gamma*p/rho);
-            % l = [u, u+c, u-c];
+        function closure = boundary_condition_inflow(obj, boundary, p_data, v_data)
+            [e_s,e_S,s] = obj.get_boundary_ops(boundary);
 
-            % p_in = find(s*l <= 0);
-            % p_ot = find(s*l >  0);
+             switch s
+                case -1
+                    p_in = [1 2];
+                    p_ot = [3];
+                case 1
+                    p_in = [1 3];
+                    p_ot = [2];
+                otherwise
+                    error();
+            end
 
-            % p = [p_in, p_ot] % Permutation to sort
-            % pt(p) = 1:length(p); % Inverse permutation
+            p = [p_in, p_ot]; % Permutation to sort
+            pt(p) = 1:length(p); % Inverse permutation
 
-            % L_in = diag(abs(l(p_in)));
-            % L_ot = diag(abs(l(p_ot)));
+            gamma = obj.gamma;
 
-            % Lambda = diag(u, u+c, u-c);
+            function o = closure_fun(q,t)
+                q_s = e_S'*q;
+                rho = q_s(1);
+                u = q_s(2)/rho;
+                e = q_s(3);
 
-            % tau = -e_S*sparse(T*[L_in; R'*L_in]); % Något med pt
+                c = obj.c(q_s);
+
+                T = obj.T(q_s);
+
+                % L = [
+                %     0      1 0;
+                %     0 -1/2*u 1;
+                % ];
+                LTpi = [
+                     2^(1/2)/(2*rho*u*(gamma - 1)^(1/2)), -(2^(1/2)*(u - c*s))/(u*(2*e*gamma - rho*(gamma*u^2 - c*s*u + 2*c*s))*(gamma - 1)^(1/2));
+                                                       0,                                          2/(2*e*gamma - gamma*rho*u^2 + c*rho*s*(u - 2));
+                ];
+                R = [
+                     (2^(1/2)*c*s*(rho*(gamma - 1)*u^2 + 2*rho*u - 2*e*gamma))/(u*(gamma - 1)^(1/2)*(- gamma*rho*u^2 + c*rho*s*u + 2*e*gamma - 2*c*rho*s));
+                                                                                     (2*c*rho*s*(u - 2))/(2*e*gamma - gamma*rho*u^2 + c*rho*s*(u - 2)) - 1;
+                ];
+
+                tau1 = -2*[
+                    u,          0;
+                    0, c + abs(u);
+                ];
+                tau2 = [0 0]; % Penalty only on ingoing char.
 
 
-            % w_s = T'*(e_S*v);
-            % w_in = w_s(p_in);
-            % w_ot = w_s(p_ot);
+                tauHat = [tau1; tau2];
+                tau = -s*e_S*sparse(T*tauHat(pt,:));
+
+                w_s = inv(T)*q_s;
+                % w_s = T\q_s;
+                % w_s = Tinv * q_s; % Med analytisk matris
+                w_in = w_s(p_in);
+                w_ot = w_s(p_ot);
 
 
-            % function closure_fun(q,t)
-            %     obj.Hi * tau * (w_in - R*w_ot - g(t));
-            % end
+                o = obj.Hi * tau * (w_in - R*w_ot - LTpi*[v_data(t); p_data(t)]);
+            end
 
-            % function closure_fun_indep(q,t)
-            %     obj.Hi * tau * (w_in - R*w_ot - g;
-            % end
+            closure = @closure_fun;
+        end
 
 
-            % switch class(g)
-            %     case 'double'
-            %         closure = @closure_fun;
-            %     case 'function_handle'
-            %         closure = @closure_fun_indep;
-            %     otherwise
-            %         error('Wierd data argument!');
-            % end
+        function closure = boundary_condition_outflow(obj, boundary, p_data)
+            [e_s,e_S,s] = obj.get_boundary_ops(boundary);
+
+             switch s
+                case -1
+                    p_in = 2;
+                    p_ot = [1 3];
+                case 1
+                    p_in = 3;
+                    p_ot = [1 2];
+                otherwise
+                    error();
+            end
+
+            p = [p_in, p_ot]; % Permutation to sort
+            pt(p) = 1:length(p); % Inverse permutation
+
+            gamma = obj.gamma;
+
+            function o = closure_fun(q,t)
+                q_s = e_S'*q;
+                rho = q_s(1);
+                u = q_s(2)/rho;
+                e = q_s(3);
+
+                c = obj.c(q_s);
+
+
+                T = obj.T(q_s);
+
+                L = (gamma -1)*[0 -1/2*u 1];
+                LTpi = 1/(L*T(:,p_in));
+                R = -[0 (gamma*(e - rho*u^2/2) - rho*u*c)/(gamma*(e - rho*u^2/2) + rho*u*c)];
+
+                tau1 = [-2*(c - abs(u))];
+                tau2 = [0; 0]; % Penalty only on ingoing char.
+
+
+                tauHat = [tau1; tau2];
+                tau = -s*e_S*sparse(T*tauHat(pt));
+
+                w_s = inv(T)*q_s;
+                % w_s = T\q_s;
+                % w_s = Tinv * q_s; % Med analytisk matris
+                w_in = w_s(p_in);
+                w_ot = w_s(p_ot);
+
+                o = obj.Hi * tau * (w_in - R*w_ot - LTpi*p_data(t));
+            end
+
+            closure = @closure_fun;
 
         end
 
@@ -279,8 +357,8 @@ classdef Euler1d < scheme.Scheme
                 tau1 = -2*c;
                 tau2 = [0; 0]; % Penalty only on ingoing char.
 
-                % L_in = diag(abs(l(p_in)));
-                % L_ot = diag(abs(l(p_ot)));
+                % Lambda_in = diag(abs(l(p_in)));
+                % Lambda_ot = diag(abs(l(p_ot)));
 
                 tauHat = [tau1; tau2];
                 tau = -s*e_S*sparse(T*tauHat(pt));
