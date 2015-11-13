@@ -166,9 +166,51 @@ classdef Euler1d < scheme.Scheme
                     closure = obj.boundary_condition_inflow(boundary,varargin{:});
                 case 'outflow'
                     closure = obj.boundary_condition_outflow(boundary,varargin{:});
+                case 'char'
+                    closure = obj.boundary_condition_char(boundary,varargin{:});
                 otherwise
                     error('Unsupported bc type: %s', type);
             end
+
+        end
+
+        function closure = boundary_condition_char(obj,boundary,w_data)
+            [e_s,e_S,s] = obj.get_boundary_ops(boundary);
+
+            function o = closure_fun(q,t)
+                q_s = e_S'*q;
+                rho = q_s(1);
+                u = q_s(2)/rho;
+                e = q_s(3);
+
+                c = obj.c(q_s);
+
+                Lambda = [u, u+c, u-c];
+
+                p_in = find(s*Lambda < 0);
+                p_ot = find(s*Lambda >= 0);
+                p = [p_in p_ot];
+                pt(p) = 1:length(p);
+
+                T = obj.T(q_s);
+
+                tau1 = -2*diag(Lambda(p_in));
+                tau2 = zeros(length(p_ot),length(p_in)); % Penalty only on ingoing char.
+
+                tauHat = [tau1; tau2];
+
+                tau = -s*e_S*sparse(T*tauHat(pt,:));
+
+                w_s = inv(T)*q_s;
+                w_in = w_s(p_in);
+
+                w_s_data = w_data(t);
+                w_in_data = w_s_data(p_in);
+
+                o = obj.Hi * tau * (w_in - w_in_data);
+            end
+
+            closure = @closure_fun;
 
         end
 
@@ -222,6 +264,7 @@ classdef Euler1d < scheme.Scheme
 
 
                 tauHat = [tau1; tau2];
+
                 tau = -s*e_S*sparse(T*tauHat(pt,:));
 
                 w_s = inv(T)*q_s;

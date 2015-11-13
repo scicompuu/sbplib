@@ -14,6 +14,13 @@ function hand = animate(dirname,discretization,Tend, time_modifier,time_method)
     default_arg('time_modifier',1);
     default_arg('time_method',[]);
 
+    if time_modifier < 0
+        do_pause = true;
+        time_modifier = -time_modifier;
+    else
+        do_pause = false;
+    end
+
 
     fprintf('Animating: %s\n',discretization.name);
     fprintf('Tend     : %.2f\n',Tend);
@@ -44,7 +51,11 @@ function hand = animate(dirname,discretization,Tend, time_modifier,time_method)
             save_frame();
         end
         % pause(0.1)
-        str = util.replace_string(str,'t = %.2f',ts.t);
+        str = util.replace_string(str,'t = %.5f',ts.t);
+
+        if do_pause
+            pause
+        end
 
     end
     sol = discretization.getTimeSnapshot(0);
