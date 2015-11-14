@@ -8,13 +8,13 @@ classdef Euler1d < scheme.Scheme
         order % Order accuracy for the approximation
 
         D % non-stabalized scheme operator
-        Fx
         M % Derivative norm
         gamma
 
         T
         p
         c
+        Lambda
 
 
         H % Discrete norm
@@ -87,11 +87,21 @@ classdef Euler1d < scheme.Scheme
                 % Pressure p = (gamma-1)*(q3-q2.^2/q1/2)
                 o = (gamma-1)*( Q(3,:)-1/2*Q(2,:).^2./Q(1,:) );
             end
+            obj.p = @p;
 
             function o = c(Q)
                 % Speed of light c = sqrt(obj.gamma*p/rho);
                 o = sqrt(gamma*p(Q)./Q(1,:));
             end
+            obj.c = @c;
+
+            function o = Lambda(q)
+                u = q(2)/q(1);
+                c = obj.c(q);
+                L = [u, u+c, u-c];
+                o = diag(L);
+            end
+            obj.Lambda = @Lambda;
 
             function o = T(q)
                 % T is the transformation such that A = T*Lambda*inv(T)
@@ -111,6 +121,7 @@ classdef Euler1d < scheme.Scheme
                 ];
                 % Devide columns by stuff to get rid of extra comp?
             end
+            obj.T = @T;
 
             function o = Fx(q)
                 Q = reshape(q,3,m);
@@ -141,12 +152,8 @@ classdef Euler1d < scheme.Scheme
                 obj.D = @(q)-Fx(q);
             end
 
-            obj.Fx = @Fx;
-            obj.T = @T;
             obj.u = x;
             obj.x = kr(x,ones(3,1));
-            obj.p = @p;
-            obj.c = @c;
             obj.gamma = gamma;
         end
 
@@ -172,6 +179,62 @@ classdef Euler1d < scheme.Scheme
                     error('Unsupported bc type: %s', type);
             end
 
+        end
+
+
+        % Sets the boundary condition Lq = g, where
+        %   L = L(rho, u, e), g = g(t)
+        %   p_in are the indecies of the ingoing characteristics.
+        function closure = boundary_condition_L(obj, boundary, L_fun, g_fun, p_in)
+            [e_s,e_S,s] = obj.get_boundary_ops(boundary);
+
+            p_ot = 1:3;
+            p_ot(p_in) = [];
+
+            p = [p_in, p_ot]; % Permutation to sort
+            pt(p) = 1:length(p); % Inverse permutation
+
+            function o = closure_fun(q,t)
+                % Extract solution at the boundary
+                q_s = e_S'*q;
+                rho = q_s(1);
+                u = q_s(2)/rho;
+                e = q_s(3);
+
+                c = obj.c(q_s);
+
+                % Calculate transformation matrix
+                T = obj.T(q_s);
+                Tin = T(:,p_in);
+                Tot = T(:,p_ot);
+
+                % Convert bc from ordinary form to characteristic form.
+                %   Lq = g  => w_in = Rw_ot + g_tilde
+                L = L_fun(rho,u,e);
+                g = g_fun(t);
+
+                Lambda = obj.Lambda(q_s);
+
+                R =-inv(L*Tin)*(L*Tot);
+                g_tilde = inv(L*Tin)*g;
+
+                % Setup the penalty parameter
+                tau1 = -2*Lambda(p_in,p_in);
+                tau2 = zeros(length(p_ot),length(p_in)); % Penalty only on ingoing char.
+
+                tauHat = [tau1; tau2];
+                tau = -s*e_S*sparse(T*tauHat(pt,:));
+
+                % Calculate the numerical caracteristics and apply the penalty
+                w_s = inv(T)*q_s;
+                % w_s = T\q_s;
+                % w_s = Tinv * q_s; % Med analytisk matris
+                w_in = w_s(p_in);
+                w_ot = w_s(p_ot);
+
+                o = obj.Hi * tau * (w_in - R*w_ot - g_tilde);
+            end
+            closure = @closure_fun;
         end
 
         function closure = boundary_condition_char(obj,boundary,w_data)
@@ -215,136 +278,45 @@ classdef Euler1d < scheme.Scheme
         end
 
         function closure = boundary_condition_inflow(obj, boundary, p_data, v_data)
-            [e_s,e_S,s] = obj.get_boundary_ops(boundary);
+            [~,~,s] = obj.get_boundary_ops(boundary);
 
              switch s
                 case -1
                     p_in = [1 2];
-                    p_ot = [3];
                 case 1
                     p_in = [1 3];
-                    p_ot = [2];
-                otherwise
-                    error();
             end
 
-            p = [p_in, p_ot]; % Permutation to sort
-            pt(p) = 1:length(p); % Inverse permutation
+            a = obj.gamma - 1;
+            L = @(~,u,~)[
+                0        1 0;
+                0 -1/2*u*a a;
+            ];
+            g = @(t)[
+                v_data(t);
+                p_data(t);
+            ];
 
-            gamma = obj.gamma;
-
-            function o = closure_fun(q,t)
-                % Extract solution at the boundary
-                q_s = e_S'*q;
-                rho = q_s(1);
-                u = q_s(2)/rho;
-                e = q_s(3);
-
-                c = obj.c(q_s);
-
-                % Calculate transformation matrix
-                T = obj.T(q_s);
-                Tin = T(:,p_in);
-                Tot = T(:,p_ot);
-
-                % Convert bc from ordinary form to characteristic form.
-                %   Lq = g  => w_in = Rw_ot + g_tilde
-                L = [
-                    0      1 0;
-                    0 -1/2*u 1;
-                ];
-                g = [
-                    v_data(t);
-                    p_data(t);
-                ];
-
-                R =-inv(L*Tin)*(L*Tot);
-                g_tilde = inv(L*Tin)*g;
-
-                % Setup the penalty parameter
-                tau1 = -2*[
-                    u,          0;
-                    0, c + abs(u);
-                ];
-                tau2 = [0 0]; % Penalty only on ingoing char.
-
-                tauHat = [tau1; tau2];
-                tau = -s*e_S*sparse(T*tauHat(pt,:));
-
-                % Calculate the numerical caracteristics and apply the penalty
-                w_s = inv(T)*q_s;
-                % w_s = T\q_s;
-                % w_s = Tinv * q_s; % Med analytisk matris
-                w_in = w_s(p_in);
-                w_ot = w_s(p_ot);
-
-                o = obj.Hi * tau * (w_in - R*w_ot - g_tilde);
-            end
-
-            closure = @closure_fun;
+            closure = boundary_condition_L(obj, boundary, L, g, p_in);
         end
 
 
         function closure = boundary_condition_outflow(obj, boundary, p_data)
-            [e_s,e_S,s] = obj.get_boundary_ops(boundary);
+            [~,~,s] = obj.get_boundary_ops(boundary);
 
              switch s
                 case -1
                     p_in = 2;
-                    p_ot = [1 3];
                 case 1
                     p_in = 3;
-                    p_ot = [1 2];
-                otherwise
-                    error();
             end
 
-            p = [p_in, p_ot]; % Permutation to sort
-            pt(p) = 1:length(p); % Inverse permutation
+            a = obj.gamma -1;
+            L = @(~,u,~)a*[0 -1/2*u 1];
+            g = @(t)[p_data(t)];
 
-            gamma = obj.gamma;
 
-
-            function o = closure_fun(q,t)
-                % Extract solution at the boundary
-                q_s = e_S'*q;
-                rho = q_s(1);
-                u = q_s(2)/rho;
-                e = q_s(3);
-
-                c = obj.c(q_s);
-
-                % Calculate transformation matrix
-                T = obj.T(q_s);
-                Tin = T(:,p_in);
-                Tot = T(:,p_ot);
-
-                % Convert bc from ordinary form to characteristic form.
-                %   Lq = g  => w_in = Rw_ot + g_tilde
-                L = (gamma -1)*[0 -1/2*u 1];
-                g = [p_data(t)];
-
-                R =-inv(L*Tin)*(L*Tot);
-                g_tilde = inv(L*Tin)*g;
-
-                % Setup the penalty parameter
-                tau1 = [-2*(c - abs(u))];
-                tau2 = [0; 0]; % Penalty only on ingoing char.
-
-                tauHat = [tau1; tau2];
-                tau = -s*e_S*sparse(T*tauHat(pt,:));
-
-                % Calculate the numerical caracteristics and apply the penalty
-                w_s = inv(T)*q_s;
-                % w_s = T\q_s;
-                % w_s = Tinv * q_s; % Med analytisk matris
-                w_in = w_s(p_in);
-                w_ot = w_s(p_ot);
-
-                o = obj.Hi * tau * (w_in - R*w_ot - g_tilde);
-            end
-
-            closure = @closure_fun;
+            closure = boundary_condition_L(obj, boundary, L, g, p_in);
 
         end
 
