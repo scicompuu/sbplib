@@ -234,6 +234,7 @@ classdef Euler1d < scheme.Scheme
             gamma = obj.gamma;
 
             function o = closure_fun(q,t)
+                % Extract solution at the boundary
                 q_s = e_S'*q;
                 rho = q_s(1);
                 u = q_s(2)/rho;
@@ -241,40 +242,43 @@ classdef Euler1d < scheme.Scheme
 
                 c = obj.c(q_s);
 
+                % Calculate transformation matrix
                 T = obj.T(q_s);
+                Tin = T(:,p_in);
+                Tot = T(:,p_ot);
 
-                % L = [
-                %     0      1 0;
-                %     0 -1/2*u 1;
-                % ];
-                LTpi = [
-                     2^(1/2)/(2*rho*u*(gamma - 1)^(1/2)), -(2^(1/2)*(u - c*s))/(u*(2*e*gamma - rho*(gamma*u^2 - c*s*u + 2*c*s))*(gamma - 1)^(1/2));
-                                                       0,                                          2/(2*e*gamma - gamma*rho*u^2 + c*rho*s*(u - 2));
+                % Convert bc from ordinary form to characteristic form.
+                %   Lq = g  => w_in = Rw_ot + g_tilde
+                L = [
+                    0      1 0;
+                    0 -1/2*u 1;
                 ];
-                R = [
-                     (2^(1/2)*c*s*(rho*(gamma - 1)*u^2 + 2*rho*u - 2*e*gamma))/(u*(gamma - 1)^(1/2)*(- gamma*rho*u^2 + c*rho*s*u + 2*e*gamma - 2*c*rho*s));
-                                                                                     (2*c*rho*s*(u - 2))/(2*e*gamma - gamma*rho*u^2 + c*rho*s*(u - 2)) - 1;
+                g = [
+                    v_data(t);
+                    p_data(t);
                 ];
 
+                R =-inv(L*Tin)*(L*Tot);
+                g_tilde = inv(L*Tin)*g;
+
+                % Setup the penalty parameter
                 tau1 = -2*[
                     u,          0;
                     0, c + abs(u);
                 ];
                 tau2 = [0 0]; % Penalty only on ingoing char.
 
-
                 tauHat = [tau1; tau2];
-
                 tau = -s*e_S*sparse(T*tauHat(pt,:));
 
+                % Calculate the numerical caracteristics and apply the penalty
                 w_s = inv(T)*q_s;
                 % w_s = T\q_s;
                 % w_s = Tinv * q_s; % Med analytisk matris
                 w_in = w_s(p_in);
                 w_ot = w_s(p_ot);
 
-
-                o = obj.Hi * tau * (w_in - R*w_ot - LTpi*[v_data(t); p_data(t)]);
+                o = obj.Hi * tau * (w_in - R*w_ot - g_tilde);
             end
 
             closure = @closure_fun;
@@ -300,7 +304,9 @@ classdef Euler1d < scheme.Scheme
 
             gamma = obj.gamma;
 
+
             function o = closure_fun(q,t)
+                % Extract solution at the boundary
                 q_s = e_S'*q;
                 rho = q_s(1);
                 u = q_s(2)/rho;
@@ -308,27 +314,34 @@ classdef Euler1d < scheme.Scheme
 
                 c = obj.c(q_s);
 
-
+                % Calculate transformation matrix
                 T = obj.T(q_s);
+                Tin = T(:,p_in);
+                Tot = T(:,p_ot);
 
+                % Convert bc from ordinary form to characteristic form.
+                %   Lq = g  => w_in = Rw_ot + g_tilde
                 L = (gamma -1)*[0 -1/2*u 1];
-                LTpi = 1/(L*T(:,p_in));
-                R = -[0 (gamma*(e - rho*u^2/2) - rho*u*c)/(gamma*(e - rho*u^2/2) + rho*u*c)];
+                g = [p_data(t)];
 
+                R =-inv(L*Tin)*(L*Tot);
+                g_tilde = inv(L*Tin)*g;
+
+                % Setup the penalty parameter
                 tau1 = [-2*(c - abs(u))];
                 tau2 = [0; 0]; % Penalty only on ingoing char.
 
-
                 tauHat = [tau1; tau2];
-                tau = -s*e_S*sparse(T*tauHat(pt));
+                tau = -s*e_S*sparse(T*tauHat(pt,:));
 
+                % Calculate the numerical caracteristics and apply the penalty
                 w_s = inv(T)*q_s;
                 % w_s = T\q_s;
                 % w_s = Tinv * q_s; % Med analytisk matris
                 w_in = w_s(p_in);
                 w_ot = w_s(p_ot);
 
-                o = obj.Hi * tau * (w_in - R*w_ot - LTpi*p_data(t));
+                o = obj.Hi * tau * (w_in - R*w_ot - g_tilde);
             end
 
             closure = @closure_fun;
