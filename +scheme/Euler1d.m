@@ -79,13 +79,13 @@ classdef Euler1d < scheme.Scheme
             %Solving on form q_t + F_x = 0
             function o = F(Q)
                 % Flux: f = [q2; q2.^2/q1 + p(q); (q3+p(q))*q2/q1];
-                o = [Q(2,:); Q(2,:).^2/Q(1,:) + p(Q); (Q(3,:)+p(Q)).*Q(2,:)./Q(1,:)];
+                o = [Q(2,:); Q(2,:).^2./Q(1,:) + p(Q); (Q(3,:)+p(Q)).*Q(2,:)./Q(1,:)];
             end
 
             % Equation of state
             function o = p(Q)
                 % Pressure p = (gamma-1)*(q3-q2.^2/q1/2)
-                o = (gamma-1)*(Q(3,:)-Q(2,:).^2/Q(1,:)/2);
+                o = (gamma-1)*( Q(3,:)-1/2*Q(2,:).^2./Q(1,:) );
             end
 
             function o = c(Q)
