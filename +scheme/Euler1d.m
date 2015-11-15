@@ -11,12 +11,6 @@ classdef Euler1d < scheme.Scheme
         M % Derivative norm
         gamma
 
-        T
-        p
-        c
-        Lambda
-
-
         H % Discrete norm
         Hi
         e_l, e_r, e_L, e_R;
@@ -76,64 +70,20 @@ classdef Euler1d < scheme.Scheme
             % F=[rho*u, rho*u^2+p, (e+p)*u] ^T
             % p=(gamma-1)*(e-rho*u^2/2);
 
+
             %Solving on form q_t + F_x = 0
-            function o = F(Q)
-                % Flux: f = [q2; q2.^2/q1 + p(q); (q3+p(q))*q2/q1];
-                o = [Q(2,:); Q(2,:).^2./Q(1,:) + p(Q); (Q(3,:)+p(Q)).*Q(2,:)./Q(1,:)];
-            end
-
-            % Equation of state
-            function o = p(Q)
-                % Pressure p = (gamma-1)*(q3-q2.^2/q1/2)
-                o = (gamma-1)*( Q(3,:)-1/2*Q(2,:).^2./Q(1,:) );
-            end
-            obj.p = @p;
-
-            function o = c(Q)
-                % Speed of light c = sqrt(obj.gamma*p/rho);
-                o = sqrt(gamma*p(Q)./Q(1,:));
-            end
-            obj.c = @c;
-
-            function o = Lambda(q)
-                u = q(2)/q(1);
-                c = obj.c(q);
-                L = [u, u+c, u-c];
-                o = diag(L);
-            end
-            obj.Lambda = @Lambda;
-
-            function o = T(q)
-                % T is the transformation such that A = T*Lambda*inv(T)
-                % where Lambda=diag(u, u+c, u-c)
-                rho = q(1);
-                u = q(2)/q(1);
-                e = q(3);
-
-                c = sqrt(gamma*p(q)/rho);
-
-                sqrt2gamm = sqrt(2*(gamma-1));
-
-                o = [
-                     sqrt2gamm*rho      , rho                               , rho                               ;
-                     sqrt2gamm*rho*u    , rho*(u+c)                         , rho*(u-c)                         ;
-                     sqrt2gamm*rho*u^2/2, e+(gamma-1)*(e-rho*u^2/2)+rho*u*c , e+(gamma-1)*(e-rho*u^2/2)-rho*u*c ;
-                ];
-                % Devide columns by stuff to get rid of extra comp?
-            end
-            obj.T = @T;
 
             function o = Fx(q)
                 Q = reshape(q,3,m);
-                o = reshape(F(Q),3*m,1);
+                o = reshape(obj.F(Q),3*m,1);
                 o = D1*o;
             end
 
             function o = Fx_disp(q)
                 Q = reshape(q,3,m);
-                f = reshape(F(Q),3*m,1);
+                f = reshape(obj.F(Q),3*m,1);
 
-                c = c(Q);
+                c = obj.c(Q);
                 lambda_max = c+abs(Q(2,:)./Q(1,:));
                 % lambda_max = max(lambda_max);
 
@@ -157,6 +107,53 @@ classdef Euler1d < scheme.Scheme
             obj.gamma = gamma;
         end
 
+        % Flux function
+        function o = F(obj, Q)
+            % Flux: f = [q2; q2.^2/q1 + p(q); (q3+p(q))*q2/q1];
+            p = obj.p(Q);
+            o = [Q(2,:); Q(2,:).^2./Q(1,:) + p; (Q(3,:)+p).*Q(2,:)./Q(1,:)];
+        end
+
+        % Equation of state
+        function o = p(obj, Q)
+            % Pressure p = (gamma-1)*(q3-q2.^2/q1/2)
+            o = (obj.gamma-1)*( Q(3,:)-1/2*Q(2,:).^2./Q(1,:) );
+        end
+
+        % Speed of sound
+        function o = c(obj, Q)
+            % Speed of light c = sqrt(obj.gamma*p/rho);
+            o = sqrt(obj.gamma*obj.p(Q)./Q(1,:));
+        end
+
+        % Eigen value matrix
+        function o = Lambda(q)
+            u = q(2)/q(1);
+            c = obj.c(q);
+            L = [u, u+c, u-c];
+            o = diag(L);
+        end
+
+        % Diagonalization transformation
+        function o = T(obj, q)
+            % T is the transformation such that A = T*Lambda*inv(T)
+            % where Lambda=diag(u, u+c, u-c)
+            rho = q(1);
+            u = q(2)/q(1);
+            e = q(3);
+            gamma = obj.gamma;
+
+            c = sqrt(gamma*obj.p(q)/rho);
+
+            sqrt2gamm = sqrt(2*(gamma-1));
+
+            o = [
+                 sqrt2gamm*rho      , rho                               , rho                               ;
+                 sqrt2gamm*rho*u    , rho*(u+c)                         , rho*(u-c)                         ;
+                 sqrt2gamm*rho*u^2/2, e+(gamma-1)*(e-rho*u^2/2)+rho*u*c , e+(gamma-1)*(e-rho*u^2/2)-rho*u*c ;
+            ];
+            % Devide columns by stuff to get rid of extra comp?
+        end
 
         % Enforces the boundary conditions
         %  w+ = R*w- + g(t)
