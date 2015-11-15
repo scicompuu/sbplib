@@ -127,7 +127,7 @@ classdef Euler1d < scheme.Scheme
         end
 
         % Eigen value matrix
-        function o = Lambda(q)
+        function o = Lambda(obj, q)
             u = q(2)/q(1);
             c = obj.c(q);
             L = [u, u+c, u-c];
