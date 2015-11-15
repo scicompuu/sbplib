@@ -285,8 +285,8 @@ classdef Euler1d < scheme.Scheme
             end
 
             a = obj.gamma - 1;
-            L = @(~,u,~)[
-                0        1 0;
+            L = @(rho,u,~)[
+                0    1/rho 0;
                 0 -1/2*u*a a;
             ];
             g = @(t)[
