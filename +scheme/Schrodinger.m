@@ -1,4 +1,4 @@
-classdef Schrodinger < noname.Scheme
+classdef Schrodinger < scheme.Scheme
     properties
         m % Number of points in each direction, possibly a vector
         h % Grid spacing
@@ -10,6 +10,7 @@ classdef Schrodinger < noname.Scheme
         M % Derivative norm
         alpha
 
+        D2
         Hi
         e_l
         e_r
@@ -43,16 +44,14 @@ classdef Schrodinger < noname.Scheme
                 V_vec = x*0 + V;
             end
 
-            V_mat = spdiags(V,0,m,m);
+            V_mat = spdiags(V_vec,0,m,m);
 
-
-            D = 1i * obj.D2 - 1i * V;
+            obj.D = 1i * obj.D2 - 1i * V;
 
             obj.m = m;
             obj.h = h;
             obj.order = order;
 
-            obj.D = alpha*obj.D2;
             obj.x = x;
         end
 
@@ -65,7 +64,7 @@ classdef Schrodinger < noname.Scheme
         %       neighbour_scheme    is an instance of Scheme that should be interfaced to.
         %       neighbour_boundary  is a string specifying which boundary to interface to.
         function [closure, penalty] = boundary_condition(obj,boundary,type,data)
-            default_arg('type','neumann');
+            default_arg('type','dirichlet');
             default_arg('data',0);
 
             [e,d,s] = obj.get_boundary_ops(boundary);
@@ -73,16 +72,14 @@ classdef Schrodinger < noname.Scheme
             switch type
                 % Dirichlet boundary condition
                 case {'D','d','dirichlet'}
-                    tau = -1i* s * d;
-
+                    tau = s * 1i*d;
                     closure = obj.Hi*tau*e';
 
-                    pp = obj.Hi*p;
                     switch class(data)
                         case 'double'
-                            penalty = pp*data;
+                            penalty = -obj.Hi*tau*data;
                         case 'function_handle'
-                            penalty = @(t)pp*data(t);
+                            penalty = @(t)-obj.Hi*tau*data(t);
                         otherwise
                             error('Wierd data argument!')
                     end
@@ -99,8 +96,8 @@ classdef Schrodinger < noname.Scheme
             [e_u,d_u,s_u] = obj.get_boundary_ops(boundary);
             [e_v,d_v,s_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
 
-            a =  s/2 * 1i ;
-            b = - a';
+            a =  s* 1/2 * 1i ;
+            b =  a';
 
             tau = b*d_u;
             sig = a*e_u;
