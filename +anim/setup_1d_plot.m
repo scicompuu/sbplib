@@ -18,11 +18,9 @@ function [update_data, plot_handles, axis_handle] = setup_1d_plot(x,y_lim,yfun)
 
     figure_handle = gcf;
     plot_handles(1) = plot(x,0*x);
-    hold on
     for i = 2:length(yfun)
-        plot_handles(i) = plot(x,0*x);
+        plot_handles(i) = line(x,0*x);
     end
-    hold off
 
     axis_handle = gca;
 
