@@ -46,7 +46,7 @@ classdef Schrodinger < scheme.Scheme
 
             V_mat = spdiags(V_vec,0,m,m);
 
-            obj.D = 1i * obj.D2 - 1i * V;
+            obj.D = 1i * obj.D2 - 1i * V_mat;
 
             obj.m = m;
             obj.h = h;
@@ -96,11 +96,11 @@ classdef Schrodinger < scheme.Scheme
             [e_u,d_u,s_u] = obj.get_boundary_ops(boundary);
             [e_v,d_v,s_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
 
-            a =  s* 1/2 * 1i ;
+            a =  -s_u* 1/2 * 1i ;
             b =  a';
 
             tau = b*d_u;
-            sig = a*e_u;
+            sig = -a*e_u;
 
             closure = obj.Hi * (tau*e_u' + sig*d_u');
             penalty = obj.Hi * (-tau*e_v' - sig*d_v');
