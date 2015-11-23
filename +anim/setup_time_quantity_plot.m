@@ -23,7 +23,7 @@ function [update_data, plot_handles] = setup_time_quantity_plot(yfun)
 
             [t,~] = getpoints(plot_handles(1));
             if t(1) < t(end)
-                xlim([t(1) t(end)]);
+                xlim(axis_handle, [t(1) t(end)]);
             end
         end
     end
