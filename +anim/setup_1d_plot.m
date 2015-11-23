@@ -35,7 +35,6 @@ function [update_data, plot_handles, axis_handle] = setup_1d_plot(x,y_lim,yfun)
                 set(plot_handles(i),'YData',yfun{i}(varargin{:}));
             end
             title(axis_handle,sprintf('T=%.3f',t));
-            drawnow
         end
     end
     update_data = @update;

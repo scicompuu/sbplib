@@ -46,6 +46,7 @@ function hand = animate(dirname,discretization,Tend, time_modifier,time_method)
         ts.evolve(next_t);
         sol = discretization.getTimeSnapshot(ts);
         update(sol);
+        drawnow
         % waitforbuttonpress
         if makemovies
             save_frame();
@@ -63,7 +64,7 @@ function hand = animate(dirname,discretization,Tend, time_modifier,time_method)
 
     fprintf('Using time step k = %.6f\n',ts.k)
     fprintf('System size: %d\n',size(discretization))
-    waitforbuttonpress
+    % waitforbuttonpress
     anim.animate(@G,0,Tend,time_modifier)
     str = util.replace_string(str,'');
 

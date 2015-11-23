@@ -21,7 +21,6 @@ function [update_data,figure_handle] = setup_2d_plot(x,y,clim,zfun)
         if ishandle(plot_handle) && ishandle(axis_handle)
             set(plot_handle,'CData',Z)
             title(axis_handle,sprintf('T=%.3f',t));
-            drawnow
         end
     end
     update_data = @update;

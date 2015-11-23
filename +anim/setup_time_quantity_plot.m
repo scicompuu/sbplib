@@ -1,6 +1,10 @@
 function [update_data, plot_handles] = setup_time_quantity_plot(yfun)
     default_arg('yfun',@(y)y);
 
+    if isa(yfun,'function_handle')
+        yfun = {yfun};
+    end
+
     t = [];
     for i = 1:length(yfun)
         plot_handles(i) = line(0,0);
@@ -21,7 +25,6 @@ function [update_data, plot_handles] = setup_time_quantity_plot(yfun)
                 plot_handles(j).XData = t;
                 plot_handles(j).YData = quantities{j};
             end
-            drawnow
         end
     end
     update_data = @update;
