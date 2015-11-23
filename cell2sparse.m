@@ -1,4 +1,10 @@
 function A = cell2sparse(C)
+
+    if isempty(C)
+        A = sparse([]);
+        return
+    end
+
     n = row_height(C);
     m = col_width(C);
 
