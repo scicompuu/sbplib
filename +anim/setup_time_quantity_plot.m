@@ -25,6 +25,10 @@ function [update_data, plot_handles] = setup_time_quantity_plot(yfun)
                 plot_handles(j).XData = t;
                 plot_handles(j).YData = quantities{j};
             end
+
+            if t(end) > t(1)
+                xlim([t(1) 1.1*t(end)]);
+            end
         end
     end
     update_data = @update;
