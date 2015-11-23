@@ -26,7 +26,11 @@ classdef Rungekutta4 < time.Timestepper
                 obj.S = S;
             end
 
-            obj.F = @(v,t)(obj.D*v + obj.S);
+            if S == 0
+                obj.F = @(v,t)(obj.D*v);
+            else
+                obj.F = @(v,t)(obj.D*v + obj.S);
+            end
         end
 
         function [v,t] = getV(obj)
