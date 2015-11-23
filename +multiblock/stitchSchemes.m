@@ -9,16 +9,27 @@
 %                 each field with a parameter array that is sent to schm.boundary_condition
 %
 % Output parameters are cell arrays and cell matrices.
+%
+% Ex: [schms, D, H] = stitchSchemes(schmHand, order, schmParam, blocks, ms, conn, bound)
 function [schms, D, H] = stitchSchemes(schmHand, order, schmParam, blocks, ms, conn, bound)
+    default_arg('schmParam',[]);
 
     n_blocks = numel(blocks);
 
     % Creating Schemes
     for i = 1:n_blocks
-        if ~iscell(schmParam{i})
+        if isempty(schmParam);
+            schms{i} = schmHand(ms{i},blocks{i},order,[]);
+        elseif ~iscell(schmParam)
             param = schmParam(i);
+            schms{i} = schmHand(ms{i},blocks{i},order,param);
         else
             param = schmParam{i};
+            if iscell(param)
+                schms{i} = schmHand(ms{i},blocks{i},order,param{:});
+            else
+                schms{i} = schmHand(ms{i},blocks{i},order,param);
+            end
         end
 
         % class(schmParam)
@@ -27,7 +38,7 @@ function [schms, D, H] = stitchSchemes(schmHand, order, schmParam, blocks, ms, c
         % class(schmParam{i})
         % class(ms)
 
-        schms{i} = schmHand(ms{i},blocks{i},order,param{:});
+
     end
 
 
@@ -36,10 +47,6 @@ function [schms, D, H] = stitchSchemes(schmHand, order, schmParam, blocks, ms, c
     for i = 1:n_blocks
         H{i,i} = schms{i}.H;
     end
-
-
-
-
 
     %% Total system matrix
 
@@ -75,7 +82,7 @@ function [schms, D, H] = stitchSchemes(schmHand, order, schmParam, blocks, ms, c
                 continue
             end
 
-            [uu,uv,vv,vu] = noname.Scheme.interface_coupling(schms{i},intf{1},schms{j},intf{2});
+            [uu,uv,vv,vu] = schms{i}.interface_coupling(schms{i},intf{1},schms{j},intf{2});
             D{i,i} = D{i,i} + uu;
             D{i,j} = uv;
             D{j,j} = D{j,j} + vv;
