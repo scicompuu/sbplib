@@ -66,7 +66,7 @@ function hand = animate(dirname,discretization,Tend, time_modifier,time_method)
     fprintf('System size: %d\n',size(discretization))
     % waitforbuttonpress
     anim.animate(@G,0,Tend,time_modifier)
-    str = util.replace_string(str,'');
+    % str = util.replace_string(str,'');
 
     % if makemovies
         % fprintf('Generating movies...\n')

@@ -28,6 +28,8 @@ function  animate(F, t, tend, time_modifier , frame_rate)
     end
     time_to_animate = toc(animation_start);
     expected_time = tend/time_modifier;
+
+    fprintf('\n');
     fprintf('Time to animate: %.3f\n', time_to_animate)
     fprintf('Expected time  : %.3f\n', expected_time)
 end
