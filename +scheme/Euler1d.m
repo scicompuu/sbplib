@@ -170,6 +170,8 @@ classdef Euler1d < scheme.Scheme
                     closure = obj.boundary_condition_inflow(boundary,varargin{:});
                 case 'outflow'
                     closure = obj.boundary_condition_outflow(boundary,varargin{:});
+                    case 'outflow_rho'
+                    closure = obj.boundary_condition_outflow_rho(boundary,varargin{:});
                 case 'char'
                     closure = obj.boundary_condition_char(boundary,varargin{:});
                 otherwise
@@ -207,29 +209,27 @@ classdef Euler1d < scheme.Scheme
 
                 % Convert bc from ordinary form to characteristic form.
                 %   Lq = g  => w_in = Rw_ot + g_tilde
-                L = L_fun(rho,u,e);
-                g = g_fun(t);
 
                 Lambda = obj.Lambda(q_s);
 
-                R =-inv(L*Tin)*(L*Tot);
-                g_tilde = inv(L*Tin)*g;
-
                 % Setup the penalty parameter
-                tau1 = -2*Lambda(p_in,p_in);
+                tau1 = -2*abs(Lambda(p_in,p_in));
                 tau2 = zeros(length(p_ot),length(p_in)); % Penalty only on ingoing char.
 
                 tauHat = [tau1; tau2];
                 tau = -s*e_S*sparse(T*tauHat(pt,:));
 
-                % Calculate the numerical caracteristics and apply the penalty
-                w_s = inv(T)*q_s;
-                % w_s = T\q_s;
-                % w_s = Tinv * q_s; % Med analytisk matris
-                w_in = w_s(p_in);
-                w_ot = w_s(p_ot);
+                L = L_fun(rho,u,e);
+                g = g_fun(t);
 
-                o = obj.Hi * tau * (w_in - R*w_ot - g_tilde);
+                % printExpr('s')
+                % penalty = tauHat(pt,:)*inv(L*Tin)*(L*q_s - g);
+                % tauHatPt = tauHat(pt,:);
+                % display(tauHatPt);
+                % display(penalty);
+                % pause
+
+                o = 1/2*obj.Hi * tau * inv(L*Tin)*(L*q_s - g);
             end
             closure = @closure_fun;
         end
@@ -254,7 +254,7 @@ classdef Euler1d < scheme.Scheme
 
                 T = obj.T(q_s);
 
-                tau1 = -2*diag(Lambda(p_in));
+                tau1 = -2*diag(abs(Lambda(p_in)));
                 tau2 = zeros(length(p_ot),length(p_in)); % Penalty only on ingoing char.
 
                 tauHat = [tau1; tau2];
@@ -267,7 +267,7 @@ classdef Euler1d < scheme.Scheme
                 w_s_data = w_data(t);
                 w_in_data = w_s_data(p_in);
 
-                o = obj.Hi * tau * (w_in - w_in_data);
+                o = 1/2*obj.Hi * tau * (w_in - w_in_data);
             end
 
             closure = @closure_fun;
@@ -311,6 +311,24 @@ classdef Euler1d < scheme.Scheme
             a = obj.gamma -1;
             L = @(~,u,~)a*[0 -1/2*u 1];
             g = @(t)[p_data(t)];
+
+
+            closure = boundary_condition_L(obj, boundary, L, g, p_in);
+
+        end
+
+        function closure = boundary_condition_outflow_rho(obj, boundary, rho_data)
+            [~,~,s] = obj.get_boundary_ops(boundary);
+
+             switch s
+                case -1
+                    p_in = 2;
+                case 1
+                    p_in = 3;
+            end
+
+            L = @(~,~,~)[1 0 0];
+            g = @(t)[rho_data(t)];
 
 
             closure = boundary_condition_L(obj, boundary, L, g, p_in);
