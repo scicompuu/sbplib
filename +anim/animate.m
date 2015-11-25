@@ -5,7 +5,7 @@
 % it will be called for increasnig t.
 
 %Todo: make it catch up and produce warnings if it lags behind? Instead of just requesting the next target time
-function  animate(F, t, tend, time_modifier , frame_rate)
+function  animate(F, tstart, tend, time_modifier , frame_rate)
     if ~exist('time_modifier')
         time_modifier = 1;
     end
@@ -18,12 +18,10 @@ function  animate(F, t, tend, time_modifier , frame_rate)
     dt = frame_time*time_modifier;
 
     animation_start = tic();
-    t = F(t);
+    t = F(tstart);
     while t < tend
         t = F(t + dt);
-
-        t_left = t/time_modifier-toc(animation_start);
-
+        t_left = (t-tstart)/time_modifier-toc(animation_start);
         pause(t_left)
     end
     time_to_animate = toc(animation_start);
