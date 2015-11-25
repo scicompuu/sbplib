@@ -412,7 +412,7 @@ classdef Euler1d < scheme.Scheme
                 w_in = w_s(p_in);
                 w_ot = w_s(p_ot);
 
-                o = obj.Hi * tau * (w_in - R*w_ot);
+                o = 1/2*obj.Hi * tau * (w_in - R*w_ot);
             end
 
             closure = @closure_fun;
