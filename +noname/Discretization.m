@@ -23,11 +23,12 @@ classdef Discretization < handle
 
         % Calculates a timestep for the discretization and a given timestepping method.
         % Can take order, differnt types of scaling in h, or other parameters in Discr into
-        % account.
+        % account.  opt is a struct that among other things may contain
         %   method -- time stepping method for which to give a timestep.
         %   cfl    -- [optioanal] a cfl constant to use to calculate the timetep.
         %             if skipped getTimestep should use a precomputed value.
-        k = getTimestep(obj, method, cfl)
+        %   k      -- timestep to use
+        k = getTimestep(obj, opt)
 
         % getTimeSnapshot returns a struct which represents the solution in ts at current time.
         % if ts is empty or 0 a representation of the initial conditions be returned.

@@ -4,15 +4,12 @@
 %      animate('',discr,tend)
 %      animate('my_mov',discr,tend,time_mod,time_method)
 
-function hand = animate(dirname,discretization,Tend, time_modifier,time_method)
-    makemovies = ~strcmp(dirname,'');
-    if makemovies
-        dirname = ['mov/' dirname];
-    end
-
-    default_arg('Tend',Inf);
+function hand = animate(discretization, time_modifier, Tend, dirname, opt)
     default_arg('time_modifier',1);
-    default_arg('time_method',[]);
+    default_arg('Tend', Inf);
+    default_arg('dirname','');
+    default_arg('opt', []);
+
 
     if time_modifier < 0
         do_pause = true;
@@ -21,23 +18,36 @@ function hand = animate(dirname,discretization,Tend, time_modifier,time_method)
         do_pause = false;
     end
 
+    makemovies = ~strcmp(dirname,'');
+    if makemovies
+        dirname = ['mov/' dirname];
+    end
 
     fprintf('Animating: %s\n',discretization.name);
-    fprintf('Tend     : %.2f\n',Tend);
     fprintf('order    : %d\n',discretization.order);
     fprintf('m        : %d\n',size(discretization));
 
-    fprintf('Creating time discretization');
-    tic
-    ts = discretization.getTimestepper(time_method);
-    fprintf(' - done  %fs\n', toc())
+
+    ts = discretization.getTimestepper(opt);
+
+    if numel(Tend) == 2
+        Tstart = Tend(1);
+        Tend = Tend(2);
+
+
+        fprintf('Evolving to starting time: ');
+        ts.evolve(Tstart,'true');
+        fprintf(' - Done\n');
+        start_solution = discretization.getTimeSnapshot(ts);
+    else
+        Tstart = 0;
+        start_solution = discretization.getTimeSnapshot(0);
+    end
 
     [update, figure_handle] = discretization.setupPlot('animation');
-
     if makemovies
         save_frame = anim.setup_fig_mov(figure_handle,dirname);
     end
-
 
     % Initialize loop
     str = '';
@@ -57,15 +67,15 @@ function hand = animate(dirname,discretization,Tend, time_modifier,time_method)
         if do_pause
             pause
         end
-
     end
-    sol = discretization.getTimeSnapshot(0);
-    update(sol);
+    update(start_solution);
 
-    fprintf('Using time step k = %.6f\n',ts.k)
-    fprintf('System size: %d\n',size(discretization))
+    fprintf('Using time step k = %.6f\n',ts.k);
+    fprintf('System size: %d\n',size(discretization));
     % waitforbuttonpress
-    anim.animate(@G,0,Tend,time_modifier)
+
+    anim.animate(@G, Tstart, Tend, time_modifier);
+
     % str = util.replace_string(str,'');
 
     % if makemovies
