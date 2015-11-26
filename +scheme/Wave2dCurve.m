@@ -175,19 +175,29 @@ classdef Wave2dCurve < scheme.Scheme
             switch type
                 % Dirichlet boundary condition
                 case {'D','d','dirichlet'}
-                    error('not implemented')
-                    alpha = obj.alpha;
+                    % v denotes the solution in the neighbour domain
+                    tuning = 1.2;
+                    % tuning = 20.2;
+                    [e, d_n, d_t, coeff_n, coeff_t, s, gamm, halfnorm_inv_n, halfnorm_inv_t, halfnorm_t] = obj.get_boundary_ops(boundary);
 
-                    % tau1 < -alpha^2/gamma
-                    tuning = 1.1;
-                    tau1 = -tuning*alpha/gamm;
-                    tau2 =  s*alpha;
+                    a_n = spdiag(coeff_n);
+                    a_t = spdiag(coeff_t);
 
-                    p = tau1*e + tau2*d;
+                    F = (s * a_n * d_n' + s * a_t*d_t')';
 
-                    closure = halfnorm_inv*p*e';
+                    u = obj;
 
-                    pp = halfnorm_inv*p;
+                    b1 = gamm*u.lambda./u.a11.^2;
+                    b2 = gamm*u.lambda./u.a22.^2;
+
+                    tau  = -1./b1 - 1./b2;
+                    tau = tuning * spdiag(tau(:));
+                    sig1 = 1/2;
+
+                    penalty_parameter_1 = halfnorm_inv_n*(tau + sig1*halfnorm_inv_t*F*e'*halfnorm_t)*e;
+
+                    closure = obj.Ji*obj.c^2 * penalty_parameter_1*e';
+                    pp = -obj.Ji*obj.c^2 * penalty_parameter_1;
                     switch class(data)
                         case 'double'
                             penalty = pp*data;
@@ -254,8 +264,7 @@ classdef Wave2dCurve < scheme.Scheme
             b2_v = gamm_v*v.lambda./v.a22.^2;
 
 
-            tau  = -1./(4*b1_u) -1./(4*b1_v) -1./(4*b2_u) -1./(4*b2_v);
-            m_tot = obj.m(1)*obj.m(2);
+            tau = -1./(4*b1_u) -1./(4*b1_v) -1./(4*b2_u) -1./(4*b2_v);
             tau = tuning * spdiag(tau(:));
             sig1 = 1/2;
             sig2 = -1/2*s_u;
