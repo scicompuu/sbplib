@@ -245,7 +245,7 @@ classdef Wave2dCurve < scheme.Scheme
             tuning = 1.2;
             % tuning = 20.2;
             [e_u, d_n_u, d_t_u, coeff_n_u, coeff_t_u, s_u, gamm_u, halfnorm_inv_u_n, halfnorm_inv_u_t, halfnorm_u_t] = obj.get_boundary_ops(boundary);
-            [e_v, d_n_v, d_t_v, coeff_n_v, coeff_t_v, s_v, gamm_v, halfnorm_inv_v_n, halfnorm_inv_v_t, halfnorm_v_t] = neighbour_scheme.get_boundary_ops(boundary);
+            [e_v, d_n_v, d_t_v, coeff_n_v, coeff_t_v, s_v, gamm_v, halfnorm_inv_v_n, halfnorm_inv_v_t, halfnorm_v_t] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
 
             a_n_u = spdiag(coeff_n_u);
             a_t_u = spdiag(coeff_t_u);
@@ -267,14 +267,14 @@ classdef Wave2dCurve < scheme.Scheme
             tau = -1./(4*b1_u) -1./(4*b1_v) -1./(4*b2_u) -1./(4*b2_v);
             tau = tuning * spdiag(tau(:));
             sig1 = 1/2;
-            sig2 = -1/2*s_u;
+            sig2 = -1/2;
 
             penalty_parameter_1 = halfnorm_inv_u_n*(tau + sig1*halfnorm_inv_u_t*F_u*e_u'*halfnorm_u_t)*e_u;
             penalty_parameter_2 = halfnorm_inv_u_n * sig2 * e_u;
 
 
             closure = obj.Ji*obj.c^2 * ( penalty_parameter_1*e_u' + penalty_parameter_2*F_u');
-            penalty = obj.Ji*obj.c^2 * (-penalty_parameter_1*e_v' - penalty_parameter_2*F_v');
+            penalty = obj.Ji*obj.c^2 * (-penalty_parameter_1*e_v' + penalty_parameter_2*F_v');
         end
 
         % Ruturns the boundary ops and sign for the boundary specified by the string boundary.
