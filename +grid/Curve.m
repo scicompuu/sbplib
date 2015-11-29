@@ -3,6 +3,11 @@ classdef Curve
         g
         gp
         transformation
+        arc_length_fun 
+        
+        % arc_length_fun: 
+        % function handle. arc_length(s)=distance 
+        % between t=0 and t=s.
     end
     methods
         %TODO:
@@ -15,17 +20,18 @@ classdef Curve
         % Curve to cell array of linesegments
 
         % Should supply either derivative or a difference operator D1
-        function obj = Curve(g,gp,transformation,D1)
+        function obj = Curve(g,gp,transformation,D1,arc_length_fun)
             default_arg('gp',[]);
             default_arg('transformation',[]);
             default_arg('D1',[]);
+            default_arg('arc_length_fun',[]);
             p_test = g(0);
             assert(all(size(p_test) == [2,1]), 'A curve parametrization must return a 2x1 vector.');
 
             if(isempty(gp) && isempty(D1));
                 % Should be error instead of disp.
                 disp(['You really should supply either the exact derivative ',...
-                'or a suitable difference operator to compute it.']);
+                'or a suitable difference operator to compute an approximation.']);
             elseif(isempty(gp))
                 gp = grid.Curve.numerical_derivative(g,D1);
             end
@@ -36,21 +42,21 @@ classdef Curve
                 [g,gp] = grid.Curve.transform_g(g,gp,transformation);
             end
 
+            if(isempty(arc_length_fun))
+                if(~isempty(D1)); N = length(D1); % Same accuracy as for deriv.
+                else N = 101; % Best way to let user choose?
+                end
+                tvec = linspace(0,1,N);
+                arc_vec = grid.Curve.arc_length(gp,0,tvec);
+                arc_length_fun = grid.Curve.spline(tvec,arc_vec);
+            end
+            
             obj.g = g;
             obj.gp = gp;
             obj.transformation = transformation;
-        end
-        
-        % Length of arc from parameter t0 to t1 (which may be vectors).
-        % Computed using derivative.
-        function L = arc_length(obj,t0,t1)
-            deriv = obj.gp;
-            speed = @(t) sp(deriv(t));
+            obj.arc_length_fun = arc_length_fun;
             
-            function s = sp(deriv)
-                s = sqrt(sum(deriv.^2,1));
-            end
-            L =  util.integral_vec(speed,t0,t1);
+
         end
 
         % Made up length calculation!! Science this before actual use!!
@@ -104,16 +110,40 @@ classdef Curve
         end
 
 
-        % Plots a curve g(t) for 0<t<1, using n points. Retruns a handle h to the plotted curve.
+        % Plots a curve g(t) for 0<t<1, using n points. Returns a handle h to the plotted curve.
         %   h = plot_curve(g,n)
-        function h = plot(obj,n)
+        function h = plot(obj,n,marker)
             default_arg('n',100);
+            default_arg('marker','line')
 
             t = linspace(0,1,n);
 
             p = obj.g(t);
 
-            h = line(p(1,:),p(2,:));
+            switch marker
+                case 'line'
+                    h = line(p(1,:),p(2,:));
+                otherwise
+                    h = plot(p(1,:),p(2,:),marker);
+            end
+        end
+        
+        % Plots the derivative gp(t) for 0<t<1, using n points. Returns a handle h to the plotted curve.
+        %   h = plot_curve(gp,n)
+        function h = plot_derivative(obj,n,marker)
+            default_arg('n',100);
+            default_arg('marker','line')
+
+            t = linspace(0,1,n);
+
+            p = obj.gp(t);
+
+            switch marker
+                case 'line'
+                    h = line(p(1,:),p(2,:));
+                otherwise
+                    h = plot(p(1,:),p(2,:),marker);
+            end
         end
 
         function h= plot_normals(obj,l,n,m)
@@ -148,19 +178,19 @@ classdef Curve
             % Shows curve with name and arrow for direction.
 
         
-        % Should this be in the transformation method?
         function curve = stretch_parameter(obj,type)
             default_arg('type','arc_length');
             switch type
-                % Arc length parameterization. WARNING: slow.
+                % Arc length parameterization.
                 case 'arc_length'
-                    arcLength = @(t) obj.arc_length(0,t);
-                    arcPar = @(t) util.fzero_vec(@(s)arcLength(s) - t*arcLength(1),0);
+                    arcLength = obj.arc_length_fun;
+                    arcPar = @(t) util.fzero_vec(@(s)arcLength(s) - t*arcLength(1),[0-10*eps,1+10*eps]);
                     g_new = @(t)obj.g(arcPar(t));
                     gp_old = obj.gp;
                     gp_new = @(t) normalize(gp_old(arcPar(t)));
                     
-                    curve = grid.Curve(g_new,gp_new);
+                    arc_len_new = @(t) t;
+                    curve = grid.Curve(g_new,gp_new,[],[],arc_len_new);
                     
                 otherwise
                     error('That stretching is not implemented.');
@@ -308,25 +338,43 @@ classdef Curve
 
     methods (Static)
         
+        % Length of arc from parameter t0 to t1 (which may be vectors).
+        % Computed using derivative.
+        function L = arc_length(deriv,t0,t1)
+            speed = @(t) sp(deriv(t));
+            
+            function s = sp(deriv)
+                s = sqrt(sum(deriv.^2,1));
+            end
+            L =  util.integral_vec(speed,t0,t1);
+        end
+        
         function gp_out = numerical_derivative(g,D1)
             m = length(D1); L = 1; % Assume curve parameter from 0 to 1.
-            dt = L/(m-1);
             t = linspace(0,L,m); 
             g = g(t)';
             gp = (D1*g)';
-            
-            % Make vectors longer to make sure splines are
-            % reasonable at 1+eps.
-            t_l = linspace(0,L+dt,m+1);
-            gp_l = [gp,gp(:,end)+gp(:,end)-gp(:,end-1)];
-            
-            % 4:th order splines.
-            spline_order = 4;
-            gp1 = spapi( optknt(t_l,spline_order), t_l, gp_l(1,:) ); 
-            gp2 = spapi( optknt(t_l,spline_order), t_l, gp_l(2,:) ); 
-            gp1_fun = @(t) fnval(gp1,t); gp2_fun = @(t) fnval(gp2,t);
+
+            gp1_fun = grid.Curve.spline(t,gp(1,:));
+            gp2_fun = grid.Curve.spline(t,gp(2,:));
             gp_out = @(t) [gp1_fun(t);gp2_fun(t)];
             
+        end
+        
+        % Returns a function handle to the spline.
+        function f = spline(tval,fval,spline_order)
+            default_arg('spline_order',4);
+            [m,~] = size(tval);
+            assert(m==1,'Need row vectors.');
+            
+            % make vectors longer to be safe slightly beyond edges.
+            dt0 = tval(2)-tval(1); dt1 = tval(end)-tval(end-1);
+            df0 = fval(2)-fval(1); df1 = fval(end)-fval(end-1);
+            tval = [tval(1)-dt0, tval, tval(end)+dt1];
+            fval = [fval(1)-df0, fval, fval(end)+df1];
+            
+            f_spline = spapi( optknt(tval,spline_order), tval, fval );
+            f = @(t) fnval(f_spline,t);
         end
         
         function obj = line(p1, p2)
