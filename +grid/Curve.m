@@ -7,19 +7,29 @@ classdef Curve
     methods
         %TODO:
         % Errors or FD if there is no derivative function added.
+        % -semi-done
 
         % Concatenation of curves
         % Subsections of curves
-        % Stretching of curve paramter
+        % Stretching of curve paramter - semi-done
         % Curve to cell array of linesegments
 
-        % Should accept derivative of curve.
-        function obj = Curve(g,gp,transformation)
+        % Should supply either derivative or a difference operator D1
+        function obj = Curve(g,gp,transformation,D1)
             default_arg('gp',[]);
             default_arg('transformation',[]);
+            default_arg('D1',[]);
             p_test = g(0);
             assert(all(size(p_test) == [2,1]), 'A curve parametrization must return a 2x1 vector.');
 
+            if(isempty(gp) && isempty(D1));
+                % Should be error instead of disp.
+                disp(['You really should supply either the exact derivative ',...
+                'or a suitable difference operator to compute it.']);
+            elseif(isempty(gp))
+                gp = grid.Curve.numerical_derivative(g,D1);
+            end
+            
             if ~isempty(transformation)
                 transformation.base_g = g;
                 transformation.base_gp = gp;
@@ -29,6 +39,18 @@ classdef Curve
             obj.g = g;
             obj.gp = gp;
             obj.transformation = transformation;
+        end
+        
+        % Length of arc from parameter t0 to t1 (which may be vectors).
+        % Computed using derivative.
+        function L = arc_length(obj,t0,t1)
+            deriv = obj.gp;
+            speed = @(t) sp(deriv(t));
+            
+            function s = sp(deriv)
+                s = sqrt(sum(deriv.^2,1));
+            end
+            L =  util.integral_vec(speed,t0,t1);
         end
 
         % Made up length calculation!! Science this before actual use!!
@@ -125,7 +147,27 @@ classdef Curve
         end
             % Shows curve with name and arrow for direction.
 
-
+        
+        % Should this be in the transformation method?
+        function curve = stretch_parameter(obj,type)
+            default_arg('type','arc_length');
+            switch type
+                % Arc length parameterization. WARNING: slow.
+                case 'arc_length'
+                    arcLength = @(t) obj.arc_length(0,t);
+                    arcPar = @(t) util.fzero_vec(@(s)arcLength(s) - t*arcLength(1),0);
+                    g_new = @(t)obj.g(arcPar(t));
+                    gp_old = obj.gp;
+                    gp_new = @(t) normalize(gp_old(arcPar(t)));
+                    
+                    curve = grid.Curve(g_new,gp_new);
+                    
+                otherwise
+                    error('That stretching is not implemented.');
+            end
+            
+        end
+            
         % how to make it work for methods without returns
         function p = subsref(obj,S)
             %Should i add error checking here?
@@ -265,6 +307,28 @@ classdef Curve
     end
 
     methods (Static)
+        
+        function gp_out = numerical_derivative(g,D1)
+            m = length(D1); L = 1; % Assume curve parameter from 0 to 1.
+            dt = L/(m-1);
+            t = linspace(0,L,m); 
+            g = g(t)';
+            gp = (D1*g)';
+            
+            % Make vectors longer to make sure splines are
+            % reasonable at 1+eps.
+            t_l = linspace(0,L+dt,m+1);
+            gp_l = [gp,gp(:,end)+gp(:,end)-gp(:,end-1)];
+            
+            % 4:th order splines.
+            spline_order = 4;
+            gp1 = spapi( optknt(t_l,spline_order), t_l, gp_l(1,:) ); 
+            gp2 = spapi( optknt(t_l,spline_order), t_l, gp_l(2,:) ); 
+            gp1_fun = @(t) fnval(gp1,t); gp2_fun = @(t) fnval(gp2,t);
+            gp_out = @(t) [gp1_fun(t);gp2_fun(t)];
+            
+        end
+        
         function obj = line(p1, p2)
 
             function v = g_fun(t)
@@ -343,5 +407,14 @@ classdef Curve
             end
         end
 
-    end
+    end 
 end
+
+function g_norm = normalize(g0)
+    g1 = g0(1,:); g2 = g0(2,:);
+    normalization = sqrt(sum(g0.^2,1));
+    g_norm = [g1./normalization; g2./normalization];
+end
+
+    
+    
