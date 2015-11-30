@@ -294,8 +294,8 @@ classdef Wave2dCurve < scheme.Scheme
                     s = -1;
 
                     I = gridMatrix(:,1);
-                    coeff_n = obj.a11(:,1);
-                    coeff_t = obj.a12(:,1);
+                    coeff_n = obj.a11(I);
+                    coeff_t = obj.a12(I);
                 case 'e'
                     e = obj.e_e;
                     d_n = obj.du_e;
@@ -303,8 +303,8 @@ classdef Wave2dCurve < scheme.Scheme
                     s = 1;
 
                     I = gridMatrix(:,end);
-                    coeff_n = obj.a11(:,end);
-                    coeff_t = obj.a12(:,end);
+                    coeff_n = obj.a11(I);
+                    coeff_t = obj.a12(I);
                 case 's'
                     e = obj.e_s;
                     d_n = obj.dv_s;
@@ -312,8 +312,8 @@ classdef Wave2dCurve < scheme.Scheme
                     s = -1;
 
                     I = gridMatrix(1,:)';
-                    coeff_n = obj.a22(1,:)';
-                    coeff_t = obj.a12(1,:)';
+                    coeff_n = obj.a22(I);
+                    coeff_t = obj.a12(I);
                 case 'n'
                     e = obj.e_n;
                     d_n = obj.dv_n;
@@ -321,8 +321,8 @@ classdef Wave2dCurve < scheme.Scheme
                     s = 1;
 
                     I = gridMatrix(end,:)';
-                    coeff_n = obj.a22(end,:)';
-                    coeff_t = obj.a12(end,:)';
+                    coeff_n = obj.a22(I);
+                    coeff_t = obj.a12(I);
                 otherwise
                     error('No such boundary: boundary = %s',boundary);
             end
