@@ -209,9 +209,7 @@ classdef Euler1d < scheme.Scheme
                 Tin = T(:,p_in);
                 Tot = T(:,p_ot);
 
-                % Convert bc from ordinary form to characteristic form.
-                %   Lq = g  => w_in = Rw_ot + g_tilde
-
+                % Calculate eigen value matrix
                 Lambda = obj.Lambda(q_s);
 
                 % Setup the penalty parameter
@@ -219,17 +217,10 @@ classdef Euler1d < scheme.Scheme
                 tau2 = zeros(length(p_ot),length(p_in)); % Penalty only on ingoing char.
 
                 tauHat = [tau1; tau2];
-                tau = -s*e_S*sparse(T*tauHat(pt,:));
+                tau = e_S*sparse(T*tauHat(pt,:));
 
                 L = L_fun(rho,u,e);
                 g = g_fun(t);
-
-                % printExpr('s')
-                % penalty = tauHat(pt,:)*inv(L*Tin)*(L*q_s - g);
-                % tauHatPt = tauHat(pt,:);
-                % display(tauHatPt);
-                % display(penalty);
-                % pause
 
                 o = 1/2*obj.Hi * tau * inv(L*Tin)*(L*q_s - g);
             end
