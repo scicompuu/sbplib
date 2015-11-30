@@ -170,7 +170,9 @@ classdef Euler1d < scheme.Scheme
                     closure = obj.boundary_condition_inflow(boundary,varargin{:});
                 case 'outflow'
                     closure = obj.boundary_condition_outflow(boundary,varargin{:});
-                    case 'outflow_rho'
+                case 'inflow_rho'
+                    closure = obj.boundary_condition_inflow_rho(boundary,varargin{:});
+                case 'outflow_rho'
                     closure = obj.boundary_condition_outflow_rho(boundary,varargin{:});
                 case 'char'
                     closure = obj.boundary_condition_char(boundary,varargin{:});
@@ -315,6 +317,29 @@ classdef Euler1d < scheme.Scheme
 
             closure = boundary_condition_L(obj, boundary, L, g, p_in);
 
+        end
+
+        function closure = boundary_condition_inflow_rho(obj, boundary, rho_data, v_data)
+            [~,~,s] = obj.get_boundary_ops(boundary);
+
+             switch s
+                case -1
+                    p_in = [1 2];
+                case 1
+                    p_in = [1 3];
+            end
+
+            a = obj.gamma - 1;
+            L = @(rho,~,~)[
+                0  1/rho 0;
+                1      0 0;
+            ];
+            g = @(t)[
+                v_data(t);
+                rho_data(t);
+            ];
+
+            closure = boundary_condition_L(obj, boundary, L, g, p_in);
         end
 
         function closure = boundary_condition_outflow_rho(obj, boundary, rho_data)
