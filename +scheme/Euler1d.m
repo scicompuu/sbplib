@@ -17,6 +17,14 @@ classdef Euler1d < scheme.Scheme
 
     end
 
+    properties (Constant)
+        SUBSONIC_INFLOW = 1;
+        SUBSONIC_OUTFLOW = -1;
+        NO_FLOW = 0;
+        SUPERSONIC_INFLOW = 2;
+        SUPERSONIC_OUTFLOW = -2;
+    end
+
     methods
         function obj = Euler1d(m,xlim,order,gama,opsGen,do_upwind)
             default_arg('opsGen',@sbp.Ordinary);
@@ -153,6 +161,40 @@ classdef Euler1d < scheme.Scheme
                  sqrt2gamm*rho*u^2/2, e+(gamma-1)*(e-rho*u^2/2)+rho*u*c , e+(gamma-1)*(e-rho*u^2/2)-rho*u*c ;
             ];
             % Devide columns by stuff to get rid of extra comp?
+        end
+
+        function fs = flowStateL(obj, q)
+            q_l = obj.e_L'*q;
+            c = obj.c(q);
+            v = q_l(2,:)/q_l(1,:);
+
+            if v > c
+                fs = scheme.Euler1d.SUPERSONIC_INFLOW;
+            elseif v > 0
+                fs = scheme.Euler1d.SUBSONIC_INFLOW;
+            elseif v > -c
+                fs = scheme.Euler1d.SUBSONIC_OUTFLOW;
+            else
+                fs = scheme.Euler1d.SUPERSONIC_INFLOW;
+            end
+        end
+
+        % returns positiv values for inlfow, negative for outflow.
+        %  +-1 for subsonic
+        function fs = flowStateR(obj, q)
+            q_r = obj.e_R'*q;
+            c = obj.c(q);
+            v = q_r(2,:)/q_r(1,:);
+
+            if v < -c
+                fs = scheme.Euler1d.SUPERSONIC_INFLOW;
+            elseif v < 0
+                fs = scheme.Euler1d.SUBSONIC_INFLOW;
+            elseif v < c
+                fs = scheme.Euler1d.SUBSONIC_OUTFLOW;
+            else
+                fs = scheme.Euler1d.SUPERSONIC_INFLOW;
+            end
         end
 
         % Enforces the boundary conditions
