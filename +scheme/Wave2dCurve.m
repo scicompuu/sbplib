@@ -264,12 +264,11 @@ classdef Wave2dCurve < scheme.Scheme
             b2_v = gamm_v*v.lambda(I_v)./v.a22(I_v).^2;
 
             tau = -1./(4*b1_u) -1./(4*b1_v) -1./(4*b2_u) -1./(4*b2_v);
-            tau = tuning * spdiag(tau(:)); % Probably correct until here, see eq 27
+            tau = tuning * spdiag(tau(:));
             sig1 = 1/2;
             sig2 = -1/2;
 
-            % penalty_parameter_1 = halfnorm_inv_u_n*(tau + sig1*halfnorm_inv_u_t*F_u*e_u'*halfnorm_u_t)*e_u;  %% This is what is in the paper, but there is an error in dimensions.
-            penalty_parameter_1 = halfnorm_inv_u_n*(e_u*tau + sig1*halfnorm_inv_u_t*F_u*e_u'*halfnorm_u_t*e_u); %% Random guess at a fix, should check theory for this.
+            penalty_parameter_1 = halfnorm_inv_u_n*(e_u*tau + sig1*halfnorm_inv_u_t*F_u*e_u'*halfnorm_u_t*e_u);
             penalty_parameter_2 = halfnorm_inv_u_n * sig2 * e_u;
 
 
