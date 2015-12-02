@@ -175,19 +175,29 @@ classdef Wave2dCurve < scheme.Scheme
             switch type
                 % Dirichlet boundary condition
                 case {'D','d','dirichlet'}
-                    error('not implemented')
-                    alpha = obj.alpha;
+                    % v denotes the solution in the neighbour domain
+                    tuning = 1.2;
+                    % tuning = 20.2;
+                    [e, d_n, d_t, coeff_n, coeff_t, s, gamm, halfnorm_inv_n, halfnorm_inv_t, halfnorm_t] = obj.get_boundary_ops(boundary);
 
-                    % tau1 < -alpha^2/gamma
-                    tuning = 1.1;
-                    tau1 = -tuning*alpha/gamm;
-                    tau2 =  s*alpha;
+                    a_n = spdiag(coeff_n);
+                    a_t = spdiag(coeff_t);
 
-                    p = tau1*e + tau2*d;
+                    F = (s * a_n * d_n' + s * a_t*d_t')';
 
-                    closure = halfnorm_inv*p*e';
+                    u = obj;
 
-                    pp = halfnorm_inv*p;
+                    b1 = gamm*u.lambda./u.a11.^2;
+                    b2 = gamm*u.lambda./u.a22.^2;
+
+                    tau  = -1./b1 - 1./b2;
+                    tau = tuning * spdiag(tau(:));
+                    sig1 = 1/2;
+
+                    penalty_parameter_1 = halfnorm_inv_n*(tau + sig1*halfnorm_inv_t*F*e'*halfnorm_t)*e;
+
+                    closure = obj.Ji*obj.c^2 * penalty_parameter_1*e';
+                    pp = -obj.Ji*obj.c^2 * penalty_parameter_1;
                     switch class(data)
                         case 'double'
                             penalty = pp*data;
@@ -234,8 +244,8 @@ classdef Wave2dCurve < scheme.Scheme
             % v denotes the solution in the neighbour domain
             tuning = 1.2;
             % tuning = 20.2;
-            [e_u, d_n_u, d_t_u, coeff_n_u, coeff_t_u, s_u, gamm_u, halfnorm_inv_u_n, halfnorm_inv_u_t, halfnorm_u_t] = obj.get_boundary_ops(boundary);
-            [e_v, d_n_v, d_t_v, coeff_n_v, coeff_t_v, s_v, gamm_v, halfnorm_inv_v_n, halfnorm_inv_v_t, halfnorm_v_t] = neighbour_scheme.get_boundary_ops(boundary);
+            [e_u, d_n_u, d_t_u, coeff_n_u, coeff_t_u, s_u, gamm_u, halfnorm_inv_u_n, halfnorm_inv_u_t, halfnorm_u_t, I_u] = obj.get_boundary_ops(boundary);
+            [e_v, d_n_v, d_t_v, coeff_n_v, coeff_t_v, s_v, gamm_v, halfnorm_inv_v_n, halfnorm_inv_v_t, halfnorm_v_t, I_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
 
             a_n_u = spdiag(coeff_n_u);
             a_t_u = spdiag(coeff_t_u);
@@ -248,29 +258,33 @@ classdef Wave2dCurve < scheme.Scheme
             u = obj;
             v = neighbour_scheme;
 
-            b1_u = gamm_u*u.lambda./u.a11.^2;
-            b2_u = gamm_u*u.lambda./u.a22.^2;
-            b1_v = gamm_v*v.lambda./v.a11.^2;
-            b2_v = gamm_v*v.lambda./v.a22.^2;
+            b1_u = gamm_u*u.lambda(I_u)./u.a11(I_u).^2;
+            b2_u = gamm_u*u.lambda(I_u)./u.a22(I_u).^2;
+            b1_v = gamm_v*v.lambda(I_v)./v.a11(I_v).^2;
+            b2_v = gamm_v*v.lambda(I_v)./v.a22(I_v).^2;
 
-
-            tau  = -1./(4*b1_u) -1./(4*b1_v) -1./(4*b2_u) -1./(4*b2_v);
-            m_tot = obj.m(1)*obj.m(2);
+            tau = -1./(4*b1_u) -1./(4*b1_v) -1./(4*b2_u) -1./(4*b2_v);
             tau = tuning * spdiag(tau(:));
             sig1 = 1/2;
-            sig2 = -1/2*s_u;
+            sig2 = -1/2;
 
-            penalty_parameter_1 = halfnorm_inv_u_n*(tau + sig1*halfnorm_inv_u_t*F_u*e_u'*halfnorm_u_t)*e_u;
+            penalty_parameter_1 = halfnorm_inv_u_n*(e_u*tau + sig1*halfnorm_inv_u_t*F_u*e_u'*halfnorm_u_t*e_u);
             penalty_parameter_2 = halfnorm_inv_u_n * sig2 * e_u;
 
 
             closure = obj.Ji*obj.c^2 * ( penalty_parameter_1*e_u' + penalty_parameter_2*F_u');
-            penalty = obj.Ji*obj.c^2 * (-penalty_parameter_1*e_v' - penalty_parameter_2*F_v');
+            penalty = obj.Ji*obj.c^2 * (-penalty_parameter_1*e_v' + penalty_parameter_2*F_v');
         end
 
         % Ruturns the boundary ops and sign for the boundary specified by the string boundary.
         % The right boundary is considered the positive boundary
-        function [e, d_n, d_t, coeff_n, coeff_t, s, gamm, halfnorm_inv_n, halfnorm_inv_t, halfnorm_t,a_n, a_t] = get_boundary_ops(obj,boundary)
+        %
+        %  I -- the indecies of the boundary points in the grid matrix
+        function [e, d_n, d_t, coeff_n, coeff_t, s, gamm, halfnorm_inv_n, halfnorm_inv_t, halfnorm_t, I] = get_boundary_ops(obj,boundary)
+
+            gridMatrix = zeros(obj.m(2),obj.m(1));
+            gridMatrix(:) = 1:numel(gridMatrix);
+
             switch boundary
                 case 'w'
                     e = obj.e_w;
@@ -278,32 +292,36 @@ classdef Wave2dCurve < scheme.Scheme
                     d_t = obj.dv_w;
                     s = -1;
 
-                    coeff_n = obj.a11(:,1);
-                    coeff_t = obj.a12(:,1);
+                    I = gridMatrix(:,1);
+                    coeff_n = obj.a11(I);
+                    coeff_t = obj.a12(I);
                 case 'e'
                     e = obj.e_e;
                     d_n = obj.du_e;
                     d_t = obj.dv_e;
                     s = 1;
 
-                    coeff_n = obj.a11(:,end);
-                    coeff_t = obj.a12(:,end);
+                    I = gridMatrix(:,end);
+                    coeff_n = obj.a11(I);
+                    coeff_t = obj.a12(I);
                 case 's'
                     e = obj.e_s;
                     d_n = obj.dv_s;
                     d_t = obj.du_s;
                     s = -1;
 
-                    coeff_n = obj.a22(1,:)';
-                    coeff_t = obj.a12(1,:)';
+                    I = gridMatrix(1,:)';
+                    coeff_n = obj.a22(I);
+                    coeff_t = obj.a12(I);
                 case 'n'
                     e = obj.e_n;
                     d_n = obj.dv_n;
                     d_t = obj.du_n;
                     s = 1;
 
-                    coeff_n = obj.a22(end,:)';
-                    coeff_t = obj.a12(end,:)';
+                    I = gridMatrix(end,:)';
+                    coeff_n = obj.a22(I);
+                    coeff_t = obj.a12(I);
                 otherwise
                     error('No such boundary: boundary = %s',boundary);
             end

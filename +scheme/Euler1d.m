@@ -17,6 +17,14 @@ classdef Euler1d < scheme.Scheme
 
     end
 
+    properties (Constant)
+        SUBSONIC_INFLOW = 1;
+        SUBSONIC_OUTFLOW = -1;
+        NO_FLOW = 0;
+        SUPERSONIC_INFLOW = 2;
+        SUPERSONIC_OUTFLOW = -2;
+    end
+
     methods
         function obj = Euler1d(m,xlim,order,gama,opsGen,do_upwind)
             default_arg('opsGen',@sbp.Ordinary);
@@ -155,6 +163,40 @@ classdef Euler1d < scheme.Scheme
             % Devide columns by stuff to get rid of extra comp?
         end
 
+        function fs = flowStateL(obj, q)
+            q_l = obj.e_L'*q;
+            c = obj.c(q);
+            v = q_l(2,:)/q_l(1,:);
+
+            if v > c
+                fs = scheme.Euler1d.SUPERSONIC_INFLOW;
+            elseif v > 0
+                fs = scheme.Euler1d.SUBSONIC_INFLOW;
+            elseif v > -c
+                fs = scheme.Euler1d.SUBSONIC_OUTFLOW;
+            else
+                fs = scheme.Euler1d.SUPERSONIC_INFLOW;
+            end
+        end
+
+        % returns positiv values for inlfow, negative for outflow.
+        %  +-1 for subsonic
+        function fs = flowStateR(obj, q)
+            q_r = obj.e_R'*q;
+            c = obj.c(q);
+            v = q_r(2,:)/q_r(1,:);
+
+            if v < -c
+                fs = scheme.Euler1d.SUPERSONIC_INFLOW;
+            elseif v < 0
+                fs = scheme.Euler1d.SUBSONIC_INFLOW;
+            elseif v < c
+                fs = scheme.Euler1d.SUBSONIC_OUTFLOW;
+            else
+                fs = scheme.Euler1d.SUPERSONIC_INFLOW;
+            end
+        end
+
         % Enforces the boundary conditions
         %  w+ = R*w- + g(t)
         function closure = boundary_condition(obj,boundary, type, varargin)
@@ -170,7 +212,9 @@ classdef Euler1d < scheme.Scheme
                     closure = obj.boundary_condition_inflow(boundary,varargin{:});
                 case 'outflow'
                     closure = obj.boundary_condition_outflow(boundary,varargin{:});
-                    case 'outflow_rho'
+                case 'inflow_rho'
+                    closure = obj.boundary_condition_inflow_rho(boundary,varargin{:});
+                case 'outflow_rho'
                     closure = obj.boundary_condition_outflow_rho(boundary,varargin{:});
                 case 'char'
                     closure = obj.boundary_condition_char(boundary,varargin{:});
@@ -207,9 +251,7 @@ classdef Euler1d < scheme.Scheme
                 Tin = T(:,p_in);
                 Tot = T(:,p_ot);
 
-                % Convert bc from ordinary form to characteristic form.
-                %   Lq = g  => w_in = Rw_ot + g_tilde
-
+                % Calculate eigen value matrix
                 Lambda = obj.Lambda(q_s);
 
                 % Setup the penalty parameter
@@ -217,17 +259,10 @@ classdef Euler1d < scheme.Scheme
                 tau2 = zeros(length(p_ot),length(p_in)); % Penalty only on ingoing char.
 
                 tauHat = [tau1; tau2];
-                tau = -s*e_S*sparse(T*tauHat(pt,:));
+                tau = e_S*sparse(T*tauHat(pt,:));
 
                 L = L_fun(rho,u,e);
                 g = g_fun(t);
-
-                % printExpr('s')
-                % penalty = tauHat(pt,:)*inv(L*Tin)*(L*q_s - g);
-                % tauHatPt = tauHat(pt,:);
-                % display(tauHatPt);
-                % display(penalty);
-                % pause
 
                 o = 1/2*obj.Hi * tau * inv(L*Tin)*(L*q_s - g);
             end
@@ -315,6 +350,29 @@ classdef Euler1d < scheme.Scheme
 
             closure = boundary_condition_L(obj, boundary, L, g, p_in);
 
+        end
+
+        function closure = boundary_condition_inflow_rho(obj, boundary, rho_data, v_data)
+            [~,~,s] = obj.get_boundary_ops(boundary);
+
+             switch s
+                case -1
+                    p_in = [1 2];
+                case 1
+                    p_in = [1 3];
+            end
+
+            a = obj.gamma - 1;
+            L = @(rho,~,~)[
+                0  1/rho 0;
+                1      0 0;
+            ];
+            g = @(t)[
+                v_data(t);
+                rho_data(t);
+            ];
+
+            closure = boundary_condition_L(obj, boundary, L, g, p_in);
         end
 
         function closure = boundary_condition_outflow_rho(obj, boundary, rho_data)
