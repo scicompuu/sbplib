@@ -11,8 +11,6 @@ function [update_data, plot_handles] = setup_time_quantity_plot(yfun)
     end
 
     axis_handle = gca;
-    legend()
-
 
     function update(t_now,varargin)
         if ishandle(axis_handle)
