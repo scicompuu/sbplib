@@ -3,11 +3,7 @@ classdef Curve
         g
         gp
         transformation
-        arc_length_fun 
         
-        % arc_length_fun: 
-        % function handle. arc_length(s)=distance 
-        % between t=0 and t=s.
     end
     methods
         %TODO:
@@ -16,23 +12,18 @@ classdef Curve
 
         % Concatenation of curves
         % Subsections of curves
-        % Stretching of curve paramter - semi-done
+        % Stretching of curve parameter - semi-done
         % Curve to cell array of linesegments
 
-        % Should supply either derivative or a difference operator D1
-        function obj = Curve(g,gp,transformation,D1,arc_length_fun)
+        % Can supply either derivative or a difference operator D1
+        function obj = Curve(g,gp,transformation,D1)
             default_arg('gp',[]);
             default_arg('transformation',[]);
             default_arg('D1',[]);
-            default_arg('arc_length_fun',[]);
             p_test = g(0);
             assert(all(size(p_test) == [2,1]), 'A curve parametrization must return a 2x1 vector.');
 
-            if(isempty(gp) && isempty(D1));
-                % Should be error instead of disp.
-                disp(['You really should supply either the exact derivative ',...
-                'or a suitable difference operator to compute an approximation.']);
-            elseif(isempty(gp))
+            if(isempty(gp) && ~isempty(D1))
                 gp = grid.Curve.numerical_derivative(g,D1);
             end
             
@@ -41,66 +32,11 @@ classdef Curve
                 transformation.base_gp = gp;
                 [g,gp] = grid.Curve.transform_g(g,gp,transformation);
             end
-
-            if(isempty(arc_length_fun))
-                if(~isempty(D1)); N = length(D1); % Same accuracy as for deriv.
-                else N = 101; % Best way to let user choose?
-                end
-                tvec = linspace(0,1,N);
-                arc_vec = grid.Curve.arc_length(gp,0,tvec);
-                arc_length_fun = grid.Curve.spline(tvec,arc_vec);
-            end
             
             obj.g = g;
             obj.gp = gp;
             obj.transformation = transformation;
-            obj.arc_length_fun = arc_length_fun;
             
-
-        end
-
-        % Made up length calculation!! Science this before actual use!!
-        % Calculates the length of the curve. Makes sure the longet segment used is shorter than h_max.
-        function [L,t] = curve_length(C,h_max)
-            default_arg('h_max',0.001);
-            g = C.g;
-            h = 0.1;
-            m = 1/h+1;
-            t = linspace(0,1,m);
-
-            [p,d] = get_d(t,g);
-
-            while any(d>h_max)
-                I = find(d>h_max);
-
-                % plot(p(1,:),p(2,:),'.')
-                % waitforbuttonpress
-
-                new_t = [];
-                for i = I
-                    new_t(end +1) = (t(i)+t(i+1))/2;
-                end
-                t = [t new_t];
-                t = sort(t);
-
-                [p,d] = get_d(t,g);
-            end
-
-            L = sum(d);
-
-            function [p,d] = get_d(t,g)
-                n = length(t);
-
-                p = zeros(2,n);
-                for i = 1:n
-                    p(:,i) = g(t(i));
-                end
-
-                d = zeros(1,n-1);
-                for i = 1:n-1
-                    d(i) = norm(p(:,i) - p(:,i+1));
-                end
-            end
         end
 
         function n = normal(obj,t)
@@ -112,38 +48,22 @@ classdef Curve
 
         % Plots a curve g(t) for 0<t<1, using n points. Returns a handle h to the plotted curve.
         %   h = plot_curve(g,n)
-        function h = plot(obj,n,marker)
+        function h = plot(obj,n)
             default_arg('n',100);
-            default_arg('marker','line')
 
             t = linspace(0,1,n);
-
             p = obj.g(t);
-
-            switch marker
-                case 'line'
-                    h = line(p(1,:),p(2,:));
-                otherwise
-                    h = plot(p(1,:),p(2,:),marker);
-            end
+            h = line(p(1,:),p(2,:));
         end
         
         % Plots the derivative gp(t) for 0<t<1, using n points. Returns a handle h to the plotted curve.
         %   h = plot_curve(gp,n)
-        function h = plot_derivative(obj,n,marker)
+        function h = plot_derivative(obj,n)
             default_arg('n',100);
-            default_arg('marker','line')
 
             t = linspace(0,1,n);
-
             p = obj.gp(t);
-
-            switch marker
-                case 'line'
-                    h = line(p(1,:),p(2,:));
-                otherwise
-                    h = plot(p(1,:),p(2,:),marker);
-            end
+            h = line(p(1,:),p(2,:));
         end
 
         function h= plot_normals(obj,l,n,m)
@@ -178,24 +98,26 @@ classdef Curve
             % Shows curve with name and arrow for direction.
 
         
-        function curve = stretch_parameter(obj,type)
-            default_arg('type','arc_length');
-            switch type
-                % Arc length parameterization.
-                case 'arc_length'
-                    arcLength = obj.arc_length_fun;
-                    arcPar = @(t) util.fzero_vec(@(s)arcLength(s) - t*arcLength(1),[0-10*eps,1+10*eps]);
-                    g_new = @(t)obj.g(arcPar(t));
-                    gp_old = obj.gp;
-                    gp_new = @(t) normalize(gp_old(arcPar(t)));
-                    
-                    arc_len_new = @(t) t;
-                    curve = grid.Curve(g_new,gp_new,[],[],arc_len_new);
-                    
-                otherwise
-                    error('That stretching is not implemented.');
-            end
+        % Arc length parameterization.
+        function curve = arcLengthStretch(obj,N)
+            default_arg('N',100);
+            assert(~isempty(obj.gp),'This curve does not yet have a derivative added.')
             
+            % Construct arcLength function using splines
+            tvec = linspace(0,1,N);
+            arcVec = grid.Curve.arcLength(obj.gp,0,tvec);
+            arcLength = grid.Curve.spline(tvec,arcVec);
+   
+            % Stretch the parameter
+            arcPar = @(t) util.fzero_vec(@(s)arcLength(s) - t*arcLength(1),[0-10*eps,1+10*eps]);
+            
+            % New function and derivative
+            g_new = @(t)obj.g(arcPar(t));
+            gp_old = obj.gp;
+            gp_new = @(t) normalize(gp_old(arcPar(t)));
+
+            curve = grid.Curve(g_new,gp_new);
+                     
         end
             
         % how to make it work for methods without returns
@@ -213,8 +135,6 @@ classdef Curve
                     % error()
             end
         end
-
-
 
 
         %% TRANSFORMATION OF A CURVE
@@ -340,7 +260,7 @@ classdef Curve
         
         % Length of arc from parameter t0 to t1 (which may be vectors).
         % Computed using derivative.
-        function L = arc_length(deriv,t0,t1)
+        function L = arcLength(deriv,t0,t1)
             speed = @(t) sp(deriv(t));
             
             function s = sp(deriv)
