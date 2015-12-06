@@ -108,8 +108,9 @@ classdef Curve
             arcVec = grid.Curve.arcLength(obj.gp,0,tvec);
             arcLength = grid.Curve.spline(tvec,arcVec);
    
-            % Stretch the parameter
-            arcPar = @(t) util.fzero_vec(@(s)arcLength(s) - t*arcLength(1),[0-10*eps,1+10*eps]);
+            % Stretch the parameter, construct function with splines
+            arcParVec = util.fzero_vec(@(s)arcLength(s) - tvec*arcLength(1),[0-10*eps,1+10*eps]);
+            arcPar = grid.Curve.spline(tvec,arcParVec);
             
             % New function and derivative
             g_new = @(t)obj.g(arcPar(t));
