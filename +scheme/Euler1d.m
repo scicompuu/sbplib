@@ -283,7 +283,8 @@ classdef Euler1d < scheme.Scheme
                 Lambda = [u, u+c, u-c];
 
                 p_in = find(s*Lambda < 0);
-                p_ot = find(s*Lambda >= 0);
+                p_ot = 1:3;
+                p_ot(p_in) = [];
                 p = [p_in p_ot];
                 pt(p) = 1:length(p);
 
@@ -396,29 +397,6 @@ classdef Euler1d < scheme.Scheme
         % Set wall boundary condition v = 0.
         function closure = boundary_condition_wall(obj,boundary)
             [e_s,e_S,s] = obj.get_boundary_ops(boundary);
-
-            % v = 0 corresponds to
-            % L = [0 1 0];
-            % g = 0
-            %
-            % Tp =
-            % R = -(u-c)/(u+c)
-
-            % tau = alpha * (u+c)
-            % (alpha+1)(u+c) + 1/4* alpha^2|u-c| <= 0
-            % 4*(alpha+1)(u+c) + alpha^2|u-c| <= 0
-            % 4 * (alpha+1)(u+c) + alpha^2|u| + alpha^2*c <= 0
-            % |u|*(sgn(u)*4 + sgn(u)*4*alpha + alpha^2) + c*(4 + 4alpha + alpha^2) <= 0
-            % |u|*(alpha^2 + 4*sgn(u)*alpha + 4*sgn(u)) + c*(alpha+2)^2 <= 0
-            % |u|*[(alpha + 2*sgn(u))^2 - 4*(sgn(u)-1)] + c*(alpha+2)^2 <= 0
-
-
-            % om vi låtsas att u = 0:
-            % (alpha+1)c + 1/4 * alpha^2*c <= 0
-            % alpha^2 +  4*alpha +4 <= 0
-            % (alpha + 2)^2 <= 0
-            % alpha = -2   gives tau = -2*c;
-
 
             % Vill vi sätta penalty på karateristikan som är nära noll också eller vill
             % vi låta den vara fri?
