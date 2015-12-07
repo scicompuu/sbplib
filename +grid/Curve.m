@@ -8,7 +8,6 @@ classdef Curve
     methods
         %TODO:
         % Errors or FD if there is no derivative function added.
-        % -semi-done
 
         % Concatenation of curves
         % Subsections of curves
@@ -98,11 +97,9 @@ classdef Curve
             % Construct arcLength function using splines
             tvec = linspace(0,1,N);
             arcVec = obj.arcLength(0,tvec);
-            arcLength = spline(tvec,arcVec);
-   
-            % Stretch the parameter, construct function with splines
-            arcParVec = fzero_vec(@(s)arcLength(s) - tvec*arcLength(1),[0-10*eps,1+10*eps]);
-            arcPar = spline(tvec,arcParVec);
+            tFunc = spline(arcVec,tvec); % t as a function of arcLength
+            L = obj.arcLength(0,1);
+            arcPar = @(s) tFunc(s*L);
             
             % New function and derivative
             g_new = @(t)obj.g(arcPar(t));
@@ -249,7 +246,8 @@ classdef Curve
 
     methods (Static)
         
-        function gp_out = numerical_derivative(g,D1)
+        
+        function gp_out = numericalDerivative(g,D1)
             m = length(D1); L = 1; % Assume curve parameter from 0 to 1.
             t = linspace(0,L,m); 
             gVec = g(t)';
@@ -376,32 +374,11 @@ function I = integral_vec(f,a,b)
     end
 end
 
-function I = fzero_vec(f,lim)
-% Wrapper around the built-in function fzero that
-% handles multiple functions (vector-valued f).
-
-    fval = f(lim(1));
-    I = zeros(size(fval));
-    
-    for i = 1:length(fval)
-        e = zeros(size(fval));
-        e(i) = 1;
-        I(i) = fzero(@(t) sum(e.*f(t)),lim);
-    end
-    
-end
-
 % Returns a function handle to the spline.
 function f = spline(tval,fval,spline_order)
     default_arg('spline_order',4);
     [m,~] = size(tval);
     assert(m==1,'Need row vectors.');
-
-    % make vectors longer to be safe slightly beyond edges.
-    dt0 = tval(2)-tval(1); dt1 = tval(end)-tval(end-1);
-    df0 = fval(2)-fval(1); df1 = fval(end)-fval(end-1);
-    tval = [tval(1)-dt0, tval, tval(end)+dt1];
-    fval = [fval(1)-df0, fval, fval(end)+df1];
 
     f_spline = spapi( optknt(tval,spline_order), tval, fval );
     f = @(t) fnval(f_spline,t);
