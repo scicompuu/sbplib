@@ -8,14 +8,13 @@ function testCfl(discr, timestepper_method, T, alpha0, tol,threshold, silentFlag
     while( (alpha0(2)-alpha0(1))/alpha0(1) > tol)
         alpha = mean(alpha0);
 
-        ts = discr.getTimestepper(timestepper_method,[],alpha);
+        ts = discr.getTimestepper(struct('method', timestepper_method, 'cfl', alpha));
 
         warning('off','all')
         ts.evolve(T,true);
         warning('on','all')
 
         [v,t] = ts.getV();
-
         max_val = max(v);
 
         if isnan(max_val) || max_val == Inf || max_val > threshold
