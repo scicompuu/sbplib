@@ -15,17 +15,13 @@ classdef Curve
         % Stretching of curve parameter - semi-done
         % Curve to cell array of linesegments
 
-        % Can supply either derivative or a difference operator D1
-        function obj = Curve(g,gp,transformation,D1)
+        % The curve parameter t must be in [0,1].
+        % Can supply derivative.
+        function obj = Curve(g,gp,transformation)
             default_arg('gp',[]);
             default_arg('transformation',[]);
-            default_arg('D1',[]);
             p_test = g(0);
             assert(all(size(p_test) == [2,1]), 'A curve parametrization must return a 2x1 vector.');
-
-            if(isempty(gp) && ~isempty(D1))
-                gp = grid.Curve.numerical_derivative(g,D1);
-            end
             
             if ~isempty(transformation)
                 transformation.base_g = g;
@@ -53,16 +49,6 @@ classdef Curve
 
             t = linspace(0,1,n);
             p = obj.g(t);
-            h = line(p(1,:),p(2,:));
-        end
-        
-        % Plots the derivative gp(t) for 0<t<1, using n points. Returns a handle h to the plotted curve.
-        %   h = plot_curve(gp,n)
-        function h = plot_derivative(obj,n)
-            default_arg('n',100);
-
-            t = linspace(0,1,n);
-            p = obj.gp(t);
             h = line(p(1,:),p(2,:));
         end
 
@@ -97,26 +83,30 @@ classdef Curve
         end
             % Shows curve with name and arrow for direction.
 
+        % Length of arc from parameter t0 to t1 (which may be vectors).
+        % Computed using derivative.
+        function L = arcLength(obj,t0,t1)
+            assert(~isempty(obj.gp),'Curve has no derivative!');
+            speed = @(t) sqrt(sum(obj.gp(t).^2,1));
+            L =  integral_vec(speed,t0,t1);
+        end
         
         % Arc length parameterization.
-        function curve = arcLengthStretch(obj,N)
+        function curve = arcLengthParametrization(obj,N)
             default_arg('N',100);
-            assert(~isempty(obj.gp),'This curve does not yet have a derivative added.')
             
             % Construct arcLength function using splines
             tvec = linspace(0,1,N);
-            arcVec = grid.Curve.arcLength(obj.gp,0,tvec);
-            arcLength = grid.Curve.spline(tvec,arcVec);
+            arcVec = obj.arcLength(0,tvec);
+            arcLength = spline(tvec,arcVec);
    
             % Stretch the parameter, construct function with splines
-            arcParVec = util.fzero_vec(@(s)arcLength(s) - tvec*arcLength(1),[0-10*eps,1+10*eps]);
-            arcPar = grid.Curve.spline(tvec,arcParVec);
+            arcParVec = fzero_vec(@(s)arcLength(s) - tvec*arcLength(1),[0-10*eps,1+10*eps]);
+            arcPar = spline(tvec,arcParVec);
             
             % New function and derivative
             g_new = @(t)obj.g(arcPar(t));
-            gp_old = obj.gp;
-            gp_new = @(t) normalize(gp_old(arcPar(t)));
-
+            gp_new = @(t) normalize(obj.gp(arcPar(t)));
             curve = grid.Curve(g_new,gp_new);
                      
         end
@@ -259,43 +249,16 @@ classdef Curve
 
     methods (Static)
         
-        % Length of arc from parameter t0 to t1 (which may be vectors).
-        % Computed using derivative.
-        function L = arcLength(deriv,t0,t1)
-            speed = @(t) sp(deriv(t));
-            
-            function s = sp(deriv)
-                s = sqrt(sum(deriv.^2,1));
-            end
-            L =  util.integral_vec(speed,t0,t1);
-        end
-        
         function gp_out = numerical_derivative(g,D1)
             m = length(D1); L = 1; % Assume curve parameter from 0 to 1.
             t = linspace(0,L,m); 
-            g = g(t)';
-            gp = (D1*g)';
+            gVec = g(t)';
+            gpVec = (D1*gVec)';
 
-            gp1_fun = grid.Curve.spline(t,gp(1,:));
-            gp2_fun = grid.Curve.spline(t,gp(2,:));
+            gp1_fun = spline(t,gpVec(1,:));
+            gp2_fun = spline(t,gpVec(2,:));
             gp_out = @(t) [gp1_fun(t);gp2_fun(t)];
             
-        end
-        
-        % Returns a function handle to the spline.
-        function f = spline(tval,fval,spline_order)
-            default_arg('spline_order',4);
-            [m,~] = size(tval);
-            assert(m==1,'Need row vectors.');
-            
-            % make vectors longer to be safe slightly beyond edges.
-            dt0 = tval(2)-tval(1); dt1 = tval(end)-tval(end-1);
-            df0 = fval(2)-fval(1); df1 = fval(end)-fval(end-1);
-            tval = [tval(1)-dt0, tval, tval(end)+dt1];
-            fval = [fval(1)-df0, fval, fval(end)+df1];
-            
-            f_spline = spapi( optknt(tval,spline_order), tval, fval );
-            f = @(t) fnval(f_spline,t);
         end
         
         function obj = line(p1, p2)
@@ -380,9 +343,68 @@ classdef Curve
 end
 
 function g_norm = normalize(g0)
-    g1 = g0(1,:); g2 = g0(2,:);
+    g1 = g0(1,:); 
+    g2 = g0(2,:);
     normalization = sqrt(sum(g0.^2,1));
     g_norm = [g1./normalization; g2./normalization];
+end
+
+function I = integral_vec(f,a,b)
+% Wrapper around the built-in function integral that
+% handles multiple limits.
+
+    Na = length(a);
+    Nb = length(b);
+    assert(Na == 1 || Nb == 1 || Na==Nb,...
+        'a and b must have same length, unless one is a scalar.');
+    
+    if(Na>Nb);
+        I = zeros(size(a));
+        for i = 1:Na
+            I(i) = integral(f,a(i),b);
+        end
+    elseif(Nb>Na)
+        I = zeros(size(b));
+        for i = 1:Nb
+            I(i) = integral(f,a,b(i));
+        end
+    else
+        I = zeros(size(b));
+        for i = 1:Nb
+            I(i) = integral(f,a(i),b(i));
+        end
+    end
+end
+
+function I = fzero_vec(f,lim)
+% Wrapper around the built-in function fzero that
+% handles multiple functions (vector-valued f).
+
+    fval = f(lim(1));
+    I = zeros(size(fval));
+    
+    for i = 1:length(fval)
+        e = zeros(size(fval));
+        e(i) = 1;
+        I(i) = fzero(@(t) sum(e.*f(t)),lim);
+    end
+    
+end
+
+% Returns a function handle to the spline.
+function f = spline(tval,fval,spline_order)
+    default_arg('spline_order',4);
+    [m,~] = size(tval);
+    assert(m==1,'Need row vectors.');
+
+    % make vectors longer to be safe slightly beyond edges.
+    dt0 = tval(2)-tval(1); dt1 = tval(end)-tval(end-1);
+    df0 = fval(2)-fval(1); df1 = fval(end)-fval(end-1);
+    tval = [tval(1)-dt0, tval, tval(end)+dt1];
+    fval = [fval(1)-df0, fval, fval(end)+df1];
+
+    f_spline = spapi( optknt(tval,spline_order), tval, fval );
+    f = @(t) fnval(f_spline,t);
 end
 
     
