@@ -7,11 +7,9 @@ classdef Curve
     end
     methods
         %TODO:
-        % Errors or FD if there is no derivative function added.
-
         % Concatenation of curves
         % Subsections of curves
-        % Stretching of curve parameter - semi-done
+        % Stretching of curve parameter - done for arc length.
         % Curve to cell array of linesegments
 
         % The curve parameter t must be in [0,1].
@@ -35,6 +33,7 @@ classdef Curve
         end
 
         function n = normal(obj,t)
+            assert(~isempty(obj.gp),'Curve has no derivative!');
             deriv = obj.gp(t);
             normalization = sqrt(sum(deriv.^2,1));
             n = [-deriv(2,:)./normalization; deriv(1,:)./normalization];
@@ -93,6 +92,7 @@ classdef Curve
         % Arc length parameterization.
         function curve = arcLengthParametrization(obj,N)
             default_arg('N',100);
+            assert(~isempty(obj.gp),'Curve has no derivative!');
             
             % Construct arcLength function using splines
             tvec = linspace(0,1,N);
