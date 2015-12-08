@@ -226,9 +226,11 @@ classdef Euler1d < scheme.Scheme
 
 
         % Sets the boundary condition Lq = g, where
-        %   L = L(rho, u, e), g = g(t)
+        %   L = L(rho, u, e)
         %   p_in are the indecies of the ingoing characteristics.
-        function closure = boundary_condition_L(obj, boundary, L_fun, g_fun, p_in)
+        %
+        % Returns closure(q,g)
+        function closure = boundary_condition_L(obj, boundary, L_fun, p_in)
             [e_s,e_S,s] = obj.get_boundary_ops(boundary);
 
             p_ot = 1:3;
@@ -237,7 +239,7 @@ classdef Euler1d < scheme.Scheme
             p = [p_in, p_ot]; % Permutation to sort
             pt(p) = 1:length(p); % Inverse permutation
 
-            function o = closure_fun(q,t)
+            function o = closure_fun(q,g)
                 % Extract solution at the boundary
                 q_s = e_S'*q;
                 rho = q_s(1);
@@ -262,17 +264,17 @@ classdef Euler1d < scheme.Scheme
                 tau = e_S*sparse(T*tauHat(pt,:));
 
                 L = L_fun(rho,u,e);
-                g = g_fun(t);
 
                 o = 1/2*obj.Hi * tau * inv(L*Tin)*(L*q_s - g);
             end
             closure = @closure_fun;
         end
 
-        function closure = boundary_condition_char(obj,boundary,w_data)
+        % Return closure(q,g)
+        function closure = boundary_condition_char(obj,boundary)
             [e_s,e_S,s] = obj.get_boundary_ops(boundary);
 
-            function o = closure_fun(q,t)
+            function o = closure_fun(q, w_data)
                 q_s = e_S'*q;
                 rho = q_s(1);
                 u = q_s(2)/rho;
@@ -300,17 +302,17 @@ classdef Euler1d < scheme.Scheme
                 w_s = inv(T)*q_s;
                 w_in = w_s(p_in);
 
-                w_s_data = w_data(t);
-                w_in_data = w_s_data(p_in);
+                w_in_data = w_data(p_in);
 
                 o = 1/2*obj.Hi * tau * (w_in - w_in_data);
             end
 
             closure = @closure_fun;
-
         end
 
-        function closure = boundary_condition_inflow(obj, boundary, p_data, v_data)
+
+        % Return closure(q,[v; p])
+        function closure = boundary_condition_inflow(obj, boundary)
             [~,~,s] = obj.get_boundary_ops(boundary);
 
              switch s
@@ -322,19 +324,16 @@ classdef Euler1d < scheme.Scheme
 
             a = obj.gamma - 1;
             L = @(rho,u,~)[
-                0    1/rho 0;
-                0 -1/2*u*a a;
-            ];
-            g = @(t)[
-                v_data(t);
-                p_data(t);
+                0    1/rho 0;  %v
+                0 -1/2*u*a a;  %p
             ];
 
-            closure = boundary_condition_L(obj, boundary, L, g, p_in);
+            closure_raw = boundary_condition_L(obj, boundary, L, g, p_in);
+            closure = @(q,p,v) closure_raw(q,[v; p]);
         end
 
-
-        function closure = boundary_condition_outflow(obj, boundary, p_data)
+        % Return closure(q, p)
+        function closure = boundary_condition_outflow(obj, boundary)
             [~,~,s] = obj.get_boundary_ops(boundary);
 
              switch s
@@ -346,14 +345,12 @@ classdef Euler1d < scheme.Scheme
 
             a = obj.gamma -1;
             L = @(~,u,~)a*[0 -1/2*u 1];
-            g = @(t)[p_data(t)];
 
-
-            closure = boundary_condition_L(obj, boundary, L, g, p_in);
-
+            closure = boundary_condition_L(obj, boundary, L, p_in);
         end
 
-        function closure = boundary_condition_inflow_rho(obj, boundary, rho_data, v_data)
+        % Return closure(q,[v; rho])
+        function closure = boundary_condition_inflow_rho(obj, boundary)
             [~,~,s] = obj.get_boundary_ops(boundary);
 
              switch s
@@ -368,15 +365,12 @@ classdef Euler1d < scheme.Scheme
                 0  1/rho 0;
                 1      0 0;
             ];
-            g = @(t)[
-                v_data(t);
-                rho_data(t);
-            ];
 
-            closure = boundary_condition_L(obj, boundary, L, g, p_in);
+            closure = boundary_condition_L(obj, boundary, L, p_in);
         end
 
-        function closure = boundary_condition_outflow_rho(obj, boundary, rho_data)
+        % Return closure(q,rho)
+        function closure = boundary_condition_outflow_rho(obj, boundary)
             [~,~,s] = obj.get_boundary_ops(boundary);
 
              switch s
@@ -387,11 +381,8 @@ classdef Euler1d < scheme.Scheme
             end
 
             L = @(~,~,~)[1 0 0];
-            g = @(t)[rho_data(t)];
 
-
-            closure = boundary_condition_L(obj, boundary, L, g, p_in);
-
+            closure = boundary_condition_L(obj, boundary, L, p_in);
         end
 
         % Set wall boundary condition v = 0.
