@@ -3,8 +3,8 @@ classdef Curve
         g
         gp
         transformation
-        
     end
+
     methods
         %TODO:
         % Concatenation of curves
@@ -12,24 +12,25 @@ classdef Curve
         % Stretching of curve parameter - done for arc length.
         % Curve to cell array of linesegments
 
-        % The curve parameter t must be in [0,1].
-        % Can supply derivative.
+        % Returns a curve object.
+        %   g -- curve parametrization for parameter between 0 and 1
+        %  gp -- parametrization of curve derivative
         function obj = Curve(g,gp,transformation)
             default_arg('gp',[]);
             default_arg('transformation',[]);
             p_test = g(0);
             assert(all(size(p_test) == [2,1]), 'A curve parametrization must return a 2x1 vector.');
-            
+
             if ~isempty(transformation)
                 transformation.base_g = g;
                 transformation.base_gp = gp;
                 [g,gp] = grid.Curve.transform_g(g,gp,transformation);
             end
-            
+
             obj.g = g;
             obj.gp = gp;
             obj.transformation = transformation;
-            
+
         end
 
         function n = normal(obj,t)
@@ -88,26 +89,27 @@ classdef Curve
             speed = @(t) sqrt(sum(obj.gp(t).^2,1));
             L =  integral_vec(speed,t0,t1);
         end
-        
-        % Arc length parameterization.
+
+        % Creates the arc length parameterization of a curve.
+        %    N -- number of points used to approximate the arclength function
         function curve = arcLengthParametrization(obj,N)
             default_arg('N',100);
             assert(~isempty(obj.gp),'Curve has no derivative!');
-            
+
             % Construct arcLength function using splines
             tvec = linspace(0,1,N);
             arcVec = obj.arcLength(0,tvec);
             tFunc = spline(arcVec,tvec); % t as a function of arcLength
             L = obj.arcLength(0,1);
             arcPar = @(s) tFunc(s*L);
-            
+
             % New function and derivative
             g_new = @(t)obj.g(arcPar(t));
             gp_new = @(t) normalize(obj.gp(arcPar(t)));
             curve = grid.Curve(g_new,gp_new);
-                     
+
         end
-            
+
         % how to make it work for methods without returns
         function p = subsref(obj,S)
             %Should i add error checking here?
@@ -245,20 +247,19 @@ classdef Curve
     end
 
     methods (Static)
-        
-        
+
+        % Computes the derivative of g: R -> R^2 using an operator D1
         function gp_out = numericalDerivative(g,D1)
-            m = length(D1); L = 1; % Assume curve parameter from 0 to 1.
-            t = linspace(0,L,m); 
+            m = length(D1);
+            t = linspace(0,1,m);
             gVec = g(t)';
             gpVec = (D1*gVec)';
 
             gp1_fun = spline(t,gpVec(1,:));
             gp2_fun = spline(t,gpVec(2,:));
             gp_out = @(t) [gp1_fun(t);gp2_fun(t)];
-            
         end
-        
+
         function obj = line(p1, p2)
 
             function v = g_fun(t)
@@ -337,11 +338,13 @@ classdef Curve
             end
         end
 
-    end 
+    end
 end
 
+
+
 function g_norm = normalize(g0)
-    g1 = g0(1,:); 
+    g1 = g0(1,:);
     g2 = g0(2,:);
     normalization = sqrt(sum(g0.^2,1));
     g_norm = [g1./normalization; g2./normalization];
@@ -355,7 +358,7 @@ function I = integral_vec(f,a,b)
     Nb = length(b);
     assert(Na == 1 || Nb == 1 || Na==Nb,...
         'a and b must have same length, unless one is a scalar.');
-    
+
     if(Na>Nb);
         I = zeros(size(a));
         for i = 1:Na
@@ -383,6 +386,3 @@ function f = spline(tval,fval,spline_order)
     f_spline = spapi( optknt(tval,spline_order), tval, fval );
     f = @(t) fnval(f_spline,t);
 end
-
-    
-    
