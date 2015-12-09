@@ -18,6 +18,12 @@ function hand = animate(discretization, time_modifier, Tend, dirname, opt)
         do_pause = false;
     end
 
+    if isinf(time_modifier)
+        do_step = true;
+    else
+        do_step = false;
+    end
+
     makemovies = ~strcmp(dirname,'');
     if makemovies
         dirname = ['mov/' dirname];
@@ -74,7 +80,21 @@ function hand = animate(discretization, time_modifier, Tend, dirname, opt)
     fprintf('System size: %d\n',size(discretization));
     % waitforbuttonpress
 
-    anim.animate(@G, Tstart, Tend, time_modifier);
+
+    if ~do_step
+        anim.animate(@G, Tstart, Tend, time_modifier);
+    else
+        while true
+            ts.step();
+            sol = discretization.getTimeSnapshot(ts);
+            update(sol);
+            drawnow
+
+            if do_pause
+                pause
+            end
+        end
+    end
 
     % str = util.replace_string(str,'');
 
