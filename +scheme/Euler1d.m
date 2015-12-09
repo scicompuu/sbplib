@@ -165,7 +165,7 @@ classdef Euler1d < scheme.Scheme
 
         function fs = flowStateL(obj, q)
             q_l = obj.e_L'*q;
-            c = obj.c(q);
+            c = obj.c(q_l);
             v = q_l(2,:)/q_l(1,:);
 
             if v > c
@@ -175,7 +175,7 @@ classdef Euler1d < scheme.Scheme
             elseif v > -c
                 fs = scheme.Euler1d.SUBSONIC_OUTFLOW;
             else
-                fs = scheme.Euler1d.SUPERSONIC_INFLOW;
+                fs = scheme.Euler1d.SUPERSONIC_OUTFLOW;
             end
         end
 
@@ -183,7 +183,7 @@ classdef Euler1d < scheme.Scheme
         %  +-1 for subsonic
         function fs = flowStateR(obj, q)
             q_r = obj.e_R'*q;
-            c = obj.c(q);
+            c = obj.c(q_r);
             v = q_r(2,:)/q_r(1,:);
 
             if v < -c
@@ -193,7 +193,7 @@ classdef Euler1d < scheme.Scheme
             elseif v < c
                 fs = scheme.Euler1d.SUBSONIC_OUTFLOW;
             else
-                fs = scheme.Euler1d.SUPERSONIC_INFLOW;
+                fs = scheme.Euler1d.SUPERSONIC_OUTFLOW;
             end
         end
 
