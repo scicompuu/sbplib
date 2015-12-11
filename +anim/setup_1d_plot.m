@@ -27,7 +27,10 @@ function [update_data, plot_handles, axis_handle] = setup_1d_plot(x,y_lim,yfun)
     xlabel('x')
     ylabel('y')
     xlim([x(1) x(end)]);
-    ylim(y_lim);
+
+    if ~isempty(y_lim)
+        ylim(y_lim);
+    end
 
     function update(t,varargin)
         if ishandle(figure_handle) && ishandle(axis_handle)
