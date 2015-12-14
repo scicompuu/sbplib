@@ -1,8 +1,8 @@
-% animate(dirname,discretization,Tend, time_modifier,time_method)
+% hand = animate(discretization, time_modifier, Tend, dirname, opt)
 %
 % Example:
-%      animate('',discr,tend)
-%      animate('my_mov',discr,tend,time_mod,time_method)
+%      animate(discr,timemodifier,tend)
+%      animate(discr,1, [tstart tend],'my_mov', opt)
 
 function hand = animate(discretization, time_modifier, Tend, dirname, opt)
     default_arg('time_modifier',1);
@@ -46,8 +46,8 @@ function hand = animate(discretization, time_modifier, Tend, dirname, opt)
         fprintf(' - Done\n');
         start_solution = discretization.getTimeSnapshot(ts);
     else
-        Tstart = 0;
         start_solution = discretization.getTimeSnapshot(0);
+        Tstart = start_solution.t;
     end
 
     [update, figure_handle] = discretization.setupPlot('animation');
@@ -82,6 +82,7 @@ function hand = animate(discretization, time_modifier, Tend, dirname, opt)
 
 
     if ~do_step
+        pause
         anim.animate(@G, Tstart, Tend, time_modifier);
     else
         while true
