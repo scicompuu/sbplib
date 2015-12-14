@@ -7,6 +7,7 @@
 function hand = benchmark(discretization,N ,time_method,do_profile)
     default_arg('N',100);
     default_arg('time_method',[]);
+    default_arg('do_profile',true);
 
     fprintf('Creating time discretization');
     tic
