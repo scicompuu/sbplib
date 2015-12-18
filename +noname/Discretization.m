@@ -34,12 +34,6 @@ classdef Discretization < handle
         % if ts is empty or 0 a representation of the initial conditions be returned.
         repr = getTimeSnapshot(obj, ts)
 
-
-        % Sets up movie recording to a given file.
-        %     saveFrame is a function_handle with no inputs that records the current state
-        %               as a frame in the moive.
-        saveFrame = setupMov(obj, file)
-
         % Sets up a plot of the discretisation
         %     update is a function_handle accepting a timestepper that updates the plot to the
         %            state of the timestepper
