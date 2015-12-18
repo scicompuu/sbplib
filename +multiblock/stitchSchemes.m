@@ -69,8 +69,8 @@ function [schms, D, H] = stitchSchemes(schmHand, order, schmParam, blocks, ms, c
                 continue
             end
 
-            t = schms{i}.boundary_condition(fn{j},bc{:});
-            D{i,i} = D{i,i}+t;
+            [closure, ~] = schms{i}.boundary_condition(fn{j},bc{:});
+            D{i,i} = D{i,i}+closure;
         end
     end
 
