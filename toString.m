@@ -17,7 +17,7 @@ function str  = value2string(value)
         str = struct2string(value);
     elseif iscell(value)
         str = cell2string(value);
-    elseif isa(value,'function_hande')
+    elseif isa(value,'function_handle')
         str = func2str(value);
     else
         warning('No string representation for class ''%s''', class(value))
