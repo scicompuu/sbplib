@@ -19,6 +19,8 @@ function str  = value2string(value)
         str = cell2string(value);
     elseif isa(value,'function_handle')
         str = func2str(value);
+    elseif isa(value,'sym')
+        str = char(value);
     else
         warning('No string representation for class ''%s''', class(value))
         str = 'NO_STR_REP';
