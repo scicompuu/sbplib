@@ -19,38 +19,47 @@ function animate(F, tstart, tend, time_modifier, target_frame_rate)
     dTau_target = 1/target_frame_rate; % Real time between frames
 
     rs = util.ReplaceableString();
-    rs.appendFormat('              tau: %d\n');
-    rs.appendFormat('       target tau: %d\n');
-    rs.appendFormat('       Target fps: %.2f\n');
-    rs.appendFormat('       Actual fps: %.2f\n');
-
-    frameId = 0;
-    NframeAvg = 20;
-    frameTimes = ones(1,NframeAvg);
+    rs.appendFormat('                 tau: %d\n');
+    rs.appendFormat('          target tau: %d\n');
+    rs.appendFormat('          Target fps: %.2f\n');
+    rs.appendFormat('          Actual fps: %.2f\n');
+    rs.appendFormat('Target time_modifier: %d\n');
+    rs.appendFormat('actual time_modifier: %d\n');
 
     animation_start = tic();
     prevTau = 0;
     targetTau = 0;
+    tauFrameStart = -dTau_target;
     t = F(tstart);
 
     while t < tend
         % Sleep until the frame should start
         pause(targetTau-toc(animation_start));
-        tauFrameStart = targetTau;
+        tau = toc(animation_start);
+        dTau = tau - tauFrameStart;
+
+        % Calculate error in tau
+        e_Tau = tau - targetTau;
+
+        % Regulate time_modifier based on e_Tau
+        % time_modifier = min(time_modifier_bound, max(0.5, abs(1-e_Tau/dTau)) * time_modifier);
+
+        % Mark the start of the frame
+        tauFrameStart = tau;
 
         dt_target = dTau_target*time_modifier; % Targeted simulation time between frames
 
         t_prev = t;
         t = F(t + dt_target); % Run simulation
 
-
         % Calculate when this frame should end and the next start. (this depends on what simulation time we ended up on)
         dt = t-t_prev;
-        targetTau = targetTau + dt/time_modifier;
+        % targetTau = targetTau + dt/time_modifier;
+        targetTau = targetTau + dTau_target;
 
         % Update information about this frame
         tau = toc(animation_start);
-        rs.updateParam(tau, targetTau, 1/dTau_target, 1/(targetTau-tauFrameStart));
+        rs.updateParam(tau, targetTau, 1/dTau_target, 1/dTau, time_modifier_bound, time_modifier);
     end
 
 
