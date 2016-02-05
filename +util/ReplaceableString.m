@@ -18,6 +18,10 @@ classdef ReplaceableString < handle
             obj.fmt = fmt;
         end
 
+        function appendFormat(obj, fmt)
+            obj.fmt = [obj.fmt, fmt];
+        end
+
         function update(obj, fmt, varargin)
             obj.setFormat(fmt);
             obj.param = varargin;
