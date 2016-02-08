@@ -1,8 +1,8 @@
-% hand = animate(discretization, time_modifier, Tend, dirname, opt)
+% hand = noname.animate(discretization, time_modifier, Tend, dirname, opt)
 %
 % Example:
-%      animate(discr,timemodifier,tend)
-%      animate(discr,1, [tstart tend],'my_mov', opt)
+%      noname.animate(discr,timemodifier,tend)
+%      noname.animate(discr,1, [tstart tend],'my_mov', opt)
 
 function hand = animate(discretization, time_modifier, Tend, dirname, opt)
     default_arg('time_modifier',1);
