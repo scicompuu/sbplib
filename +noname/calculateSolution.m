@@ -56,6 +56,7 @@ function [] = calculateSolution(filename, name, discrHand, m, T_in, order, tsOpt
             if is_int_multiples
                 % Times are integer multiples, we can save time
                 [k,N] = alignedTimestep(k_max,T(1));
+                tsOpt.k = k;
                 ts = discr.getTimestepper(tsOpt);
                 runtime = 0;
                 for l = 1:length(T)
@@ -72,6 +73,7 @@ function [] = calculateSolution(filename, name, discrHand, m, T_in, order, tsOpt
                 % Times are not interger multiples, we have to start from 0 every time.
                 for l = 1:length(T)
                     [k,N] = alignedTimestep(k_max,T(l));
+                    tsOpt.k = k;
                     ts = discr.getTimestepper(tsOpt);
                     fprintf('[order = %-*d, m = %-*d, T = %-*d]: ',orderWidth,order(i),mWidth,m(j),TWidth,T(l));
                     clock_start = tic();
