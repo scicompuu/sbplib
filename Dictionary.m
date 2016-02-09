@@ -72,7 +72,8 @@ classdef Dictionary
                         end
                     end
                 otherwise
-                    error('Unsupported indexing operator: %s',S.type);
+                    B = builtin('subsref', obj, S);
+                    % error('Unsupported indexing operator: %s',S.type);
             end
         end
 
