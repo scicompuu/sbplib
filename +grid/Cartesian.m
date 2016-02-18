@@ -71,8 +71,5 @@ classdef Cartesian < grid.Grid
                 X{i} = repmat(t,s);
             end
         end
-
-        % coordVectors()
-        % coordMatrices()
     end
 end

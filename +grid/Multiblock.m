@@ -1,4 +1,4 @@
-classdef Grid < grid.Grid
+classdef Multiblock < grid.Grid
     % General multiblock grid
     methods (Abstract)
         % NBlocks returns the number of blocks in the grid.
@@ -11,3 +11,6 @@ classdef Grid < grid.Grid
         gs = Grids(obj);
     end
 end
+
+
+% Should define boundaries and connections between grids.
