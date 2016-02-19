@@ -9,9 +9,14 @@ classdef Grid < handle
 
         % points returns a n x d matrix containing the coordinates for all points.
         X = points(obj)
+
+        % Restricts the grid function gf on obj to the subgrid g.
+        gf = restrictFunc(gf, g)
+
+        % Projects the grid function gf on obj to the grid g.
+        gf = projectFunc(gf, g)
     end
 end
-
 
 
 %% Should it be able to return a cell size aswell? For an equidistant grid this would be know
