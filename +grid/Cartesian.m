@@ -1,4 +1,4 @@
-classdef Cartesian < grid.Grid
+classdef Cartesian < grid.Structured
     properties
         n % Number of points in the grid
         d % Number of dimensions

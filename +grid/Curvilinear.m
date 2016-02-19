@@ -1,4 +1,4 @@
-classdef Curvilinear < grid.Grid
+classdef Curvilinear < grid.Structured
     % General grid mapping
     methods (Abstract)
         % baseGrid returns the domain grid of the mapping.
