@@ -1,7 +1,6 @@
 classdef Structured < grid.Grid
-    % General multiblock grid
     methods (Abstract)
-        % get matrices of coords
-        % turn gridfunctions to matrices
+        % Returns the size of the grid in each dimension m = [mx my mz ...]
+        m = size(obj)
     end
 end
