@@ -5,10 +5,13 @@ classdef Multiblock < grid.Grid
         o = NBlocks(obj);
 
         % Grid returns the ith grid in the multiblockgrid
-        gs = Grid(obj,i);
+        gs = grid(obj,i);
 
         % Grids returns a cell array of all the grids in the multiblock grid.
-        gs = Grids(obj);
+        gs = grids(obj);
+
+        % Split a grid function on obj to a cell array of grid function on each block
+        gf = splitFunc(gf)
     end
 end
 
