@@ -11,10 +11,10 @@ classdef Grid < handle
         X = points(obj)
 
         % Restricts the grid function gf on obj to the subgrid g.
-        gf = restrictFunc(gf, g)
+        gf = restrictFunc(obj, gf, g)
 
         % Projects the grid function gf on obj to the grid g.
-        gf = projectFunc(gf, g)
+        gf = projectFunc(obj, gf, g)
     end
 end
 
