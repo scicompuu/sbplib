@@ -1,9 +1,6 @@
 % Takes a grid function and reshapes it into a matrix of shape m for plotting.
-% Called by class methods.
-function F = funcToPlotMatrix(gf, m)
+function F = reshapeToPlotMatrix(gf, m)
     D = length(m);
-
-
 
     switch D
         case 1
@@ -15,6 +12,6 @@ function F = funcToPlotMatrix(gf, m)
             p = [2 3 1]; % Permuation
             F = permute(reshape(gf,rot90(m,2)), p);
         otherwise
-            error('grid:funcToMatrix:NotImplemented','Grid function to matrix is not implemented for dimension = %d', length(m));
+            error('reshapeToPlotMatrix:NotImplemented','Grid function to matrix is not implemented for dimension = %d', length(m));
     end
 end

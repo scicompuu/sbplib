@@ -1,6 +1,5 @@
 % Takes a grid function and reshapes it into a matrix of shape m.
-% Called by class methods.
-function F = funcToMatrix(gf, m)
+function F = reshapeKronVector(gf, m)
     D = length(m);
 
     if D == 1

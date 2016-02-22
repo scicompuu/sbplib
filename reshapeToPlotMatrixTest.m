@@ -1,4 +1,4 @@
-function tests = funcToPlotMatrixTest()
+function tests = reshapeToPlotMatrixTest()
     tests = functiontests(localfunctions);
 end
 
@@ -6,7 +6,7 @@ function test1D(testCase)
     inGf = [1 2 3 4 5]';
     inM = 5;
     out = [1 2 3 4 5]';
-    testCase.verifyEqual(grid.funcToPlotMatrix(inGf, inM),out);
+    testCase.verifyEqual(reshapeToPlotMatrix(inGf, inM),out);
 end
 
 function test2D(testCase)
@@ -24,7 +24,7 @@ function test2D(testCase)
 
     inM = [2, 3];
 
-    testCase.verifyEqual(grid.funcToPlotMatrix(inGf, inM),out);
+    testCase.verifyEqual(reshapeToPlotMatrix(inGf, inM),out);
 end
 
 function test3D(testCase)
@@ -44,5 +44,5 @@ function test3D(testCase)
 
     inM = [2, 3, 4];
 
-    testCase.verifyEqual(grid.funcToPlotMatrix(inGf, inM),out);
+    testCase.verifyEqual(reshapeToPlotMatrix(inGf, inM),out);
 end

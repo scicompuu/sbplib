@@ -1,4 +1,4 @@
-function tests = funcToMatrixTest()
+function tests = reshapeKronVectorTest()
     tests = functiontests(localfunctions);
 end
 
@@ -6,7 +6,7 @@ function test1D(testCase)
     inGf = [1 2 3 4 5]';
     inM = 5;
     out = [1 2 3 4 5]';
-    testCase.verifyEqual(grid.funcToMatrix(inGf, inM),out);
+    testCase.verifyEqual(reshapeKronVector(inGf, inM),out);
 end
 
 function test2D(testCase)
@@ -18,7 +18,7 @@ function test2D(testCase)
     out(2,1) = 21;
     out(2,2) = 22;
 
-    testCase.verifyEqual(grid.funcToMatrix(inGf, inM),out);
+    testCase.verifyEqual(reshapeKronVector(inGf, inM),out);
 end
 
 function test3D(testCase)
@@ -34,7 +34,7 @@ function test3D(testCase)
     out(2,2,1) = 221;
     out(2,2,2) = 222;
 
-    testCase.verifyEqual(grid.funcToMatrix(inGf, inM),out);
+    testCase.verifyEqual(reshapeKronVector(inGf, inM),out);
 end
 
 function testNonSquare(testCase)
@@ -91,5 +91,5 @@ function testNonSquare(testCase)
     out(2,3,3) = 233;
     out(2,3,4) = 234;
 
-    testCase.verifyEqual(grid.funcToMatrix(inGf, inM), out);
+    testCase.verifyEqual(reshapeKronVector(inGf, inM), out);
 end
