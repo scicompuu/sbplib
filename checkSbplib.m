@@ -4,11 +4,11 @@ function [files,res] = checkSbplib()
     files = collectTargets([]);
 
     if nargout == 0
-        checkcode(files);
+        checkcode(files, '-config=checksettings.txt');
         return
     end
 
-    res = checkcode(files);
+    res = checkcode(files, '-config=checksettings.txt');
 
     % Remove any empty respones
     I = [];
