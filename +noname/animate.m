@@ -1,8 +1,8 @@
-% hand = animate(discretization, time_modifier, Tend, dirname, opt)
+% hand = noname.animate(discretization, time_modifier, Tend, dirname, opt)
 %
 % Example:
-%      animate(discr,timemodifier,tend)
-%      animate(discr,1, [tstart tend],'my_mov', opt)
+%      noname.animate(discr,timemodifier,tend)
+%      noname.animate(discr,1, [tstart tend],'my_mov', opt)
 
 function hand = animate(discretization, time_modifier, Tend, dirname, opt)
     default_arg('time_modifier',1);
@@ -67,8 +67,6 @@ function hand = animate(discretization, time_modifier, Tend, dirname, opt)
         if makemovies
             save_frame();
         end
-        % pause(0.1)
-        str = util.replace_string(str,'t = %.5f',ts.t);
 
         if do_pause
             pause

@@ -1,4 +1,4 @@
-classdef SchmWave < noname.Scheme
+classdef Wave < noname.Scheme
     properties
         m % Number of points in each direction, possibly a vector
         h % Grid spacing
@@ -20,7 +20,7 @@ classdef SchmWave < noname.Scheme
     end
 
     methods
-        function obj = SchmWave(m,xlim,order,alpha)
+        function obj = Wave(m,xlim,order,alpha)
             default_arg('a',1);
             [x, h] = util.get_grid(xlim{:},m);
 

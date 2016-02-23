@@ -1,4 +1,4 @@
-classdef SchmBeam2d < noname.Scheme
+classdef Beam2d < noname.Scheme
     properties
         m % Number of points in each direction, possibly a vector
         N % Number of points total
@@ -26,7 +26,7 @@ classdef SchmBeam2d < noname.Scheme
     end
 
     methods
-        function obj = SchmBeam2d(m,lim,order,alpha,opsGen)
+        function obj = Beam2d(m,lim,order,alpha,opsGen)
             default_arg('opsGen',@sbp.Higher);
             default_arg('a',1);
 

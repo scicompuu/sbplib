@@ -72,7 +72,7 @@ classdef Timestepper < handle
         end
 
         function evolve_without_progress(obj, tend)
-            while obj.t < tend - obj.k/100
+            while obj.t < tend - obj.k/2
                 obj.step();
             end
         end
@@ -84,7 +84,7 @@ classdef Timestepper < handle
             steps_since_update = 0;
             last_update = tic();
             s = util.replace_string('','   %d %%',0);
-            while obj.t < tend - obj.k/100
+            while obj.t < tend - obj.k/2
                 obj.step();
 
                 steps_since_update = steps_since_update + 1;

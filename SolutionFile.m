@@ -34,15 +34,18 @@ classdef SolutionFile < handle
         end
 
         function stupidSave(obj)
+            % Read file contents
             matObj = matfile(obj.filename,'Writable',true);
 
             keys = obj.matfile.keys;
             entries = obj.matfile.entries;
 
+            % Delete the file
             if exist(obj.filename,'file')
                 delete(obj.filename);
             end
 
+            % Rewrite the file
             matObj = matfile(obj.filename,'Writable',true);
             matObj.keys = keys;
             matObj.entries = entries;
