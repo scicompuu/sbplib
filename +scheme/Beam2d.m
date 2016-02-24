@@ -1,4 +1,4 @@
-classdef Beam2d < noname.Scheme
+classdef Beam2d < scheme.Scheme
     properties
         m % Number of points in each direction, possibly a vector
         N % Number of points total

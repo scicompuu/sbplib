@@ -1,4 +1,4 @@
-classdef Wave < noname.Scheme
+classdef Wave < scheme.Scheme
     properties
         m % Number of points in each direction, possibly a vector
         h % Grid spacing
