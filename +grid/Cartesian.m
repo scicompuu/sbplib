@@ -31,6 +31,10 @@ classdef Cartesian < grid.Structured
             o = obj.d;
         end
 
+        function m = size(obj)
+            m = obj.m;
+        end
+
         % points returns a n x d matrix containing the coordianets for all points.
         % points are ordered according to the kronecker product with X*Y*Z
         function X = points(obj)
@@ -70,6 +74,40 @@ classdef Cartesian < grid.Structured
                 s(i) = 1;
                 X{i} = repmat(t,s);
             end
+        end
+
+        % Restricts the grid function gf on obj to the subgrid g.
+        % Only works for even multiples
+        function gf = restrictFunc(obj, gf, g)
+            m1 = obj.m;
+            m2 = g.m;
+
+            % Check the input
+            if prod(m1) ~= numel(gf)
+                error('grid:Cartesian:restrictFunc:NonMatchingFunctionSize', 'The grid function has to few or too many points.');
+            end
+
+            if ~all(mod(m1-1,m2-1) == 0)
+                error('grid:Cartesian:restrictFunc:NonMatchingGrids', 'Only integer downsamplings are allowed');
+            end
+
+            % Calculate stride for each dimension
+            stride = (m1-1)./(m2-1);
+
+            % Create downsampling indecies
+            I = {};
+            for i = 1:length(m1)
+                I{i} = 1:stride(i):m1(i);
+            end
+
+            gf = reshapeRowMaj(gf, m1);
+            gf = gf(I{:});
+            gf = reshapeRowMaj(gf, prod(m2));
+        end
+
+        % Projects the grid function gf on obj to the grid g.
+        function gf = projectFunc(obj, gf, g)
+            error('grid:Cartesian:NotImplemented')
         end
     end
 end
