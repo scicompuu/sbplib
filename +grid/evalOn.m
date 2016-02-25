@@ -33,5 +33,7 @@ function gf = evalOn(g, func)
     end
 
     gf = func(X{:});
-    gf = reshape(reshape(gf, [g.N, k])', [g.N*k, 1]); % Reorder so that componets sits together.
+    if  k > 1  % Reorder so that componets sits together.
+        gf = reshape(reshape(gf, [g.N, k])', [g.N*k, 1]);
+    end
 end
