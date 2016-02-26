@@ -29,7 +29,7 @@ classdef Curvilinear < grid.Structured & grid.Mapped
             if iscell(mapping)
                 obj.coords = cellMappingToCoords(mapping, N, D, obj.logic.m);
             elseif isnumeric(mapping)
-                obj.coords = matrixMappingToCoords(mapping, N, D)
+                obj.coords = matrixMappingToCoords(mapping, N, D);
             else
                 error('grid:Curvilinear:Curvilinear','mapping must be a matrix or a cell array.');
             end
@@ -73,13 +73,20 @@ classdef Curvilinear < grid.Structured & grid.Mapped
         function gf = projectFunc(obj, gf, g)
             gf = obj.logic.projectFunc(gf,g.baseGrid());
         end
+
+        function h = scaling(obj)
+            if isempty(obj.logic.h)
+                error('grid:Curvilinear:NoScalingSet','No scaling set');
+            end
+            h = obj.logic.h;
+        end
     end
 end
 
 
 function coords = cellMappingToCoords(mapping, N, D, m)
     if ~isequal(size(mapping),[1 D])
-        error('grid:Curvilinear:Curvilinear','The cell array must be a row array.');
+        error('grid:Curvilinear:Curvilinear','The cell array must be a 1xD array.');
     end
 
     if isequal(size(mapping{1}),[N 1])

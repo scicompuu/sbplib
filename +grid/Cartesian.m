@@ -4,6 +4,7 @@ classdef Cartesian < grid.Structured
         d % Number of dimensions
         m % Number of points in each direction
         x % Cell array of vectors with node placement for each dimension.
+        h % Spacing/Scaling
     end
 
     % General d dimensional grid with n points
@@ -12,14 +13,18 @@ classdef Cartesian < grid.Structured
         % in each direction
         function obj = Cartesian(varargin)
             obj.d = length(varargin);
+
             for i = 1:obj.d
                 obj.x{i} = varargin{i};
                 obj.m(i) = length(varargin{i});
             end
+
             obj.n = prod(obj.m);
             if obj.n == 0
                 error('grid:Cartesian:EmptyGrid','Input parameter gives an empty grid.')
             end
+
+            obj.h = [];
         end
         % n returns the number of points in the grid
         function o = N(obj)
@@ -74,6 +79,14 @@ classdef Cartesian < grid.Structured
                 s(i) = 1;
                 X{i} = repmat(t,s);
             end
+        end
+
+        function h = scaling(obj)
+            if isempty(obj.h)
+                error('grid:Cartesian:NoScalingSet', 'No scaling set')
+            end
+
+            h = obj.h;
         end
 
         % Restricts the grid function gf on obj to the subgrid g.

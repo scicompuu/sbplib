@@ -184,3 +184,13 @@ function testRestrictFunc(testCase)
     end
 end
 
+function testScaling(testCase)
+    in = {[1 2 3], [1 2]};
+    g = grid.Cartesian(in{:});
+
+    testCase.verifyError(@()g.scaling(),'grid:Cartesian:NoScalingSet');
+
+    g.h = [2 1];
+    testCase.verifyEqual(g.scaling(),[2 1]);
+
+end

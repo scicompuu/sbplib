@@ -69,3 +69,14 @@ end
 function testMappingInputError(testCase)
     testCase.assumeFail();
 end
+
+function testScaling(testCase)
+    in = {{1:2, 1:3}, {[1 2 3 4 5 6]', [7 8 9 10 11 12]'}};
+    g = grid.Curvilinear(in{2},in{1}{:});
+
+    testCase.verifyError(@()g.scaling(),'grid:Curvilinear:NoScalingSet');
+
+    g.logicalGrid.h = [2 1];
+    testCase.verifyEqual(g.scaling(),[2 1]);
+end
+
