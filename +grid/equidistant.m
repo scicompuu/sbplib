@@ -19,9 +19,11 @@ function g = equidistant(m, varargin)
     end
 
     X = {};
+    h = [];
     for i = 1:length(m)
-        X{i} = util.get_grid(varargin{i}{:},m(i));
+        [X{i}, h(i)] = util.get_grid(varargin{i}{:},m(i));
     end
 
     g = grid.Cartesian(X{:});
+    g.h = h;
 end

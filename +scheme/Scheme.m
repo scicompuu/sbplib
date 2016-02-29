@@ -1,7 +1,6 @@
 % Start with all matrix returns. When that works see how we should generalize to non-matrix stuff/nonlinear
 classdef Scheme < handle
     properties (Abstract)
-        m % Number of points in each direction, possibly a vector
         order % Order accuracy for the approximation
 
         % vectors u,v,w depending on dim that gives were gridpoints are in each dimension
