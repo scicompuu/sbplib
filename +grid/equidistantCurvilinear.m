@@ -25,9 +25,11 @@ function g = equidistantCurvilinear(mapping, m, varargin)
     end
 
     X = {};
+    h = [];
     for i = 1:length(m)
-        X{i} = util.get_grid(varargin{i}{:},m(i));
+        [X{i}, h(i)] = util.get_grid(varargin{i}{:},m(i));
     end
 
     g = grid.Curvilinear(mapping, X{:});
+    g.h = h;
 end
