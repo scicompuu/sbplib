@@ -22,7 +22,7 @@ classdef Beam < scheme.Scheme
             default_arg('alpha', 1);
             default_arg('opsGen', @sbp.Higher);
 
-            if ~isa(grid, 'Cartesian') || grid.D() ~= 1
+            if ~isa(grid, 'grid.Cartesian') || grid.D() ~= 1
                 error('Grid must be 1d cartesian');
             end
 
@@ -31,7 +31,7 @@ classdef Beam < scheme.Scheme
             obj.alpha = alpha;
 
             m = grid.m;
-            h = grid.spacing();
+            h = grid.scaling();
 
             ops = opsGen(m, h, order);
 
@@ -142,10 +142,10 @@ classdef Beam < scheme.Scheme
                     d3 = obj.d3_l;
                     s = -1;
                 case 'r'
-                    e  = obj.e_e;
-                    d1 = obj.d1_e;
-                    d2 = obj.d2_e;
-                    d3 = obj.d3_e;
+                    e  = obj.e_r;
+                    d1 = obj.d1_r;
+                    d2 = obj.d2_r;
+                    d3 = obj.d3_r;
                     s = 1;
                 otherwise
                     error('No such boundary: boundary = %s',boundary);

@@ -26,7 +26,7 @@ classdef Beam2d < scheme.Scheme
             default_arg('alpha',1);
             default_arg('opsGen',@sbp.Higher);
 
-            if ~isa(grid, 'Cartesian') || grid.D() ~= 2
+            if ~isa(grid, 'grid.Cartesian') || grid.D() ~= 2
                 error('Grid must be 2d cartesian');
             end
 
