@@ -17,11 +17,3 @@ classdef Grid < handle
         gf = projectFunc(obj, gf, g)
     end
 end
-
-
-%% Should it be able to return a cell size aswell? For an equidistant grid this would be know
-%% for other grids the constructor would have to make something up.
-%% For example the grid.Cartesian constructor would take a h (1 x d) vector as an in parameter.
-
-
-%Should define boundaries somehow, look in stitchSchemes.
