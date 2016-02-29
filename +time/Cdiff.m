@@ -13,6 +13,7 @@ classdef Cdiff < time.Timestepper
 
     methods
         function obj = Cdiff(D, E, S, k, t0, n0, v, v_prev)
+            % Cdiff(D, E, S, k, t0, n0, v, v_prev)
             m = size(D,1);
             default_arg('E',sparse(m,m));
             default_arg('S',sparse(m,1));
