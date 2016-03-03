@@ -1,4 +1,4 @@
-classdef Multiblock < grid.Grid
+classdef Grid < grid.Grid
     properties
         grids
         connections
@@ -10,11 +10,12 @@ classdef Multiblock < grid.Grid
     methods
 
         % grids -- cell array of N grids
-        % connections -- NxN cell matrix. connections{i,j} specifies the connection
-        %                between block i and j. If it's empty there is no
-        %                connection otherwise it's a 2-cell-vector with strings
-        %                naming the boundaries to be connected. (inverted coupling?)
-        function obj = Multiblock(grids, connections)
+        % connections -- NxN upper triangular cell matrix. connections{i,j}
+        %                specifies the connection between block i and j. If
+        %                it's empty there is no connection otherwise it's a 2
+        %                -cell-vector with strings naming the boundaries to be
+        %                connected. (inverted coupling?)
+        function obj = Grid(grids, connections)
             obj.grids = grids;
             obj.connections = connections;
 
@@ -31,6 +32,10 @@ classdef Multiblock < grid.Grid
         % n returns the number of points in the grid
         function o = N(obj)
             o = obj.nPoints;
+        end
+
+        function n = nBlocks(obj)
+            n = length(obj.grids);
         end
 
         % d returns the spatial dimension of the grid
