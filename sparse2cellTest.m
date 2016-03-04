@@ -26,7 +26,7 @@ function testOutput(testCase)
     out{1} = {
         [17 24], [1 8 15];
         [23 5; 4 6; 10 12; 11 18], [7 14 16; 13 20 22; 19 21 3; 25 2 9];
-    }
+    };
 
     in{1}{1} = [17 24 1 8 15; 23 5 0 0 0; 4 6 0 0 0; 10 12 0 0 0; 11 18 0 0 0];
     in{1}{2} = [1 4];
@@ -35,7 +35,7 @@ function testOutput(testCase)
     out{1} = {
         [17 24], [1 8 15];
         [23 5; 4 6; 10 12; 11 18], [];
-    }
+    };
 
     for i = 1:length(in)
         testCase.verifyEqual(sparse2cell(in{i}{:}), out{i});
