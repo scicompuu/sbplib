@@ -15,7 +15,7 @@ classdef Grid < grid.Grid
         %                it's empty there is no connection otherwise it's a 2
         %                -cell-vector with strings naming the boundaries to be
         %                connected. (inverted coupling?)
-        function obj = Grid(grids, connections)
+        function obj = Grid(grids, connections, boundaryGroup)
             obj.grids = grids;
             obj.connections = connections;
 
@@ -92,6 +92,15 @@ classdef Grid < grid.Grid
                 % Find what grid a point lies on
             end
 
+        end
+
+        function bs = getBoundaryNames(obj)
+            bs = [];
+        end
+
+        % Return coordinates for the given boundary
+        function b = getBoundary(obj, name)
+            b = [];
         end
     end
 end

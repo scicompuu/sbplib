@@ -9,7 +9,9 @@ function testCreation(testCase)
     do = multiblock.DiffOp(doHand, g, order);
 end
 
-
+function testMissing(testCase)
+    testCase.verifyFail();
+end
 
 
 % function do = mockDiffOp()
