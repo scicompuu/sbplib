@@ -194,3 +194,12 @@ function testScaling(testCase)
     testCase.verifyEqual(g.scaling(),[2 1]);
 
 end
+
+
+function testGetBoundaryNames(testCase)
+    testCase.verifyFail();
+end
+
+function testGetBoundary(testCase)
+    testCase.verifyFail();
+end

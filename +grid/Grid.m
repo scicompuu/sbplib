@@ -15,5 +15,11 @@ classdef Grid < handle
 
         % Projects the grid function gf on obj to the grid g.
         gf = projectFunc(obj, gf, g)
+
+        % Return the names of all boundaries in this grid.
+        bs = getBoundaryNames(obj)
+
+        % Return coordinates for the given boundary
+        b = getBoundary(obj, name)
     end
 end

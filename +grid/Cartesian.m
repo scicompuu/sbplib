@@ -122,5 +122,16 @@ classdef Cartesian < grid.Structured
         function gf = projectFunc(obj, gf, g)
             error('grid:Cartesian:NotImplemented')
         end
+
+        % Return the names of all boundaries in this grid.
+        function bs = getBoundaryNames(obj)
+            bs = [];
+        end
+
+        % Return coordinates for the given boundary
+        function b = getBoundary(obj, name)
+            b = [];
+        end
+
     end
 end

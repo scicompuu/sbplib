@@ -67,7 +67,7 @@ function testMappingInputCellOfVectors(testCase)
 end
 
 function testMappingInputError(testCase)
-    testCase.assumeFail();
+    testCase.verifyFail();
 end
 
 function testScaling(testCase)
@@ -78,5 +78,13 @@ function testScaling(testCase)
 
     g.logicalGrid.h = [2 1];
     testCase.verifyEqual(g.scaling(),[2 1]);
+end
+
+function testGetBoundaryNames(testCase)
+    testCase.verifyFail();
+end
+
+function testGetBoundary(testCase)
+    testCase.verifyFail();
 end
 

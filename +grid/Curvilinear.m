@@ -80,6 +80,16 @@ classdef Curvilinear < grid.Structured & grid.Mapped
             end
             h = obj.logic.h;
         end
+
+        % Return the names of all boundaries in this grid.
+        function bs = getBoundaryNames(obj)
+            bs = [];
+        end
+
+        % Return coordinates for the given boundary
+        function b = getBoundary(obj, name)
+            b = [];
+        end
     end
 end
 
