@@ -19,6 +19,7 @@ function animate(F, tstart, tend, time_modifier, target_frame_rate)
     dTau_target = 1/target_frame_rate; % Real time between frames
 
     rs = util.ReplaceableString();
+    rs.appendFormat('                   t: %d\n');
     rs.appendFormat('                 tau: %d\n');
     rs.appendFormat('          target tau: %d\n');
     rs.appendFormat('          Target fps: %.2f\n');
@@ -59,7 +60,7 @@ function animate(F, tstart, tend, time_modifier, target_frame_rate)
 
         % Update information about this frame
         tau = toc(animation_start);
-        rs.updateParam(tau, targetTau, 1/dTau_target, 1/dTau, time_modifier_bound, time_modifier);
+        rs.updateParam(t, tau, targetTau, 1/dTau_target, 1/dTau, time_modifier_bound, time_modifier);
     end
 
 
