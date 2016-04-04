@@ -125,13 +125,65 @@ classdef Cartesian < grid.Structured
 
         % Return the names of all boundaries in this grid.
         function bs = getBoundaryNames(obj)
-            bs = [];
+            switch obj.D()
+                case 1
+                    bs = {'l', 'r'};
+                case 2
+                    bs = {'w', 'e', 's', 'n'};
+                case 3
+                    bs = {'w', 'e', 's', 'n', 'd', 'u'};
+                otherwise
+                    error('not implemented');
+            end
         end
 
         % Return coordinates for the given boundary
-        function b = getBoundary(obj, name)
-            b = [];
-        end
+        function X = getBoundary(obj, name)
+            % In what dimension is the boundary?
+            switch name
+                case {'l', 'r', 'w', 'e'}
+                    D = 1;
+                case {'s', 'n'}
+                    D = 2;
+                case {'d', 'u'}
+                    D = 3;
+                otherwise
+                    error('not implemented');
+            end
 
+            % At what index is the boundary?
+            switch name
+                case {'l', 'w', 's', 'd'}
+                    index = 1;
+                case {'r', 'e', 'n', 'u'}
+                    index = obj.m(D);
+                otherwise
+                    error('not implemented');
+            end
+
+
+
+            I = cell(1, obj.d);
+            for i = 1:obj.d
+                if i == D
+                    I{i} = index;
+                else
+                    I{i} = ':';
+                end
+            end
+
+            % Calculate size of result:
+            m = obj.m;
+            m(D) = [];
+            N = prod(m);
+
+            X = zeros(N, obj.d);
+
+            coordMat = obj.matrices();
+            for i = 1:length(coordMat)
+                Xtemp = coordMat{i}(I{:});
+                X(:,i) = reshapeRowMaj(Xtemp, [N,1]);
+            end
+        end
     end
 end

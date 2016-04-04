@@ -81,10 +81,51 @@ function testScaling(testCase)
 end
 
 function testGetBoundaryNames(testCase)
-    testCase.verifyFail();
+    in = {
+        {{1:10}, @(x) exp(x)},
+        {{1:10,1:6}, @(x,y) [exp(x+y); exp(x-y)]},
+        {{1:10,1:5,1:7}, @(x,y,z)[exp(x+y+z); exp(x-y-z); 2+x+y-z]},
+    };
+
+    out = {
+        {'l', 'r'},
+        {'w', 'e', 's', 'n'},
+        {'w', 'e', 's', 'n', 'd', 'u'},
+    };
+
+    for i = 1:length(in)
+        g = grid.Curvilinear(in{i}{2},in{i}{1}{:});
+        testCase.verifyEqual(g.getBoundaryNames(), out{i});
+    end
 end
 
 function testGetBoundary(testCase)
-    testCase.verifyFail();
+    grids = {
+        {{1:10}, @(x) exp(x)},
+        {{1:10,1:6}, @(x,y) [exp(x+y); exp(x-y)]},
+        {{1:10,1:5,1:7}, @(x,y,z)[exp(x+y+z); exp(x-y-z); 2+x+y-z]},
+    };
+
+    boundaries = {
+        {'l', 'r'},
+        {'w', 'e', 's', 'n'},
+        {'w', 'e', 's', 'n', 'd', 'u'},
+    };
+
+
+    for ig = 1:length(grids)
+        g = grid.Curvilinear(grids{ig}{2},grids{ig}{1}{:});
+
+        logicalGrid = grid.Cartesian(grids{ig}{1}{:});
+
+        for ib = 1:length(boundaries{ig})
+
+            logicalBoundary = logicalGrid.getBoundary(boundaries{ig}{ib});
+
+            x = num2cell(logicalBoundary',2);
+            expectedBoundary = grids{ig}{2}(x{:})';
+            testCase.verifyEqual(g.getBoundary(boundaries{ig}{ib}), expectedBoundary);
+        end
+    end
 end
 
