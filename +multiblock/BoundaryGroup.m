@@ -19,6 +19,9 @@ classdef BoundaryGroup
             obj.blockIDs = [];
             obj.names = {};
             for i = 1:length(varargin)
+                if ~iscell(varargin{i}) || ~all(size(varargin{i}) == [1 2])
+                    error('multiblock:BoundaryGroup:BoundaryGroup:InvalidInput', 'Inputs must be 1x2 cell arrays');
+                end
                 obj.blockIDs(i) = varargin{i}{1};
                 obj.names{i} = varargin{i}{2};
             end
