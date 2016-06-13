@@ -2,6 +2,7 @@ classdef Grid < grid.Grid
     properties
         grids
         connections
+        boundaryGroups
 
         nPoints
     end
@@ -15,7 +16,9 @@ classdef Grid < grid.Grid
         %                it's empty there is no connection otherwise it's a 2
         %                -cell-vector with strings naming the boundaries to be
         %                connected. (inverted coupling?)
-        function obj = Grid(grids, connections, boundaryGroup)
+        %% Should we have boundary groups at all? maybe it can be handled in a
+        %% cleaner way outside of the class.
+        function obj = Grid(grids, connections, boundaryGroups)
             obj.grids = grids;
             obj.connections = connections;
 
@@ -23,6 +26,8 @@ classdef Grid < grid.Grid
             for i = 1:length(grids)
                 obj.nPoints = obj.nPoints + grids{i}.N();
             end
+
+            % if iscell(boundaryGroups)
         end
 
         function n = size(obj)
