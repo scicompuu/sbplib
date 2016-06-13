@@ -3,5 +3,5 @@ function tests = equdistantCurvilinearTest()
 end
 
 function testNoTests(testCase)
-    testCase.assumeFail();
+    testCase.verifyFail();
 end

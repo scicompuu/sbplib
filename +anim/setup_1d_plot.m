@@ -9,8 +9,9 @@
 %                             be passed to functions in yfun.
 %   plot_handles            - Array of plot_handles. One for each yfun.
 %   axis_handle             - Handle to the axis plotted to.
-function [update_data, plot_handles, axis_handle] = setup_1d_plot(x,yfun)
+function [update_data, plot_handles, axis_handle] = setup_1d_plot(x,yfun,show_title)
     default_arg('yfun',{@(y)y});
+    default_arg('show_title', true)
 
     if isa(yfun,'function_handle')
         yfun = {yfun};
@@ -24,8 +25,6 @@ function [update_data, plot_handles, axis_handle] = setup_1d_plot(x,yfun)
 
     axis_handle = gca;
 
-    xlabel('x')
-    ylabel('y')
     xlim([x(1) x(end)]);
 
     function update(t,varargin)
@@ -33,7 +32,10 @@ function [update_data, plot_handles, axis_handle] = setup_1d_plot(x,yfun)
             for i = 1:length(yfun)
                 set(plot_handles(i),'YData',yfun{i}(varargin{:}));
             end
-            title(axis_handle,sprintf('T=%.3f',t));
+
+            if show_title
+                title(axis_handle,sprintf('T=%.3f',t));
+            end
         end
     end
     update_data = @update;

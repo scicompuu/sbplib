@@ -15,13 +15,11 @@ classdef Grid < handle
 
         % Projects the grid function gf on obj to the grid g.
         gf = projectFunc(obj, gf, g)
+
+        % Return the names of all boundaries in this grid.
+        bs = getBoundaryNames(obj)
+
+        % Return coordinates for the given boundary
+        b = getBoundary(obj, name)
     end
 end
-
-
-%% Should it be able to return a cell size aswell? For an equidistant grid this would be know
-%% for other grids the constructor would have to make something up.
-%% For example the grid.Cartesian constructor would take a h (1 x d) vector as an in parameter.
-
-
-%Should define boundaries somehow, look in stitchSchemes.

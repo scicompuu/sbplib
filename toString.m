@@ -28,19 +28,26 @@ function str  = value2string(value)
 end
 
 function str = cell2string(c)
-    len = length(c);
-
-    if len == 0
+    if isempty(c)
         str = '{}';
         return
     end
 
+    [n, m] = size(c);
+
     str = '{';
 
-    for i =1:len-1
-        str = [str sprintf('%s, ', value2string(c{i}))];
+    for i = 1:n-1
+        for j = 1:m-1
+            str = [str sprintf('%s, ', value2string(c{i,j}))];
+        end
+        str = [str sprintf('%s; ', value2string(c{i,end}))];
     end
-    str = [str sprintf('%s}', value2string(c{end}))];
+
+    for j = 1:m-1
+        str = [str sprintf('%s, ', value2string(c{end,j}))];
+    end
+    str = [str sprintf('%s}', value2string(c{end,end}))];
 end
 
 function str = struct2string(s)
