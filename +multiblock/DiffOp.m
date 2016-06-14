@@ -35,7 +35,7 @@ classdef DiffOp < scheme.Scheme
             for i = 1:nBlocks
                 h = getHand(i);
                 p = getParam(i);
-                obj.diffOps{i} = h(grid.grid{i}, order, p{:});
+                obj.diffOps{i} = h(grid.grids{i}, order, p{:});
             end
 
 
@@ -60,11 +60,11 @@ classdef DiffOp < scheme.Scheme
                         continue
                     end
 
-                    [ii, ij] = obj.diffOps{i}.inteface_coupling(intf{1}, obj.diffOps{j}, intf{2});
+                    [ii, ij] = obj.diffOps{i}.interface(intf{1}, obj.diffOps{j}, intf{2});
                     D{i,i} = D{i,i} + ii;
                     D{i,j} = D{i,j} + ij;
 
-                    [jj, ji] = obj.diffOps{j}.inteface_coupling(intf{2}, obj.diffOps{i}, intf{1});
+                    [jj, ji] = obj.diffOps{j}.interface(intf{2}, obj.diffOps{i}, intf{1});
                     D{j,j} = D{j,j} + jj;
                     D{j,i} = D{j,i} + ji;
                 end
@@ -111,10 +111,11 @@ classdef DiffOp < scheme.Scheme
         end
 
 
+        % Size returns the number of degrees of freedom
         function N = size(obj)
             N = 0;
-            for i = 1:length(diffOps)
-                N = N + diffOps.size();
+            for i = 1:length(obj.diffOps)
+                N = N + obj.diffOps{i}.size();
             end
         end
     end
