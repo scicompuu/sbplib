@@ -102,14 +102,20 @@ classdef DiffOp < scheme.Scheme
             ops = sparse2cell(op, obj.NNN);
         end
 
-        function m = boundary_condition(obj,boundary,type,data)
+        % Creates the closere and penalty matrix for a given boundary condition,
+        %    boundary -- the name of the boundary on the form [id][name] where
+        %                id is the number of a block and name is the name of a
+        %                boundary of that block example: 1s or 3w
+        function [closure, penalty] = boundary_condition(obj,boundary,type,data)
+            I = boundary(1)
+            name = boundary(2:end);
 
+            [c, p] = obj.diffOps{I}.boundary_condition(name, type, data);
         end
 
-        function m = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
+        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
 
         end
-
 
         % Size returns the number of degrees of freedom
         function N = size(obj)

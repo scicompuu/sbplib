@@ -12,3 +12,7 @@ function [v, n] = cell2vector(cv)
         v = [v; cv{i}];
     end
 end
+
+
+% IS THIS ONE REALLY NEEDED? JUST USE cell2sparse?
+
