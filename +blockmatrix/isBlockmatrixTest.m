@@ -21,6 +21,10 @@ function testIsBlockmatrix(testCase)
             false % Column dimensions must match
         },
         {
+            {},
+            true % An empty matrix is a matrix too
+        },
+        {
             {
             [2 2; 2 1], [1; 2];
             [2 2], [1]
