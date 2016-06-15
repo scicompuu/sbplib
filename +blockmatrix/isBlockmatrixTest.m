@@ -52,8 +52,6 @@ function testIsBlockmatrix(testCase)
             },
             true % Empty blocks allowed.
         },
-
-
     };
 
     for i = 1:length(cases)
