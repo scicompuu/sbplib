@@ -5,6 +5,8 @@ classdef DiffOp < scheme.Scheme
         diffOps
         D
         H
+
+        blockmatrixDiv
     end
 
     methods
@@ -44,7 +46,7 @@ classdef DiffOp < scheme.Scheme
             for i = 1:nBlocks
                 H{i,i} = obj.diffOps{i}.H;
             end
-            obj.H = cell2sparse(H);
+            obj.H = blockmatrix.toMatrix(H);
 
 
             % Build the differentiation matrix
@@ -69,9 +71,9 @@ classdef DiffOp < scheme.Scheme
                     D{j,i} = D{j,i} + ji;
                 end
             end
-            obj.D = cell2sparse(D);
+            obj.D = blockmatrix.toMatrix(D);
 
-            % end
+            obj.blockmatrixDiv = blockmatrix.getDivision(D);
 
             function [getHand, getParam] = parseInput(doHand, grid, doParam)
                 if ~isa(grid, 'multiblock.Grid')
@@ -110,7 +112,21 @@ classdef DiffOp < scheme.Scheme
             I = boundary(1)
             name = boundary(2:end);
 
-            [c, p] = obj.diffOps{I}.boundary_condition(name, type, data);
+            % Get the closure and penaly matrices
+            [blockClosure, blockPenalty] = obj.diffOps{I}.boundary_condition(name, type, data);
+
+            % Expand to matrix for full domain.
+            div = obj.blockmatrixDiv;
+            closure = blockmatrix.zero(div);
+            closure{I,I} = blockClosure;
+
+            div{2} = 1; % Penalty is a column vector
+            penalty = blockmatrix.zero(div);
+            penalty{I} = blockPenalty;
+
+            % Convert to matrix
+            closure = blockmatrix.toMatrix(closure);
+            penalty = blockmatrix.toMatrix(closure);
         end
 
         function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
