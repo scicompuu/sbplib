@@ -5,6 +5,8 @@ classdef DiffOp < scheme.Scheme
         diffOps
         D
         H
+
+        blockmatrixDiv
     end
 
     methods
@@ -35,7 +37,7 @@ classdef DiffOp < scheme.Scheme
             for i = 1:nBlocks
                 h = getHand(i);
                 p = getParam(i);
-                obj.diffOps{i} = h(grid.grid{i}, order, p{:});
+                obj.diffOps{i} = h(grid.grids{i}, order, p{:});
             end
 
 
@@ -44,7 +46,7 @@ classdef DiffOp < scheme.Scheme
             for i = 1:nBlocks
                 H{i,i} = obj.diffOps{i}.H;
             end
-            obj.H = cell2sparse(H);
+            obj.H = blockmatrix.toMatrix(H);
 
 
             % Build the differentiation matrix
@@ -60,18 +62,18 @@ classdef DiffOp < scheme.Scheme
                         continue
                     end
 
-                    [ii, ij] = obj.diffOps{i}.inteface_coupling(intf{1}, obj.diffOps{j}, intf{2});
+                    [ii, ij] = obj.diffOps{i}.interface(intf{1}, obj.diffOps{j}, intf{2});
                     D{i,i} = D{i,i} + ii;
                     D{i,j} = D{i,j} + ij;
 
-                    [jj, ji] = obj.diffOps{j}.inteface_coupling(intf{2}, obj.diffOps{i}, intf{1});
+                    [jj, ji] = obj.diffOps{j}.interface(intf{2}, obj.diffOps{i}, intf{1});
                     D{j,j} = D{j,j} + jj;
                     D{j,i} = D{j,i} + ji;
                 end
             end
-            obj.D = cell2sparse(D);
+            obj.D = blockmatrix.toMatrix(D);
 
-            % end
+            obj.blockmatrixDiv = blockmatrix.getDivision(D);
 
             function [getHand, getParam] = parseInput(doHand, grid, doParam)
                 if ~isa(grid, 'multiblock.Grid')
@@ -102,19 +104,40 @@ classdef DiffOp < scheme.Scheme
             ops = sparse2cell(op, obj.NNN);
         end
 
-        function m = boundary_condition(obj,boundary,type,data)
+        % Creates the closere and penalty matrix for a given boundary condition,
+        %    boundary -- the name of the boundary on the form [id][name] where
+        %                id is the number of a block and name is the name of a
+        %                boundary of that block example: 1s or 3w
+        function [closure, penalty] = boundary_condition(obj,boundary,type,data)
+            I = boundary(1)
+            name = boundary(2:end);
+
+            % Get the closure and penaly matrices
+            [blockClosure, blockPenalty] = obj.diffOps{I}.boundary_condition(name, type, data);
+
+            % Expand to matrix for full domain.
+            div = obj.blockmatrixDiv;
+            closure = blockmatrix.zero(div);
+            closure{I,I} = blockClosure;
+
+            div{2} = 1; % Penalty is a column vector
+            penalty = blockmatrix.zero(div);
+            penalty{I} = blockPenalty;
+
+            % Convert to matrix
+            closure = blockmatrix.toMatrix(closure);
+            penalty = blockmatrix.toMatrix(closure);
+        end
+
+        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
 
         end
 
-        function m = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
-
-        end
-
-
+        % Size returns the number of degrees of freedom
         function N = size(obj)
             N = 0;
-            for i = 1:length(diffOps)
-                N = N + diffOps.size();
+            for i = 1:length(obj.diffOps)
+                N = N + obj.diffOps{i}.size();
             end
         end
     end
