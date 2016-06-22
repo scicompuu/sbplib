@@ -1,5 +1,5 @@
 % Reference is either a key or a function handle
-function [q, e, h, runtime] = convergence(filename, errorFunc, reference, method, order, m, T)
+function [q, e, h, runtime] = convergence(filename, errorFunc, reference, name, order, m, T)
     default_arg('errorFunc', @scheme.error1d);
 
     sf = SolutionFile(filename);
@@ -7,7 +7,7 @@ function [q, e, h, runtime] = convergence(filename, errorFunc, reference, method
 
     % Generate convergence, error, and efficiency plots for each search key with more than one entry.
     for i = 1:length(m)
-        key.method = method;
+        key.name = name;
         key.order = order;
         key.m = m(i);
         key.T = T;

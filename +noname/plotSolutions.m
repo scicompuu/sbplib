@@ -10,7 +10,7 @@ function plotSolutions(filename, figename_prefix, plot_type)
         key = sf.keys{i};
         entry = sf.get(key);
 
-        method  = key.method;
+        name  = key.name;
         order   = key.order;
         m       = key.m;
         T       = key.T;
@@ -23,7 +23,7 @@ function plotSolutions(filename, figename_prefix, plot_type)
         update(repr);
 
         if save_figures
-            figname = sprintf('%s_%s_o%d_m%d_T%d',figename_prefix,method,order,m,i);
+            figname = sprintf('%s_%s_o%d_m%d_T%d',figename_prefix,name,order,m,i);
             fprintf('Saving figure to ''%s''\n',figname);
             saveeps(hand,figname);
         end
