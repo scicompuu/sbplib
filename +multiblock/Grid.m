@@ -62,9 +62,9 @@ classdef Grid < grid.Grid
             nBlocks = length(obj.grids);
 
             % Collect number of points in each block
-            N = cell(1,nBlocks);
+            N = zeros(1,nBlocks);
             for i = 1:nBlocks
-                N{i} = obj.grids{i}.N();
+                N(i) = obj.grids{i}.N();
             end
 
             gfs = mat2cell(gf, N, 1);

@@ -64,11 +64,11 @@ classdef DiffOp < scheme.Scheme
 
                     [ii, ij] = obj.diffOps{i}.interface(intf{1}, obj.diffOps{j}, intf{2});
                     D{i,i} = D{i,i} + ii;
-                    D{i,j} = D{i,j} + ij;
+                    D{i,j} = ij;
 
                     [jj, ji] = obj.diffOps{j}.interface(intf{2}, obj.diffOps{i}, intf{1});
                     D{j,j} = D{j,j} + jj;
-                    D{j,i} = D{j,i} + ji;
+                    D{j,i} = ji;
                 end
             end
             obj.D = blockmatrix.toMatrix(D);
@@ -108,12 +108,12 @@ classdef DiffOp < scheme.Scheme
         %    boundary -- the name of the boundary on the form [id][name] where
         %                id is the number of a block and name is the name of a
         %                boundary of that block example: 1s or 3w
-        function [closure, penalty] = boundary_condition(obj,boundary,type,data)
-            I = boundary(1)
-            name = boundary(2:end);
+        function [closure, penalty] = boundary_condition(obj,boundary,type)
+            I = boundary{1};
+            name = boundary{2};
 
             % Get the closure and penaly matrices
-            [blockClosure, blockPenalty] = obj.diffOps{I}.boundary_condition(name, type, data);
+            [blockClosure, blockPenalty] = obj.diffOps{I}.boundary_condition(name, type);
 
             % Expand to matrix for full domain.
             div = obj.blockmatrixDiv;
@@ -126,7 +126,7 @@ classdef DiffOp < scheme.Scheme
 
             % Convert to matrix
             closure = blockmatrix.toMatrix(closure);
-            penalty = blockmatrix.toMatrix(closure);
+            penalty = blockmatrix.toMatrix(penalty);
         end
 
         function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
