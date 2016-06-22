@@ -20,13 +20,11 @@ classdef Scheme < handle
         %                           'l','r' or 'e','w','n','s'.
         %       type                is a string specifying the type of
         %                           boundary condition if there are several.
-        %       data                is a function returning the data that
-        %                           should be applied at the boundary.
         %       neighbour_scheme    is an instance of Scheme that should be
         %                           interfaced to.
         %       neighbour_boundary  is a string specifying which boundary to
         %                           interface to.
-        [closure, penalty] = boundary_condition(obj,boundary,type,data)
+        [closure, penalty] = boundary_condition(obj,boundary,type)
         [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
 
         % Returns the number of degrees of freedom.
