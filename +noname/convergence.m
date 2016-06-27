@@ -30,18 +30,11 @@ function [e, h] = errorForEntry(key,entry, errorFunc, reference,T)
 
     % Get the reference solution vector
     if isa(reference,'function_handle');
-        x = v_repr.x;
+        x = v_repr.grid.Points();
         v_ref = reference(x,T);
     else
         % Downsample the reference solution
-        x = v_repr.x;
-        x_ref = reference.x;
-
-        [~,I] = ismember(x,x_ref,'rows');
-        if any(I == 0)
-            error('Solution and reference solution seem to be on different grids.');
-        end
-        v_ref = reference.v(I);
+        v_ref = reference.grid.restrictFunc(reference.v, v_repr.grid);
     end
 
     e = errorFunc(discr,v, v_ref);
