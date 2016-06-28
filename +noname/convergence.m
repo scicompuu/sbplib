@@ -30,7 +30,7 @@ function [e, h] = errorForEntry(key,entry, errorFunc, reference,T)
 
     % Get the reference solution vector
     if isa(reference,'function_handle');
-        x = v_repr.grid.Points();
+        x = v_repr.grid.points();
         v_ref = reference(x,T);
     else
         % Downsample the reference solution
