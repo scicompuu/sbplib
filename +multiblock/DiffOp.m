@@ -119,14 +119,20 @@ classdef DiffOp < scheme.Scheme
             div = obj.blockmatrixDiv;
             closure = blockmatrix.zero(div);
             closure{I,I} = blockClosure;
+            closure = blockmatrix.toMatrix(closure);
 
             div{2} = 1; % Penalty is a column vector
-            penalty = blockmatrix.zero(div);
-            penalty{I} = blockPenalty;
-
-            % Convert to matrix
-            closure = blockmatrix.toMatrix(closure);
-            penalty = blockmatrix.toMatrix(penalty);
+            if ~iscell(blockPenalty)
+                p = blockmatrix.zero(div);
+                p{I} = blockPenalty;
+                penalty = blockmatrix.toMatrix(p);
+            else
+                for i = 1:length(blockPenalty)
+                    p = blockmatrix.zero(div);
+                    p{I} = blockPenalty{i};
+                    penalty{i} = blockmatrix.toMatrix(p);
+                end
+            end
         end
 
         function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)

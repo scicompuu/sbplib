@@ -62,7 +62,7 @@ classdef Beam < scheme.Scheme
         %       type                is a string specifying the type of boundary condition if there are several.
         %       neighbour_scheme    is an instance of Scheme that should be interfaced to.
         %       neighbour_boundary  is a string specifying which boundary to interface to.
-        function [closure, penalty_e, penalty_d] = boundary_condition(obj,boundary,type)
+        function [closure, penalty] = boundary_condition(obj,boundary,type)
             default_arg('type','dn');
 
             [e, d1, d2, d3, s] = obj.get_boundary_ops(boundary);
@@ -74,6 +74,7 @@ classdef Beam < scheme.Scheme
                     alpha = obj.alpha;
 
                     % tau1 < -alpha^2/gamma
+                    % tuning = 2;
                     tuning = 1.1;
 
                     tau1 = tuning * alpha/delt;
@@ -87,8 +88,8 @@ classdef Beam < scheme.Scheme
 
                     closure = obj.Hi*(tau*e' + sig*d1');
 
-                    penalty_e = obj.Hi*tau;
-                    penalty_d = obj.Hi*sig;
+                    penalty{1} = obj.Hi*tau;
+                    penalty{2} = obj.Hi*sig;
                 otherwise % Unknown, boundary condition
                     error('No such boundary condition: type = %s',type);
             end
@@ -106,7 +107,8 @@ classdef Beam < scheme.Scheme
             gamm_v = neighbour_scheme.gamm;
             delt_v = neighbour_scheme.delt;
 
-            tuning = 2;
+            % tuning = 2;
+            tuning = 1.1;
 
             alpha_u = obj.alpha;
             alpha_v = neighbour_scheme.alpha;
