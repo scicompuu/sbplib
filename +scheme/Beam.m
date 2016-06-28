@@ -88,8 +88,8 @@ classdef Beam < scheme.Scheme
 
                     closure = obj.Hi*(tau*e' + sig*d1');
 
-                    penalty{1} = obj.Hi*tau;
-                    penalty{2} = obj.Hi*sig;
+                    penalty{1} = -obj.Hi*tau;
+                    penalty{2} = -obj.Hi*sig;
                 otherwise % Unknown, boundary condition
                     error('No such boundary condition: type = %s',type);
             end
