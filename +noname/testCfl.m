@@ -43,8 +43,14 @@ function testCfl(discr, timestepper_method, T, alpha0, tol,threshold, silentFlag
             alpha0(2) = alpha;
         end
 
+        if ok
+            stability = 'STABLE';
+        else
+            stability = 'UNSTABLE';
+        end
+
         if ~silentFlag
-            fprintf('a = %.3e, n_step=%d  max = %.2e\n', alpha, n_step, maxVal);
+            fprintf('a = %.3e, n_step=%d %8s max = %.2e\n', alpha, n_step, stability, maxVal);
         end
     end
 
