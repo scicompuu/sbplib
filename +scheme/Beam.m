@@ -155,7 +155,7 @@ classdef Beam < scheme.Scheme
         end
 
         function N = size(obj)
-            N = prod(obj.m);
+            N = obj.grid.N;
         end
 
     end
