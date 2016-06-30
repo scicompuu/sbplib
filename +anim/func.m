@@ -1,9 +1,10 @@
 % Animates a function F(x,t) for x in lim from t to tend
-function func(xrange,yrange,t,tend, F)
+function func(F, xrange, yrange, T, timeMod)
+    default_arg('timeMod', 1);
     x = linspace(xrange(1),xrange(2), 200);
 
     fig_handle = figure;
-    plot_handle = plot(x,F(x,t));
+    plot_handle = plot(x,F(x,T(1)));
     xlim(xrange)
     ylim(yrange)
     axis_handle = gca;
@@ -15,7 +16,7 @@ function func(xrange,yrange,t,tend, F)
         drawnow
     end
 
-    anim.animate(@G, t, tend)
+    anim.animate(@G, T(1), T(2), timeMod);
 end
 
 
