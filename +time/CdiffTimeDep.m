@@ -1,4 +1,4 @@
-classdef Cdiff < time.Timestepper
+classdef CdiffTimeDep < time.Timestepper
     properties
         D
         E
@@ -12,19 +12,18 @@ classdef Cdiff < time.Timestepper
 
 
     methods
-        % Solves u_tt = Du + Eu_t + S
+        % Solves u_tt = Du + E(t)u_t + S(t)
         % D, E, S can either all be constants or all be function handles,
         % They can also be omitted by setting them equal to the empty matrix.
-        % Cdiff(D, E, S, k, t0, n0, v, v_prev)
-        function obj = Cdiff(D, E, S, k, t0, n0, v, v_prev)
+        % CdiffTimeDep(D, E, S, k, t0, n0, v, v_prev)
+        function obj = CdiffTimeDep(D, E, S, k, t0, n0, v, v_prev)
             m = length(v);
-            default_arg('E',sparse(m,m));
-            default_arg('S',sparse(m,1));
+            default_arg('E', @(t)sparse(m,m));
+            default_arg('S', @(t)sparse(m,1));
 
             obj.D = D;
             obj.E = E;
             obj.S = S;
-
 
             obj.k = k;
             obj.t = t0;
@@ -44,7 +43,7 @@ classdef Cdiff < time.Timestepper
         end
 
         function obj = step(obj)
-            [obj.v, obj.v_prev] = time.cdiff.cdiff(obj.v, obj.v_prev, obj.k, obj.D, obj.E, obj.S);
+            [obj.v, obj.v_prev] = time.cdiff.cdiff(obj.v, obj.v_prev, obj.k, obj.D, obj.E(obj.t), obj.S(obj.t));
             obj.t = obj.t + obj.k;
             obj.n = obj.n + 1;
         end
