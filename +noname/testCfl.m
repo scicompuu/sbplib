@@ -27,25 +27,27 @@ function testCfl(discr, timestepper_method, T, alpha0, tol,threshold, silentFlag
         end
     end
 
+    if silentFlag
+        rsInterval = util.ReplaceableString('');
+    end
+
     % Use bisection to find sharp estimate
     while( (alpha0(2)-alpha0(1))/alpha0(1) > tol)
         alpha = mean(alpha0);
 
         if ~silentFlag
             fprintf('[%.3e,%.3e]: ', alpha0(1), alpha0(2));
+        else
+            rsInterval.update('[%.3e,%.3e]: ', alpha0(1), alpha0(2));
         end
 
         [ok, n_step, maxVal] = testAlpha(alpha);
 
         if ok
             alpha0(1) = alpha;
-        else
-            alpha0(2) = alpha;
-        end
-
-        if ok
             stability = 'STABLE';
         else
+            alpha0(2) = alpha;
             stability = 'UNSTABLE';
         end
 
@@ -55,7 +57,8 @@ function testCfl(discr, timestepper_method, T, alpha0, tol,threshold, silentFlag
     end
 
     if silentFlag
-        fprintf('Last calculated: a = %.3e, n_step=%d  max = %.2e\n', alpha, n_step, maxVal);
+        rsInterval = util.ReplaceableString('');
+        fprintf('a = %.3e, n_step=%d  max = %.2e\n', alpha, n_step, maxVal);
     end
 
     fprintf('T = %-3d dof = %-4d order = %d: clf = %.4e\n',T, discr.size(), discr.order, alpha0(1));
