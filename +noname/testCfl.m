@@ -58,7 +58,6 @@ function testCfl(discr, timestepper_method, T, alpha0, tol,threshold, silentFlag
 
     if silentFlag
         rsInterval = util.ReplaceableString('');
-        fprintf('a = %.3e, n_step=%d  max = %.2e\n', alpha, n_step, maxVal);
     end
 
     fprintf('T = %-3d dof = %-4d order = %d: clf = %.4e\n',T, discr.size(), discr.order, alpha0(1));
