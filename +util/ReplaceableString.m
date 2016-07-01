@@ -34,10 +34,15 @@ classdef ReplaceableString < handle
             obj.display();
         end
 
+        function remove(obj)
+            obj.update('');
+        end
+
         function display(obj)
             reverseStr = repmat(sprintf('\b'), 1, obj.n);
-            newStr = padStr(sprintf(obj.fmt, obj.param{:}),obj.n);
-            fprintf([reverseStr, newStr]);
+            cleareStr = repmat(sprintf(' '), 1, obj.n);
+            newStr = sprintf(obj.fmt, obj.param{:});
+            fprintf([reverseStr, cleareStr, reverseStr, newStr]);
 
             obj.n = length(newStr);
         end
