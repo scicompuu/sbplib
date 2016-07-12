@@ -50,7 +50,8 @@ classdef DiffOp < scheme.Scheme
 
 
             % Build the differentiation matrix
-            D = cell(nBlocks, nBlocks);
+            obj.blockmatrixDiv = {grid.Ns, grid.Ns};
+            D = blockmatrix.zero(obj.blockmatrixDiv);
             for i = 1:nBlocks
                 D{i,i} = obj.diffOps{i}.D;
             end
@@ -64,16 +65,15 @@ classdef DiffOp < scheme.Scheme
 
                     [ii, ij] = obj.diffOps{i}.interface(intf{1}, obj.diffOps{j}, intf{2});
                     D{i,i} = D{i,i} + ii;
-                    D{i,j} = ij;
+                    D{i,j} = D{i,j} + ij;
 
                     [jj, ji] = obj.diffOps{j}.interface(intf{2}, obj.diffOps{i}, intf{1});
                     D{j,j} = D{j,j} + jj;
-                    D{j,i} = ji;
+                    D{j,i} = D{j,i} + ji;
                 end
             end
             obj.D = blockmatrix.toMatrix(D);
 
-            obj.blockmatrixDiv = blockmatrix.getDivision(D);
 
             function [getHand, getParam] = parseInput(doHand, grid, doParam)
                 if ~isa(grid, 'multiblock.Grid')
