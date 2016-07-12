@@ -20,7 +20,8 @@ classdef Beam < scheme.Scheme
     methods
         function obj = Beam(grid, order, alpha, opsGen)
             default_arg('alpha', 1);
-            default_arg('opsGen', @sbp.Higher);
+            % default_arg('opsGen', @sbp.Higher);
+            default_arg('opsGen', @sbp.HigherCompatibleVariable); % Supposed to be better
 
             if ~isa(grid, 'grid.Cartesian') || grid.D() ~= 1
                 error('Grid must be 1d cartesian');
@@ -107,8 +108,10 @@ classdef Beam < scheme.Scheme
             gamm_v = neighbour_scheme.gamm;
             delt_v = neighbour_scheme.delt;
 
-            % tuning = 2;
-            tuning = 1.1;
+            tuning = 2;
+            % tuning = 1.1;
+            % tuning = 0.5;
+            % tuning = 0.49998;
 
             alpha_u = obj.alpha;
             alpha_v = neighbour_scheme.alpha;
