@@ -108,10 +108,11 @@ classdef Beam < scheme.Scheme
             gamm_v = neighbour_scheme.gamm;
             delt_v = neighbour_scheme.delt;
 
-            tuning = 2;
-            % tuning = 1.1;
+            % tuning = 2;
+            tuning = 1.1;
             % tuning = 0.5;
             % tuning = 0.49998;
+            % tuning = 0.3;
 
             alpha_u = obj.alpha;
             alpha_v = neighbour_scheme.alpha;
