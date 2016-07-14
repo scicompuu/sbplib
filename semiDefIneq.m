@@ -1,5 +1,6 @@
-function ineq = semiDefIneq(A)
-    [m, sub] = minors(A);
+function ineq = semiDefIneq(A, verbose)
+    default_arg('verbose', true);
+    [m, sub] = minors(A, verbose);
 
     ineqsys = true;
     for i = 1:length(m)
