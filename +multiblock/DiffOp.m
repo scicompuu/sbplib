@@ -57,11 +57,12 @@ classdef DiffOp < scheme.Scheme
             end
 
             for i = 1:nBlocks
-                for j = i:nBlocks
+                for j = 1:nBlocks
                     intf = grid.connections{i,j};
                     if isempty(intf)
                         continue
                     end
+
 
                     [ii, ij] = obj.diffOps{i}.interface(intf{1}, obj.diffOps{j}, intf{2});
                     D{i,i} = D{i,i} + ii;
