@@ -15,11 +15,14 @@ classdef Beam < scheme.Scheme
         d3_l, d3_r
         gamm
         delt
+        interface_tuning
     end
 
     methods
-        function obj = Beam(grid, order, alpha, opsGen)
-            default_arg('alpha', 1);
+        function obj = Beam(grid, order, alpha, opsGen, interface_tuning)
+            default_arg('alpha', -1);
+            default_arg('interface_tuning', 1.1);
+
             % default_arg('opsGen', @sbp.Higher);
             default_arg('opsGen', @sbp.HigherCompatibleVariable); % Supposed to be better
 
@@ -54,6 +57,7 @@ classdef Beam < scheme.Scheme
 
             obj.gamm = h*ops.borrowing.N.S2/2;
             obj.delt = h^3*ops.borrowing.N.S3/2;
+            obj.interface_tuning = interface_tuning;
         end
 
 
@@ -108,11 +112,8 @@ classdef Beam < scheme.Scheme
             gamm_v = neighbour_scheme.gamm;
             delt_v = neighbour_scheme.delt;
 
-            % tuning = 2;
-            tuning = 1.1;
-            % tuning = 0.5;
-            % tuning = 0.49998;
-            % tuning = 0.3;
+            tuning = obj.interface_tuning;
+
 
             alpha_u = obj.alpha;
             alpha_v = neighbour_scheme.alpha;
