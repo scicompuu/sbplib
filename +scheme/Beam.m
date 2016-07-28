@@ -19,9 +19,11 @@ classdef Beam < scheme.Scheme
     end
 
     methods
-        function obj = Beam(grid, order, alpha, opsGen, interface_tuning)
+        function obj = Beam(grid, order, alpha, opsGen, interface_tuning, alphaII, alphaIII)
             default_arg('alpha', -1);
             default_arg('interface_tuning', 1.1);
+            default_arg('alphaII',  [])
+            default_arg('alphaIII', [])
 
             % default_arg('opsGen', @sbp.Higher);
             default_arg('opsGen', @sbp.HigherCompatibleVariable); % Supposed to be better
@@ -55,8 +57,13 @@ classdef Beam < scheme.Scheme
 
             obj.D = alpha*D4;
 
-            obj.gamm = h*ops.borrowing.N.S2/2;
-            obj.delt = h^3*ops.borrowing.N.S3/2;
+            if isempty(alphaII) && isempty(alphaIII)
+                alphaII = ops.borrowing.N.S2/2;
+                alphaIII = ops.borrowing.N.S3/2;
+            end
+
+            obj.gamm = h*alphaII;
+            obj.delt = h^3*alphaIII;
             obj.interface_tuning = interface_tuning;
         end
 
