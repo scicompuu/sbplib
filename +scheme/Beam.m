@@ -15,15 +15,23 @@ classdef Beam < scheme.Scheme
         d3_l, d3_r
         gamm
         delt
-        interface_tuning
+
+        opt
     end
 
     methods
-        function obj = Beam(grid, order, alpha, opsGen, interface_tuning, alphaII, alphaIII)
+        function obj = Beam(grid, order, alpha, opsGen, opt)
             default_arg('alpha', -1);
-            default_arg('interface_tuning', 1.1);
-            default_arg('alphaII',  [])
-            default_arg('alphaIII', [])
+
+
+            opt_default.interface_l.tuning = 1.1;
+            opt_default.interface_l.tau = [];
+            opt_default.interface_l.sig = [];
+            opt_default.interface_r.tuning = 1.1;
+            opt_default.interface_r.tau = [];
+            opt_default.interface_r.sig = [];
+            default_struct('opt', opt_default);
+
 
             % default_arg('opsGen', @sbp.Higher);
             default_arg('opsGen', @sbp.HigherCompatibleVariable); % Supposed to be better
@@ -57,14 +65,12 @@ classdef Beam < scheme.Scheme
 
             obj.D = alpha*D4;
 
-            if isempty(alphaII) && isempty(alphaIII)
-                alphaII = ops.borrowing.N.S2/2;
-                alphaIII = ops.borrowing.N.S3/2;
-            end
+            alphaII = ops.borrowing.N.S2/2;
+            alphaIII = ops.borrowing.N.S3/2;
 
             obj.gamm = h*alphaII;
             obj.delt = h^3*alphaIII;
-            obj.interface_tuning = interface_tuning;
+            obj.opt = opt;
         end
 
 
@@ -113,27 +119,37 @@ classdef Beam < scheme.Scheme
             [e_u,d1_u,d2_u,d3_u,s_u] = obj.get_boundary_ops(boundary);
             [e_v,d1_v,d2_v,d3_v,s_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
 
-            gamm_u = obj.gamm;
-            delt_u = obj.delt;
-
-            gamm_v = neighbour_scheme.gamm;
-            delt_v = neighbour_scheme.delt;
-
-            tuning = obj.interface_tuning;
-
 
             alpha_u = obj.alpha;
             alpha_v = neighbour_scheme.alpha;
 
-            tau1 = ((alpha_u/2)/delt_u + (alpha_v/2)/delt_v)/2*tuning;
-            % tau1 = (alpha_u/2 + alpha_v/2)/(2*delt_u)*tuning;
+            switch boundary
+                case 'l'
+                    interface_opt = obj.opt.interface_l;
+                case 'r'
+                    interface_opt = obj.opt.interface_r;
+            end
+
+
+            if isempty(interface_opt.tau) && isempty(interface_opt.sig)
+                gamm_u = obj.gamm;
+                delt_u = obj.delt;
+
+                gamm_v = neighbour_scheme.gamm;
+                delt_v = neighbour_scheme.delt;
+
+                tuning = interface_opt.tuning;
+
+                tau1 = ((alpha_u/2)/delt_u + (alpha_v/2)/delt_v)/2*tuning;
+                sig2 = ((alpha_u/2)/gamm_u + (alpha_v/2)/gamm_v)/2*tuning;
+            else
+                tau1 = interface_opt.tau;
+                sig2 = interface_opt.sig;
+            end
+
             tau4 = s_u*alpha_u/2;
-
-            sig2 = ((alpha_u/2)/gamm_u + (alpha_v/2)/gamm_v)/2*tuning;
             sig3 = -s_u*alpha_u/2;
-
             phi2 = s_u*1/2;
-
             psi1 = -s_u*1/2;
 
             tau = tau1*e_u  +                     tau4*d3_u;
