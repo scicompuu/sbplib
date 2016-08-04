@@ -34,6 +34,11 @@ classdef ReplaceableString < handle
             obj.display();
         end
 
+        function show(obj, varargin)
+            obj.param = varargin;
+            obj.display();
+        end
+
         function remove(obj)
             obj.update('');
         end
