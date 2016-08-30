@@ -6,6 +6,7 @@ classdef Beam < scheme.Scheme
         D % non-stabalized scheme operator
         alpha
 
+        h
         H % Discrete norm
         Hi
 
@@ -15,6 +16,8 @@ classdef Beam < scheme.Scheme
         d3_l, d3_r
         gamm
         delt
+        alphaII
+        alphaIII
 
         opt
     end
@@ -70,6 +73,9 @@ classdef Beam < scheme.Scheme
 
             obj.gamm = h*alphaII;
             obj.delt = h^3*alphaIII;
+            obj.alphaII = alphaII;
+            obj.alphaIII = alphaIII;
+            obj.h = h;
             obj.opt = opt;
         end
 
@@ -123,6 +129,7 @@ classdef Beam < scheme.Scheme
             alpha_u = obj.alpha;
             alpha_v = neighbour_scheme.alpha;
 
+
             switch boundary
                 case 'l'
                     interface_opt = obj.opt.interface_l;
@@ -143,8 +150,23 @@ classdef Beam < scheme.Scheme
                 tau1 = ((alpha_u/2)/delt_u + (alpha_v/2)/delt_v)/2*tuning;
                 sig2 = ((alpha_u/2)/gamm_u + (alpha_v/2)/gamm_v)/2*tuning;
             else
-                tau1 = interface_opt.tau;
-                sig2 = interface_opt.sig;
+                h_u = obj.h;
+                h_v = neighbour_scheme.h;
+
+                switch neighbour_boundary
+                    case 'l'
+                        neighbour_interface_opt = neighbour_scheme.opt.interface_l;
+                    case 'r'
+                        neighbour_interface_opt = neighbour_scheme.opt.interface_r;
+                end
+
+                tau_u = interface_opt.tau;
+                sig_u = interface_opt.sig;
+                tau_v = neighbour_interface_opt.tau;
+                sig_v = neighbour_interface_opt.sig;
+
+                tau1 = tau_u/h_u^3 + tau_v/h_v^3;
+                sig2 = sig_u/h_u   + sig_v/h_v;
             end
 
             tau4 = s_u*alpha_u/2;
