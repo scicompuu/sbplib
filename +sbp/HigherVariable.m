@@ -11,20 +11,54 @@ classdef HigherVariable < sbp.OpSet
 
 
     methods
-        function obj = HigherVariable(m,h,order)
+        function obj = HigherVariable(m,h,order, opt)
+            default_arg('opt', '')
 
             if order == 2
                 [H, HI, D1, D2, D3, D4, e_1, e_m, M4, Q, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = sbp.higher_variable2(m,h);
                 obj.borrowing.N.S2 = 1.2500;
                 obj.borrowing.N.S3 = 0.4000;
             elseif order == 4
-                [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = sbp.higher_variable4(m,h);
-                obj.borrowing.N.S2 = 0.5055;
-                obj.borrowing.N.S3 = 0.9290;
+                switch opt
+                case 'min_boundary_points'
+                    [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = sbp.higher_variable4_min_boundary_points(m,h);
+                    % obj.borrowing.N.S2 = 0.5055;
+                    % obj.borrowing.N.S3 = 0.9290;
+                otherwise
+                    [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = sbp.higher_variable4(m,h);
+                    obj.borrowing.N.S2 = 0.5055;
+                    obj.borrowing.N.S3 = 0.9290;
+                end
             elseif order == 6
-                [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = sbp.higher_variable6(m,h);
-                obj.borrowing.N.S2 = 0.3259;
-                obj.borrowing.N.S3 = 0.1580;
+                switch opt
+                case '2'
+                    [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = sbp.higher_variable6_2(m,h);
+                    % obj.borrowing.N.S2 = 0.3259;
+                    % obj.borrowing.N.S3 = 0.1580;
+                case '3'
+                    [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = sbp.higher_variable6_3(m,h);
+                    % obj.borrowing.N.S2 = 0.3259;
+                    % obj.borrowing.N.S3 = 0.1580;
+                case 'min_boundary_points'
+                    [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = sbp.higher_variable6_min_boundary_points(m,h);
+                    % obj.borrowing.N.S2 = 0.3259;
+                    % obj.borrowing.N.S3 = 0.1580;
+                otherwise
+                    [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = sbp.higher_variable6(m,h);
+                    obj.borrowing.N.S2 = 0.3259;
+                    obj.borrowing.N.S3 = 0.1580;
+            elseif order == 8
+                switch opt
+                case 'min_boundary_points'
+                    [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = sbp.higher_variable8_min_boundary_points(m,h);
+                    % obj.borrowing.N.S2 = 0.3259;
+                    % obj.borrowing.N.S3 = 0.1580;
+                otherwise
+                    [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = sbp.higher_variable8_higher_boundary_order(m,h);
+                    % obj.borrowing.N.S2 = 0.3259;
+                    % obj.borrowing.N.S3 = 0.1580;
+                end
+
             else
                 error('Invalid operator order.');
             end
