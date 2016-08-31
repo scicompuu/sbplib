@@ -1,4 +1,4 @@
-classdef HigherCompatibleVariable < sbp.OpSet
+classdef HigherVariable < sbp.OpSet
     properties
         norms % Struct containing norm matrices such as H,Q, M
         boundary  % Struct contanging vectors for boundry point approximations
@@ -11,18 +11,18 @@ classdef HigherCompatibleVariable < sbp.OpSet
 
 
     methods
-        function obj = HigherCompatibleVariable(m,h,order)
+        function obj = HigherVariable(m,h,order)
 
             if order == 2
-                [H, HI, D1, D2, D3, D4, e_1, e_m, M4, Q, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = sbp.higher2_compatible_halfvariable(m,h);
+                [H, HI, D1, D2, D3, D4, e_1, e_m, M4, Q, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = sbp.higher_variable2(m,h);
                 obj.borrowing.N.S2 = 1.2500;
                 obj.borrowing.N.S3 = 0.4000;
             elseif order == 4
-                [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = sbp.higher4_compatible_halfvariable(m,h);
+                [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = sbp.higher_variable4(m,h);
                 obj.borrowing.N.S2 = 0.5055;
                 obj.borrowing.N.S3 = 0.9290;
             elseif order == 6
-                [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = sbp.higher6_compatible_halfvariable(m,h);
+                [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = sbp.higher_variable6(m,h);
                 obj.borrowing.N.S2 = 0.3259;
                 obj.borrowing.N.S3 = 0.1580;
             else

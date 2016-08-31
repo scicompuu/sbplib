@@ -37,7 +37,7 @@ classdef Beam < scheme.Scheme
 
 
             % default_arg('opsGen', @sbp.Higher);
-            default_arg('opsGen', @sbp.HigherCompatibleVariable); % Supposed to be better
+            default_arg('opsGen', @sbp.HigherVariable); % Supposed to be better
 
             if ~isa(grid, 'grid.Cartesian') || grid.D() ~= 1
                 error('Grid must be 1d cartesian');
