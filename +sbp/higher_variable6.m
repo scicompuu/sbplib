@@ -1,4 +1,4 @@
-function [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = higher6_compatible_halfvariable(m,h)
+function [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = higher_variable6(m,h)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% 6:te ordn. SBP Finita differens         %%%
     %%% operatorer med diagonal norm            %%%

@@ -1,4 +1,4 @@
-function [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = higher4_compatible_halfvariable(m,h)
+function [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = higher_variable4(m,h)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% 4:de ordn. SBP Finita differens         %%%
     %%%                                         %%%
@@ -12,7 +12,7 @@ function [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = highe
     %h=1/(m-1);
     %h=1;
 
-    c=ones(m,1);
+    c = ones(m,1);
 
 
     H=diag(ones(m,1),0);

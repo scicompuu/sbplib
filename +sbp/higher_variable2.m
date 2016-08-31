@@ -1,5 +1,5 @@
 % Returns D2 as a function handle
-function [H, HI, D1, D2, D3, D4, e_1, e_m, M4, Q, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = higher2_compatible_halfvariable(m,h)
+function [H, HI, D1, D2, D3, D4, e_1, e_m, M4, Q, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = higher_variable2(m,h)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% 4:de ordn. SBP Finita differens         %%%
     %%% operatorer framtagna av Ken Mattsson    %%%
