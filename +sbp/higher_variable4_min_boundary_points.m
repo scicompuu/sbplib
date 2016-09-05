@@ -1,3 +1,4 @@
+function [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = higher_variable4_min_boundary_points(m,h)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% 4:de ordn. SBP Finita differens         %%%
 %%% operatorer framtagna av Mark Carpenter  %%%
@@ -11,32 +12,62 @@
 %m=20; %problemstorlek
 %h=1/(m-1);
 %h=1;
-   
-% x=1:h:m*h;x=x';
-% %c=x.^2/fac(2);
-% x0=x.^0/fac(1); 
-% x1=x.^1/fac(1);
-% x2=x.^2/fac(2);
-% x3=x.^3/fac(3);
-% x4=x.^4/fac(4);
-% x5=x.^5/fac(5);
-%c=ones(m,1);
 
- 
-H=diag(ones(m,1),0);
-H(1:4,1:4)=diag([17/48 59/48 43/48 49/48]);
-H(m-3:m,m-3:m)=fliplr(flipud(diag([17/48 59/48 43/48 49/48])));
-H=H*h;
-HI=inv(H);
+Hv = ones(m,1)
+Hv(1:4) = [17/48 59/48 43/48 49/48];
+Hv(m-3:m) = rot90(Hv(1:4),2);
+Hv = h * Hv;
+H = spdiag(Hv,0);
+HI = spdiag(1./Hv,0);
 
-   
+
+% Boundary operators
+e_1 = sparse(m,1);
+e_1(1) = 1;
+e_m = rot90(e_1, 2);
+
+S_U=[-0.11e2 / 0.6e1 3 -0.3e1 / 0.2e1 0.1e1 / 0.3e1;]/h;
+S_1=sparse(1,m);
+S_1(1:4)=S_U;
+S_m = -rot90(S_1, 2);
+
+S2_U=[2 -5 4 -1;]/h^2;
+S2_1=sparse(1,m);
+S2_1(1:4)=S2_U;
+S2_m = rot90(S2_1, 2);
+
+S3_U=[-1 3 -3 1;]/h^3;
+S3_1=sparse(1,m);
+S3_1(1:4)=S3_U;
+S3_m = rot90(S3_1, 2);
+
+
+
+
+
+
+q_diags   = [-1, 0, 1, 2];
+    q_stencil = [-1/3 -1/2 1 -1/6];
+    Qp = stripeMatrix(q_stencil, q_diags,m);
+
+    Q_U = [
+         -1/24  17/24   -1/6;
+        -13/24   -1/4  23/24;
+          1/12 -11/24 -11/24;
+    ];
+    Qp(1:3,1:3)=Q_U;
+    Qp(m-2:m,m-2:m)=rot90(Q_U,2)'; %%% This is different from standard SBP
+
+    Qm=-Qp';
+
+
 Q=(-1/12*diag(ones(m-2,1),2)+8/12*diag(ones(m-1,1),1)-8/12*diag(ones(m-1,1),-1)+1/12*diag(ones(m-2,1),-2));
 Q_U = [0 0.59e2 / 0.96e2 -0.1e1 / 0.12e2 -0.1e1 / 0.32e2; -0.59e2 / 0.96e2 0 0.59e2 / 0.96e2 0; 0.1e1 / 0.12e2 -0.59e2 / 0.96e2 0 0.59e2 / 0.96e2; 0.1e1 / 0.32e2 0 -0.59e2 / 0.96e2 0;];
 Q(1:4,1:4)=Q_U;
 Q(m-3:m,m-3:m)=flipud( fliplr(-Q_U(1:4,1:4) ) );
 
-e_1=zeros(m,1);e_1(1)=1;
-e_m=zeros(m,1);e_m(m)=1;
+
+
 
 D1=HI*(Q-1/2*e_1*e_1'+1/2*e_m*e_m') ;
 
@@ -47,13 +78,6 @@ M(1:4,1:4)=M_U;
 
 M(m-3:m,m-3:m)=flipud( fliplr( M_U ) );
 M=M/h;
-
-S_U=[-0.11e2 / 0.6e1 3 -0.3e1 / 0.2e1 0.1e1 / 0.3e1;]/h;
-S_1=zeros(1,m);
-S_1(1:4)=S_U;
-S_m=zeros(1,m);
-S_m(m-3:m)=fliplr(-S_U);
-
 M=zeros(m,m);
 
 for i=4:m-3
@@ -67,72 +91,14 @@ M(m-5:m,m-5:m)=[c(m-7) / 0.24e2 + 0.5e1 / 0.6e1 * c(m-6) + 0.5580181e7 / 0.66921
 M=M/h;
 
 D2=HI*(-M-c(1)*e_1*S_1+c(m)*e_m*S_m);
-
-S2_U=[2 -5 4 -1;]/h^2;
-S2_1=zeros(1,m);
-S2_1(1:4)=S2_U;
-S2_m=zeros(1,m);
-S2_m(m-3:m)=fliplr(S2_U);
-
 m3=-1/6;m2=2;m1=-13/2;m0=28/3;
 M4=m3*(diag(ones(m-3,1),3)+diag(ones(m-3,1),-3))+m2*(diag(ones(m-2,1),2)+diag(ones(m-2,1),-2))+m1*(diag(ones(m-1,1),1)+diag(ones(m-1,1),-1))+m0*diag(ones(m,1),0);
 
-%M4=(-1/6*(diag(ones(m-3,1),3)+diag(ones(m-3,1),-3) ) + 2*(diag(ones(m-2,1),2)+diag(ones(m-2,1),-2)) -13/2*(diag(ones(m-1,1),1)+diag(ones(m-1,1),-1)) + 28/3*diag(ones(m,1),0));
 
 M4_U=[0.8e1 / 0.3e1 -0.37e2 / 0.6e1 0.13e2 / 0.3e1 -0.5e1 / 0.6e1; -0.37e2 / 0.6e1 0.47e2 / 0.3e1 -13 0.11e2 / 0.3e1; 0.13e2 / 0.3e1 -13 0.44e2 / 0.3e1 -0.47e2 / 0.6e1; -0.5e1 / 0.6e1 0.11e2 / 0.3e1 -0.47e2 / 0.6e1 0.29e2 / 0.3e1;];
 M4(1:4,1:4)=M4_U;
 
 M4(m-3:m,m-3:m)=flipud( fliplr( M4_U ) );
 M4=M4/h^3;
-    
-S3_U=[-1 3 -3 1;]/h^3;
-S3_1=zeros(1,m);
-S3_1(1:4)=S3_U;
-S3_m=zeros(1,m);
-S3_m(m-3:m)=fliplr(-S3_U);
 
 D4=HI*(M4-e_1*S3_1+e_m*S3_m  + S_1'*S2_1-S_m'*S2_m);
-
-% % Test 
-% d3=[-1 3 -3 1];
-% DD_3=(-diag(ones(m-2,1),-2)+3*diag(ones(m-1,1),-1)-3*diag(ones(m,1),0)+ ...
-% 	  diag(ones(m-1,1),1));
-% DD_3(1:2,1:4)=[d3;d3];
-% DD_3(m,m-3:m)=[d3];
-% 
-% nnn=round(0.1/h);
-% x0=h;
-% x1=nnn*h;
-% d=h; % Start level
-% g=1; % interrior level
-% 
-% c0 = (-10*x1^3*x0^2*d+5*x1^4*x0*d-d*x1^5+10*x1^2*x0^3*g-5*x1*x0^4*g+x0^5* ...
-%       g)/(10*x1^2*x0^3-10*x0^2*x1^3+5*x0*x1^4-5*x1*x0^4+x0^5-x1^5);
-% c1 = -30*(-d+g)*x1^2*x0^2/(10*x1^2*x0^3-10*x0^2*x1^3+5*x0*x1^4-5*x1*x0^4+x0^5-x1^5);
-% c2 = 30*(-d+g)*x1*x0*(x0+x1)/(10*x1^2*x0^3-10*x0^2*x1^3+5*x0*x1^4-5*x1* ...
-% 			      x0^4+x0^5-x1^5);
-% c3 = -10*(-d+g)*(x0^2+4*x1*x0+x1^2)/(10*x1^2*x0^3-10*x0^2*x1^3+5*x0*x1^4- ...
-% 				     5*x1*x0^4+x0^5-x1^5);
-% c4 = 15*(-d+g)*(x0+x1)/(10*x1^2*x0^3-10*x0^2*x1^3+5*x0*x1^4-5*x1*x0^4+ ...
-% 			x0^5-x1^5);
-% c5 = -6*(-d+g)/(10*x1^2*x0^3-10*x0^2*x1^3+5*x0*x1^4-5*x1*x0^4+x0^5-x1^5);
-% 
-% xt=x0:h:x1;
-% ct=polyval([c5 c4 c3 c2 c1 c0],xt);
-% 
-% BB1=zeros(m);
-% BB1(1:nnn,1:nnn)=diag(ct);
-% BB1(m-nnn+1:m,m-nnn+1:m)=diag(fliplr(ct));
-% BB1(nnn+1:m-nnn,nnn+1:m-nnn)=g*eye(length(nnn+1:m-nnn));
-% 
-% DI=(1/h^3)*DD_3'*BB1*DD_3;
-% 
-% I=eye(m);
-% MM1=kron(H,D2'*H*D2)+kron(D2'*H*D2,H)+kron(D2'*H,H*D2)+kron(H*D2,D2'*H);
-% ee1=eig(MM1);min(real(ee1)),max(real(ee1))
-% 
-% 
-% MM2=kron(H,M4)+kron(M4,H)+kron(D2'*H,H*D2)+kron(H*D2,D2'*H);
-% MM3=kron(H,M4+DI)+kron(M4+DI,H)+kron(D2'*H,H*D2)+kron(H*D2,D2'*H);
-% ee3=eig(MM3);min(real(ee3)),max(real(ee3))
-

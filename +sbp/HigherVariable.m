@@ -47,6 +47,7 @@ classdef HigherVariable < sbp.OpSet
                     [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = sbp.higher_variable6(m,h);
                     obj.borrowing.N.S2 = 0.3259;
                     obj.borrowing.N.S3 = 0.1580;
+                end
             elseif order == 8
                 switch opt
                 case 'min_boundary_points'
