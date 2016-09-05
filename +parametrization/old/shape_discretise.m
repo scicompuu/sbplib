@@ -2,7 +2,7 @@
 function p = shape_discretise(s,h)
     p = [];
     for i = 1:length(s)
-        [~,pt] = grid.curve_discretise(s{i},h);
+        [~,pt] = parametrization.curve_discretise(s{i},h);
         p = [p, pt];
     end
 end

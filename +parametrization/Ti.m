@@ -119,7 +119,7 @@ classdef Ti
                 new_gs{i} = gs{i}.translate(a);
             end
 
-            ti = grid.Ti(new_gs{:});
+            ti = parametrization.Ti(new_gs{:});
         end
 
         % Mirrors the Ti so that the resulting Ti is still left handed.
@@ -134,7 +134,7 @@ classdef Ti
             new_gs{2} = gs{4}.mirror(a,b).reverse();
             new_gs{4} = gs{2}.mirror(a,b).reverse();
 
-            ti = grid.Ti(new_gs{:});
+            ti = parametrization.Ti(new_gs{:});
         end
 
         function ti = rotate(obj,a,rad)
@@ -144,7 +144,7 @@ classdef Ti
                 new_gs{i} = gs{i}.rotate(a,rad);
             end
 
-            ti = grid.Ti(new_gs{:});
+            ti = parametrization.Ti(new_gs{:});
         end
 
         function ti = rotate_edges(obj,n);
@@ -153,18 +153,18 @@ classdef Ti
                 new_i = mod(i - n,4);
                 new_gs{new_i+1} = obj.gs{i+1};
             end
-            ti = grid.Ti(new_gs{:});
+            ti = parametrization.Ti(new_gs{:});
         end
     end
 
     methods(Static)
         function obj = points(p1, p2, p3, p4)
-            g1 = grid.Curve.line(p1,p2);
-            g2 = grid.Curve.line(p2,p3);
-            g3 = grid.Curve.line(p3,p4);
-            g4 = grid.Curve.line(p4,p1);
+            g1 = parametrization.Curve.line(p1,p2);
+            g2 = parametrization.Curve.line(p2,p3);
+            g3 = parametrization.Curve.line(p3,p4);
+            g4 = parametrization.Curve.line(p4,p1);
 
-            obj = grid.Ti(g1,g2,g3,g4);
+            obj = parametrization.Ti(g1,g2,g3,g4);
         end
 
         function label(varargin)
@@ -190,11 +190,11 @@ classdef Ti
 
 
                 ti.show(2,2);
-                grid.place_label(pc,str);
-                grid.place_label(pw,'w');
-                grid.place_label(pe,'e');
-                grid.place_label(ps,'s');
-                grid.place_label(pn,'n');
+                parametrization.place_label(pc,str);
+                parametrization.place_label(pw,'w');
+                parametrization.place_label(pe,'e');
+                parametrization.place_label(ps,'s');
+                parametrization.place_label(pn,'n');
             end
         end
     end

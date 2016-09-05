@@ -8,5 +8,5 @@ function [S, g1, g2, g3] = triang_interp_pts(p1,p2,p3)
     g2 = @(t)(p2 + t*(p3-p2));
     g3 = @(t)(p3 + t*(p1-p3));
 
-    S = grid.triang_interp(g1,g2,g3);
+    S = parametrization.triang_interp(g1,g2,g3);
 end

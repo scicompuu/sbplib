@@ -13,9 +13,9 @@ classdef triang_interp
             o.A = g1(0);
             o.B = g2(0);
             o.C = g3(0);
-            o.Sa = grid.triang_interp.square_to_triangle_interp(g2,g3,g1);
-            o.Sb = grid.triang_interp.square_to_triangle_interp(g3,g1,g2);
-            o.Sc = grid.triang_interp.square_to_triangle_interp(g1,g2,g3);
+            o.Sa = parametrization.triang_interp.square_to_triangle_interp(g2,g3,g1);
+            o.Sb = parametrization.triang_interp.square_to_triangle_interp(g3,g1,g2);
+            o.Sc = parametrization.triang_interp.square_to_triangle_interp(g1,g2,g3);
         end
 
 
@@ -30,17 +30,17 @@ classdef triang_interp
 
             ka = @(t)(o.g1(1-t)+o.g2(t))/2;
 
-            h = grid.plot_curve(ma);
+            h = parametrization.plot_curve(ma);
             h.Color = Color.blue;
-            h = grid.plot_curve(mb);
+            h = parametrization.plot_curve(mb);
             h.Color = Color.blue;
-            h = grid.plot_curve(mc);
+            h = parametrization.plot_curve(mc);
             h.Color = Color.blue;
 
-            h = grid.plot_curve(na);
+            h = parametrization.plot_curve(na);
             h.Color = Color.red;
 
-            h = grid.plot_curve(ka);
+            h = parametrization.plot_curve(ka);
             h.Color = Color.red;
 
             [a(1),a(2)] = ma(1/3);
@@ -50,7 +50,7 @@ classdef triang_interp
             d = ka(1-1/3);
 
 
-            grid.label_pt(a,b,c,d);
+            parametrization.label_pt(a,b,c,d);
 
 
             % t = linspace(0,1,N);
@@ -59,23 +59,23 @@ classdef triang_interp
             %     sb = @(s)o.Sb(s,t(i));
             %     sc = @(s)o.Sc(s,t(i));
 
-            %     h = grid.plot_curve(sa);
+            %     h = parametrization.plot_curve(sa);
             %     h.Color = Color.blue;
-            %     h = grid.plot_curve(sb);
+            %     h = parametrization.plot_curve(sb);
             %     h.Color = Color.blue;
-            %     h = grid.plot_curve(sc);
+            %     h = parametrization.plot_curve(sc);
             %     h.Color = Color.blue;
             % end
 
-            h = grid.plot_curve(o.g1);
+            h = parametrization.plot_curve(o.g1);
             h.LineWidth = 2;
             h.Color = Color.red;
 
-            h = grid.plot_curve(o.g2);
+            h = parametrization.plot_curve(o.g2);
             h.LineWidth = 2;
             h.Color = Color.red;
 
-            h = grid.plot_curve(o.g3);
+            h = parametrization.plot_curve(o.g3);
             h.LineWidth = 2;
             h.Color = Color.red;
 
@@ -90,8 +90,8 @@ classdef triang_interp
         % The collapsed side is mapped to the corner oposite to g1.
         % This is done such that for S(s,t), S(s,1) = g1(s)
         function S = square_to_triangle_interp(g1,g2,g3)
-            corner = grid.line_segment(g3(0),g3(0));
-            S = grid.transfinite_interp(corner,g3,f(g1),f(g2))
+            corner = parametrization.line_segment(g3(0),g3(0));
+            S = parametrization.transfinite_interp(corner,g3,f(g1),f(g2))
 
             % Function to flip a curve
             function h = f(g)

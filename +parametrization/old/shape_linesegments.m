@@ -3,7 +3,7 @@ function l = shape_linesegments(s,h)
     l = {};
 
     for i = 1:length(s)
-        t = grid.curve_discretise(s{i},h);
-        l = [l, grid.curve_linesegments(s{i},t)];
+        t = parametrization.curve_discretise(s{i},h);
+        l = [l, parametrization.curve_linesegments(s{i},t)];
     end
 end

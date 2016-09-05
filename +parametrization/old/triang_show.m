@@ -4,8 +4,8 @@ function triang_show(S,n)
     ih = ishold();
 
     hold on
-    h_grid = grid.triang_plot_interp(S,n);
-    h_bord = grid.triang_plot_interp(S,2);
+    h_grid = parametrization.triang_plot_interp(S,n);
+    h_bord = parametrization.triang_plot_interp(S,2);
 
     set(h_grid,'Color',[0 0.4470 0.7410]);
     set(h_bord,'Color',[0.8500 0.3250 0.0980]);
