@@ -93,14 +93,14 @@ function latexTable(methodName, T, orders, m, e, q)
     data = cell(1,length(m));
     data{1} = num2str(m(1));
     for j = 1:nOrders
-        data{1} = [data{1} ' & ' sprintf('%8.2f',log10(orders(j).e(1))) ' &         ' ];
+        data{1} = [data{1} ' & ' sprintf('%8.2f',log10(e{j}(1))) ' &         ' ];
     end
     data{1} = [data{1} '\\'];
 
     for i = 2:length(m)
         data{i} = [data{i} num2str(m(i))  ];
         for j = 1:nOrders
-            data{i} = [data{i} ' & ' sprintf('%8.2f',log10(orders(j).e(i)))  ' & '  sprintf('%8.2f',(orders(j).q(i-1))) ];
+            data{i} = [data{i} ' & ' sprintf('%8.2f',log10(e{j}(i)))  ' & '  sprintf('%8.2f',(q{j}(i-1))) ];
         end
         data{i} = [data{i} '\\'];
     end
@@ -118,10 +118,10 @@ end
 
 
 function s = orderheaders(orders)
-    s= sprintf('\\multicolumn{2}{|c}{%dth order}',orders(1).order);
+    s= sprintf('\\multicolumn{2}{|c}{%dth order}',orders{1});
     nOrders = length(orders);
     for i = 2:nOrders
-        s = [s sprintf('& \\multicolumn{2}{|c}{%dth order}',orders(i).order)];
+        s = [s sprintf('& \\multicolumn{2}{|c}{%dth order}',orders{i})];
     end
     s = [s ' \\'];
 end
