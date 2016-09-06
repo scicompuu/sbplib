@@ -36,6 +36,8 @@ classdef Ti
             obj.S = @S_fun;
         end
 
+        % Does this funciton make sense?
+        % Should it always be eval?
         function [X,Y] = map(obj,u,v)
             default_arg('v',u);
 
@@ -62,6 +64,19 @@ classdef Ti
                 p = S(u,v(i));
                 X(i,:) = p(1,:);
                 Y(i,:) = p(2,:);
+            end
+        end
+
+        % Evaluate S for each pair of u and v,
+        % Return same shape as u
+        function [x, y] = eval(obj, u, v)
+            x = zeros(size(u));
+            y = zeros(size(u));
+
+            for i = 1:numel(u)
+                p = obj.S(u(i), v(i));
+                x(i) = p(1,:);
+                y(i) = p(2,:);
             end
         end
 
