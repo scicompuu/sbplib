@@ -1,3 +1,5 @@
+% WHAT KIND OF A FUNCTION NAME IS THIS?!
+%  This functions send matrixa arguments to func unlike grid.evalOn()
 % Takes a funciton and evaluates it on a grid to return a grid function in the
 % form of a (n*k)x1 vector, where n is the number of grid points and k is the
 % number of components of the function.
@@ -8,7 +10,7 @@ function gf = evalOn(g, func)
     if ~isa(func, 'function_handle')
         % We should have a constant.
         if size(func,2) ~= 1
-            error('grid:evalOn:VectorValuedWrongDim', 'A vector valued function must be given as a column vector')
+            error('grid:evalOnScalar:VectorValuedWrongDim', 'A vector valued function must be given as a column vector')
         end
 
         gf = repmat(func,[g.N, 1]);
@@ -29,7 +31,7 @@ function gf = evalOn(g, func)
     k = length(f0);
 
     if size(f0,2) ~= 1
-        error('grid:evalOn:VectorValuedWrongDim', 'A vector valued function must be given as a column vector')
+        error('grid:evalOnScalar:VectorValuedWrongDim', 'A vector valued function must be given as a column vector')
     end
 
     gf = func(X{:});
