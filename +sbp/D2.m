@@ -12,19 +12,19 @@ classdef D2 < sbp.OpSet
         function obj = D2(m,h,order)
 
             if order == 2
-                [H, HI, D1, D2, e_1, e_m, M,Q S_1, S_m] = sbp.ordinary2(m,h);
+                [H, HI, D1, D2, e_1, e_m, M, Q, S_1, S_m] = sbp.ordinary2(m,h);
                 obj.borrowing.M.S = 0.4000;
             elseif order == 4
-                [H, HI, D1, D2, e_1, e_m, M,Q S_1, S_m] = sbp.ordinary4(m,h);
+                [H, HI, D1, D2, e_1, e_m, M, Q, S_1, S_m] = sbp.ordinary4(m,h);
                 obj.borrowing.M.S = 0.2508;
             elseif order == 6
-                [H, HI, D1, D2, e_1, e_m, M,Q S_1, S_m] = sbp.ordinary6(m,h);
+                [H, HI, D1, D2, e_1, e_m, M, Q, S_1, S_m] = sbp.ordinary6(m,h);
                 obj.borrowing.M.S = 0.1878;
             elseif order == 8
-                [H, HI, D1, D2, e_1, e_m, M,Q S_1, S_m] = sbp.ordinary8(m,h);
+                [H, HI, D1, D2, e_1, e_m, M, Q, S_1, S_m] = sbp.ordinary8(m,h);
                 obj.borrowing.M.S = 0.0015;
             elseif order == 10
-                [H, HI, D1, D2, e_1, e_m, M,Q S_1, S_m] = sbp.ordinary10(m,h);
+                [H, HI, D1, D2, e_1, e_m, M, Q, S_1, S_m] = sbp.ordinary10(m,h);
                 obj.borrowing.M.S = 0.0351;
             else
                 error('Invalid operator order %d.',order);
