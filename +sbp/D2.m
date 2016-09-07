@@ -26,6 +26,9 @@ classdef D2 < sbp.OpSet
             elseif order == 10
                 [H, HI, D1, D2, e_1, e_m, M, Q, S_1, S_m] = sbp.ordinary10(m,h);
                 obj.borrowing.M.S = 0.0351;
+            elseif order == 12
+                [H, HI, D1, D2, e_1, e_m, M, Q, S_1, S_m] = sbp.ordinary12(m,h);
+                obj.borrowing.M.S = []; % Need to compute!
             else
                 error('Invalid operator order %d.',order);
             end
