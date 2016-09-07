@@ -1,4 +1,4 @@
-% Takes a funciton and evaluates it on a grid to return a grid function in the
+% Takes a function and evaluates it on a grid to return a grid function in the
 % form of a (n*k)x1 vector, where n is the number of grid points and k is the
 % number of components of the function.
 %      g -- Grid to evaluate on.
