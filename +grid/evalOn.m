@@ -16,6 +16,13 @@ function gf = evalOn(g, func)
     end
     % func should now be a function_handle
 
+    if g.D ~= nargin(func)
+        g.D
+        nargin(func)
+        error('grid:evalOn:WrongNumberOfInputs', 'The number of inputs of the function must match the dimension of the domain.')
+    end
+
+
     % Get coordinates and convert to cell array for easier use as a parameter
     x = num2cell(g.points());
 
