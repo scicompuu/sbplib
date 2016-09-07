@@ -13,19 +13,20 @@ classdef D1_nonequidistant_accurate < sbp.OpSet
         function obj = D1_nonequidistant_accurate(m,L,order)
 
             if order == 4
-                [D1,H,grid,dx] = D1_4th_4BP_2shifts(m,L);
+                [D1,H,grid,dx] = sbp.D1_4th_4BP_2shifts(m,L);
             elseif order == 6
-                [D1,H,grid,dx] = D1_6th_6BP_3shifts(m,L);
+                [D1,H,grid,dx] = sbp.D1_6th_6BP_3shifts(m,L);
             elseif order == 8
-                [D1,H,grid,dx] = D1_8th_8BP_4shifts(m,L);
+                [D1,H,grid,dx] = sbp.D1_8th_8BP_4shifts(m,L);
             elseif order == 10
-                [D1,H,grid,dx] = D1_10th_10BP_5shifts(m,L);
+                [D1,H,grid,dx] = sbp.D1_10th_10BP_5shifts(m,L);
             elseif order == 12
-                [D1,H,grid,dx] = D1_12th_12BP_6shifts(m,L);
+                [D1,H,grid,dx] = sbp.D1_12th_12BP_6shifts(m,L);
             else
                 error('Invalid operator order %d.',order);
             end
 
+            HI = inv(H);
             Q = H*D1;
             e_1 = sparse(m,1);
             e_m = sparse(m,1);

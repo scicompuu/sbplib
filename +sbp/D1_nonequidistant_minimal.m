@@ -13,19 +13,20 @@ classdef D1_nonequidistant_minimal < sbp.OpSet
         function obj = D1_nonequidistant_minimal(m,L,order)
 
             if order == 4
-                [D1,H,grid,dx] = D1_minimal_4th_3BP_1shifts(m,L);
+                [D1,H,grid,dx] = sbp.D1_minimal_4th_3BP_1shifts(m,L);
             elseif order == 6
-                [D1,H,grid,dx] = D1_minimal_6th_5BP_2shifts(m,L);
+                [D1,H,grid,dx] = sbp.D1_minimal_6th_5BP_2shifts(m,L);
             elseif order == 8
-                [D1,H,grid,dx] = D1_minimal_8th_6BP_2shifts(m,L);
+                [D1,H,grid,dx] = sbp.D1_minimal_8th_6BP_2shifts(m,L);
             elseif order == 10
-                [D1,H,grid,dx] = D1_minimal_10th_8BP_3shifts(m,L);
+                [D1,H,grid,dx] = sbp.D1_minimal_10th_8BP_3shifts(m,L);
             elseif order == 12
-                [D1,H,grid,dx] = D1_minimal_12th_10BP_4shifts(m,L);
+                [D1,H,grid,dx] = sbp.D1_minimal_12th_10BP_4shifts(m,L);
             else
                 error('Invalid operator order %d.',order);
             end
 
+            HI = inv(H);
             Q = H*D1;
             e_1 = sparse(m,1);
             e_m = sparse(m,1);
