@@ -1,4 +1,4 @@
-classdef HigherCompatible < sbp.OpSet
+classdef D4Compatible < sbp.OpSet
     properties
         norms % Struct containing norm matrices such as H,Q, M
         boundary  % Struct contanging vectors for boundry point approximations
@@ -11,7 +11,7 @@ classdef HigherCompatible < sbp.OpSet
 
 
     methods
-        function obj = HigherCompatible(m,h,order)
+        function obj = D4Compatible(m,h,order)
 
             if order == 2
                 [H, HI, D1, D4, e_1, e_m, M4, Q, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = sbp.higher_compatible2(m,h);

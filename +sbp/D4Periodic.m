@@ -1,4 +1,4 @@
-classdef Ordinary < sbp.OpSet
+classdef D4Periodic < sbp.OpSet
     properties
         norms % Struct containing norm matrices such as H,Q, M
         boundary  % Struct contanging vectors for boundry point approximations
@@ -8,26 +8,26 @@ classdef Ordinary < sbp.OpSet
         h % Step size
     end
 
+
+
     methods
-        function obj = Ordinary(m,h,order)
+        function obj = D4Periodic(m,h,order)
 
             if order == 2
-                [H, HI, D1, D2, e_1, e_m, M,Q S_1, S_m] = sbp.ordinary2(m,h);
-                obj.borrowing.M.S = 0.4000;
+                [H, HI, D1, D4, e_1, e_m, M4, Q, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = sbp.higher2_compatible(m,h);
+                obj.borrowing.N.S2 = 0.7500;
+                obj.borrowing.N.S3 = 0.3000;
             elseif order == 4
-                [H, HI, D1, D2, e_1, e_m, M,Q S_1, S_m] = sbp.ordinary4(m,h);
-                obj.borrowing.M.S = 0.2508;
+
+                [H, HI, D1, D4, e_1, e_m, M4, Q, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = sbp.higher4_compatible(m,h);
+                obj.borrowing.N.S2 = 0.4210;
+                obj.borrowing.N.S3 = 0.7080;
             elseif order == 6
-                [H, HI, D1, D2, e_1, e_m, M,Q S_1, S_m] = sbp.ordinary6(m,h);
-                obj.borrowing.M.S = 0.1878;
-            elseif order == 8
-                [H, HI, D1, D2, e_1, e_m, M,Q S_1, S_m] = sbp.ordinary8(m,h);
-                obj.borrowing.M.S = 0.0015;
-            elseif order == 10
-                [H, HI, D1, D2, e_1, e_m, M,Q S_1, S_m] = sbp.ordinary10(m,h);
-                obj.borrowing.M.S = 0.0351;
+                [H, HI, D1, D4, e_1, e_m, M4, Q, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = sbp.higher6_compatible(m,h);
+                obj.borrowing.N.S2 = 0.06925;
+                obj.borrowing.N.S3 = 0.05128;
             else
-                error('Invalid operator order %d.',order);
+                error('Invalid operator order.');
             end
 
             obj.h = h;
@@ -36,16 +36,20 @@ classdef Ordinary < sbp.OpSet
             obj.norms.H = H;
             obj.norms.HI = HI;
             obj.norms.Q = Q;
-            obj.norms.M = M;
+            obj.norms.N = M4;
 
             obj.boundary.e_1 = e_1;
             obj.boundary.S_1 = S_1;
+            obj.boundary.S2_1 = S2_1;
+            obj.boundary.S3_1 = S3_1;
 
             obj.boundary.e_m = e_m;
             obj.boundary.S_m = S_m;
+            obj.boundary.S2_m = S2_m;
+            obj.boundary.S3_m = S3_m;
 
             obj.derivatives.D1 = D1;
-            obj.derivatives.D2 = D2;
+            obj.derivatives.D4 = D4;
 
         end
     end
@@ -55,9 +59,7 @@ classdef Ordinary < sbp.OpSet
             error('Not implmented')
         end
     end
+
+
+
 end
-
-
-
-
-

@@ -1,4 +1,4 @@
-classdef Upwind < sbp.OpSet
+classdef D1Upwind < sbp.OpSet
     properties
         norms % Struct containing norm matrices such as H,Q, M
         boundary  % Struct contanging vectors for boundry point approximations
@@ -9,7 +9,7 @@ classdef Upwind < sbp.OpSet
     end
 
     methods
-        function obj = Upwind(m,h,order)
+        function obj = D1Upwind(m,h,order)
 
             switch order
                 case 2

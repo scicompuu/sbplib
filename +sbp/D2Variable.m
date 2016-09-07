@@ -1,4 +1,4 @@
-classdef Variable < sbp.OpSet
+classdef D2Variable < sbp.OpSet
     properties
         norms % Struct containing norm matrices such as H,Q, M
         boundary  % Struct contanging vectors for boundry point approximations
@@ -9,7 +9,7 @@ classdef Variable < sbp.OpSet
     end
 
     methods
-        function obj = Variable(m,h,order)
+        function obj = D2Variable(m,h,order)
 
             switch order
                 case 4
