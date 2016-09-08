@@ -13,21 +13,29 @@ classdef D1Upwind < sbp.OpSet
 
             switch order
                 case 2
-                    [H, HI, Dp, Dm, e_1, e_m] = sbp.upwind2(m,h);
+                    [H, HI, Dp, Dm, e_1, e_m] = ...
+                        sbp.implementations.d1_upwind_2(m,h);
                 case 3
-                    [H, HI, Dp, Dm, e_1, e_m] = sbp.upwind3(m,h);
+                    [H, HI, Dp, Dm, e_1, e_m] = ...
+                        sbp.implementations.d1_upwind_3(m,h);
                 case 4
-                    [H, HI, Dp, Dm, e_1, e_m] = sbp.upwind4(m,h);
+                    [H, HI, Dp, Dm, e_1, e_m] = ...
+                        sbp.implementations.d1_upwind_4(m,h);
                 case 5
-                    [H, HI, Dp, Dm, e_1, e_m] = sbp.upwind5(m,h);
+                    [H, HI, Dp, Dm, e_1, e_m] = ...
+                        sbp.implementations.d1_upwind_5(m,h);
                 case 6
-                    [H, HI, Dp, Dm, e_1, e_m] = sbp.upwind6(m,h);
+                    [H, HI, Dp, Dm, e_1, e_m] = ...
+                        sbp.implementations.d1_upwind_6(m,h);
                 case 7
-                    [H, HI, Dp, Dm, e_1, e_m] = sbp.upwind7(m,h);
+                    [H, HI, Dp, Dm, e_1, e_m] = ...
+                        sbp.implementations.d1_upwind_7(m,h);
                 case 8
-                    [H, HI, Dp, Dm, e_1, e_m] = sbp.upwind8(m,h);
+                    [H, HI, Dp, Dm, e_1, e_m] = ...
+                        sbp.implementations.d1_upwind_8(m,h);
                 case 9
-                    [H, HI, Dp, Dm, e_1, e_m] = sbp.upwind9(m,h);
+                    [H, HI, Dp, Dm, e_1, e_m] = ...
+                        sbp.implementations.d1_upwind_9(m,h);
                 otherwise
                     error('Invalid operator order %d.',order);
             end

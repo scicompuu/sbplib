@@ -14,11 +14,13 @@ classdef D4 < sbp.OpSet
         function obj = D4(m,h,order)
 
             if order == 4
-                [H, HI, D1, D2, D3, D4, e_1, e_m, M, M4,Q, Q3, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = sbp.higher4(m,h);
+                [H, HI, D1, D2, D3, D4, e_1, e_m, M, M4,Q, Q3, S2_1,...
+                    S2_m, S3_1, S3_m, S_1, S_m] = sbp.implementations.d4_4(m,h);
                 obj.borrowing.N.S2 = 0.5485;
                 obj.borrowing.N.S3 = 1.0882;
             elseif order == 6
-                [H, HI, D1, D2, D3, D4, e_1, e_m, M, M4,Q, Q3, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = sbp.higher6(m,h);
+                [H, HI, D1, D2, D3, D4, e_1, e_m, M, M4,Q, Q3, S2_1,...
+                    S2_m, S3_1, S3_m, S_1, S_m] = sbp.implementations.d4_6(m,h);
                 obj.borrowing.N.S2 = 0.3227;
                 obj.borrowing.N.S3 = 0.1568;
             else

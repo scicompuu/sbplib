@@ -14,13 +14,17 @@ classdef D2BlockNorm < sbp.OpSet
         function obj = D2BlockNorm(m,h,order)
 
             if order == 4
-                [H, HI, D1, D2, e_1, e_m, M,Q S_1, S_m] = sbp.blocknorm4(m,h);
+                [H, HI, D1, D2, e_1, e_m, M, Q, S_1, S_m] = ...
+                    sbp.implementations.d2_blocknorm_4(m,h);
             elseif order == 6
-                [H, HI, D1, D2, e_1, e_m, M,Q S_1, S_m] = sbp.blocknorm6(m,h);
+                [H, HI, D1, D2, e_1, e_m, M, Q, S_1, S_m] = ...
+                    sbp.implementations.d2_blocknorm_6(m,h);
             elseif order == 8
-                [H, HI, D1, D2, e_1, e_m, M,Q S_1, S_m] = sbp.blocknorm8(m,h);
+                [H, HI, D1, D2, e_1, e_m, M, Q, S_1, S_m] = ...
+                    sbp.implementations.d2_blocknorm_8(m,h);
             elseif order == 10
-                [H, HI, D1, D2, e_1, e_m, M,Q S_1, S_m] = sbp.blocknorm10(m,h);
+                [H, HI, D1, D2, e_1, e_m, M, Q, S_1, S_m] = ...
+                    sbp.implementations.d2_blocknorm_10(m,h);
             else
                 error('Invalid operator order %d.',order);
             end

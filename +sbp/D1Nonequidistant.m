@@ -25,15 +25,20 @@ classdef D1Nonequidistant < sbp.OpSet
                 case {'Accurate','accurate','A'}
                     
                     if order == 4
-                        [obj.D1,obj.H,obj.x,obj.h] = sbp.D1_4th_4BP_2shifts(m,L);
+                        [obj.D1,obj.H,obj.x,obj.h] = ...
+                            sbp.implementations.d1_noneq_4(m,L);
                     elseif order == 6
-                        [obj.D1,obj.H,obj.x,obj.h] = sbp.D1_6th_6BP_3shifts(m,L);
+                        [obj.D1,obj.H,obj.x,obj.h] = ...
+                            sbp.implementations.d1_noneq_6(m,L);
                     elseif order == 8
-                        [obj.D1,obj.H,obj.x,obj.h] = sbp.D1_8th_8BP_4shifts(m,L);
+                        [obj.D1,obj.H,obj.x,obj.h] = ...
+                            sbp.implementations.d1_noneq_8(m,L);
                     elseif order == 10
-                        [obj.D1,obj.H,obj.x,obj.h] = sbp.D1_10th_10BP_5shifts(m,L);
+                        [obj.D1,obj.H,obj.x,obj.h] = ...
+                            sbp.implementations.d1_noneq_10(m,L);
                     elseif order == 12
-                        [obj.D1,obj.H,obj.x,obj.h] = sbp.D1_12th_12BP_6shifts(m,L);
+                        [obj.D1,obj.H,obj.x,obj.h] = ...
+                            sbp.implementations.d1_noneq_12(m,L);
                     else
                         error('Invalid operator order %d.',order);
                     end
@@ -41,15 +46,20 @@ classdef D1Nonequidistant < sbp.OpSet
                 case {'Minimal','minimal','M'}
                     
                     if order == 4
-                        [obj.D1,obj.H,obj.x,obj.h] = sbp.D1_minimal_4th_3BP_1shifts(m,L);
+                        [obj.D1,obj.H,obj.x,obj.h] = ...
+                            sbp.implementations.d1_noneq_minimal_4(m,L);
                     elseif order == 6
-                        [obj.D1,obj.H,obj.x,obj.h] = sbp.D1_minimal_6th_5BP_2shifts(m,L);
+                        [obj.D1,obj.H,obj.x,obj.h] = ...
+                            sbp.implementations.d1_noneq_minimal_6(m,L);
                     elseif order == 8
-                        [obj.D1,obj.H,obj.x,obj.h] = sbp.D1_minimal_8th_6BP_2shifts(m,L);
+                        [obj.D1,obj.H,obj.x,obj.h] = ...
+                            sbp.implementations.d1_noneq_minimal_8(m,L);
                     elseif order == 10
-                        [obj.D1,obj.H,obj.x,obj.h] = sbp.D1_minimal_10th_8BP_3shifts(m,L);
+                        [obj.D1,obj.H,obj.x,obj.h] = ...
+                            sbp.implementations.d1_noneq_minimal_10(m,L);
                     elseif order == 12
-                        [obj.D1,obj.H,obj.x,obj.h] = sbp.D1_minimal_12th_10BP_4shifts(m,L);
+                        [obj.D1,obj.H,obj.x,obj.h] = ...
+                            sbp.implementations.d1_noneq_minimal_12(m,L);
                     else
                         error('Invalid operator order %d.',order);
                     end

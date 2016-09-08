@@ -14,15 +14,18 @@ classdef D4Compatible < sbp.OpSet
         function obj = D4Compatible(m,h,order)
 
             if order == 2
-                [H, HI, D1, D4, e_1, e_m, M4, Q, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = sbp.higher_compatible2(m,h);
+                [H, HI, D1, D4, e_1, e_m, M4, Q, S2_1, S2_m, S3_1, S3_m,...
+                    S_1, S_m] = sbp.implementations.d4_compatible_2(m,h);
                 obj.borrowing.N.S2 = 0.7500;
                 obj.borrowing.N.S3 = 0.3000;
             elseif order == 4
-                [H, HI, D1, D4, e_1, e_m, M4, Q, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = sbp.higher_compatible4(m,h);
+                [H, HI, D1, D4, e_1, e_m, M4, Q, S2_1, S2_m, S3_1, S3_m,...
+                    S_1, S_m] = sbp.implementations.d4_compatible_4(m,h);
                 obj.borrowing.N.S2 = 0.4210;
                 obj.borrowing.N.S3 = 0.7080;
             elseif order == 6
-                [H, HI, D1, D4, e_1, e_m, M4, Q, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = sbp.higher_compatible6(m,h);
+                [H, HI, D1, D4, e_1, e_m, M4, Q, S2_1, S2_m, S3_1, S3_m,...
+                    S_1, S_m] = sbp.implementations.d4_compatible_6(m,h);
                 obj.borrowing.N.S2 = 0.06925;
                 obj.borrowing.N.S3 = 0.05128;
             else

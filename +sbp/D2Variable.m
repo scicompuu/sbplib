@@ -13,7 +13,8 @@ classdef D2Variable < sbp.OpSet
 
             switch order
                 case 4
-                    [H, HI, D1, D2, e_1, e_m, S_1, S_m] = sbp.variable4(m,h);
+                    [H, HI, D1, D2, e_1, e_m, S_1, S_m] = ...
+                        sbp.implementations.d2_variable_4(m,h);
                     obj.borrowing.M.S = 0.2505765857;
                 otherwise
                     error('Invalid operator order %d.',order);
