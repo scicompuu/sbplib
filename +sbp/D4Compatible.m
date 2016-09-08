@@ -1,57 +1,67 @@
 classdef D4Compatible < sbp.OpSet
     properties
-        norms % Struct containing norm matrices such as H,Q, M
-        boundary  % Struct contanging vectors for boundry point approximations
-        derivatives % Struct containging differentiation operators
-        borrowing % Struct with borrowing limits for different norm matrices
+        D1 % SBP operator approximating first derivative
+        H % Norm matrix
+        HI % H^-1
+        Q % Skew-symmetric matrix
+        e_1 % Left boundary operator
+        e_m % Right boundary operator
+        D2 % SBP operator for second derivative
+        M % Norm matrix, second derivative
+        S_1 % Left boundary first derivative
+        S_m % Right boundary first derivative
+        D3 % SBP operator for third derivative
+        Q3 % Skew-symmetric matrix in third derivative
+        S2_1 % Left boundary second derivative
+        S2_m % Right boundary second derivative
+        D4 % SBP operator for fourth derivative
+        M4 % Norm matrix, fourth derivative
+        S3_1 % Left boundary third derivative
+        S3_m % Right boundary third derivative
         m % Number of grid points.
         h % Step size
+        x % grid
+        borrowing % Struct with borrowing limits for different norm matrices
     end
 
 
 
     methods
-        function obj = D4Compatible(m,h,order)
+        function obj = D4Compatible(m,L,order)
+            
+            obj.h = L/(m-1);
+            obj.x = linspace(0,L,m)';
 
             if order == 2
-                [H, HI, D1, D4, e_1, e_m, M4, Q, S2_1, S2_m, S3_1, S3_m,...
-                    S_1, S_m] = sbp.implementations.d4_compatible_2(m,h);
+                [obj.H, obj.HI, obj.D1, obj.D4, obj.e_1, obj.e_m, obj.M4,...
+                 obj.Q, obj.S2_1, obj.S2_m, obj.S3_1, obj.S3_m,...
+                    obj.S_1, obj.S_m] =...
+                    sbp.implementations.d4_compatible_2(m,obj.h);
                 obj.borrowing.N.S2 = 0.7500;
                 obj.borrowing.N.S3 = 0.3000;
             elseif order == 4
-                [H, HI, D1, D4, e_1, e_m, M4, Q, S2_1, S2_m, S3_1, S3_m,...
-                    S_1, S_m] = sbp.implementations.d4_compatible_4(m,h);
+                [obj.H, obj.HI, obj.D1, obj.D4, obj.e_1, obj.e_m, obj.M4,...
+                 obj.Q, obj.S2_1, obj.S2_m, obj.S3_1, obj.S3_m,...
+                    obj.S_1, obj.S_m] =...
+                    sbp.implementations.d4_compatible_4(m,obj.h);
                 obj.borrowing.N.S2 = 0.4210;
                 obj.borrowing.N.S3 = 0.7080;
             elseif order == 6
-                [H, HI, D1, D4, e_1, e_m, M4, Q, S2_1, S2_m, S3_1, S3_m,...
-                    S_1, S_m] = sbp.implementations.d4_compatible_6(m,h);
+                [obj.H, obj.HI, obj.D1, obj.D4, obj.e_1, obj.e_m, obj.M4,...
+                 obj.Q, obj.S2_1, obj.S2_m, obj.S3_1, obj.S3_m,...
+                    obj.S_1, obj.S_m] =...
+                    sbp.implementations.d4_compatible_6(m,obj.h);
                 obj.borrowing.N.S2 = 0.06925;
                 obj.borrowing.N.S3 = 0.05128;
             else
                 error('Invalid operator order.');
             end
 
-            obj.h = h;
             obj.m = m;
 
-            obj.norms.H = H;
-            obj.norms.HI = HI;
-            obj.norms.Q = Q;
-            obj.norms.N = M4;
+            obj.D2 = [];
+            obj.D3 = [];
 
-            obj.boundary.e_1 = e_1;
-            obj.boundary.S_1 = S_1;
-            obj.boundary.S2_1 = S2_1;
-            obj.boundary.S3_1 = S3_1;
-
-            obj.boundary.e_m = e_m;
-            obj.boundary.S_m = S_m;
-            obj.boundary.S2_m = S2_m;
-            obj.boundary.S3_m = S3_m;
-
-            obj.derivatives.D1 = D1;
-            obj.derivatives.D4 = D4;
 
         end
     end

@@ -1,56 +1,55 @@
 classdef D1Upwind < sbp.OpSet
     properties
-        norms % Struct containing norm matrices such as H,Q, M
-        boundary  % Struct contanging vectors for boundry point approximations
-        derivatives % Struct containging differentiation operators
-        borrowing % Struct with borrowing limits for different norm matrices
+        D1 % SBP operator approximating first derivative
+        H % Norm matrix
+        HI % H^-1
+        Q % Skew-symmetric matrix
+        e_1 % Left boundary operator
+        e_m % Right boundary operator
         m % Number of grid points.
         h % Step size
+        x % grid
+        borrowing % Struct with borrowing limits for different norm matrices
     end
 
     methods
-        function obj = D1Upwind(m,h,order)
+        function obj = D1Upwind(m,L,order)
+            
+            obj.h = L/(m-1);
+            obj.x = linspace(0,L,m)';
 
             switch order
                 case 2
-                    [H, HI, Dp, Dm, e_1, e_m] = ...
-                        sbp.implementations.d1_upwind_2(m,h);
+                    [obj.H, obj.HI, obj.Dp, obj.Dm, obj.e_1, obj.e_m] = ...
+                        sbp.implementations.d1_upwind_2(m,obj.h);
                 case 3
-                    [H, HI, Dp, Dm, e_1, e_m] = ...
-                        sbp.implementations.d1_upwind_3(m,h);
+                    [obj.H, obj.HI, obj.Dp, obj.Dm, obj.e_1, obj.e_m] = ...
+                        sbp.implementations.d1_upwind_3(m,obj.h);
                 case 4
-                    [H, HI, Dp, Dm, e_1, e_m] = ...
-                        sbp.implementations.d1_upwind_4(m,h);
+                    [obj.H, obj.HI, obj.Dp, obj.Dm, obj.e_1, obj.e_m] = ...
+                        sbp.implementations.d1_upwind_4(m,obj.h);
                 case 5
-                    [H, HI, Dp, Dm, e_1, e_m] = ...
-                        sbp.implementations.d1_upwind_5(m,h);
+                    [obj.H, obj.HI, obj.Dp, obj.Dm, obj.e_1, obj.e_m] = ...
+                        sbp.implementations.d1_upwind_5(m,obj.h);
                 case 6
-                    [H, HI, Dp, Dm, e_1, e_m] = ...
-                        sbp.implementations.d1_upwind_6(m,h);
+                    [obj.H, obj.HI, obj.Dp, obj.Dm, obj.e_1, obj.e_m] = ...
+                        sbp.implementations.d1_upwind_6(m,obj.h);
                 case 7
-                    [H, HI, Dp, Dm, e_1, e_m] = ...
-                        sbp.implementations.d1_upwind_7(m,h);
+                    [obj.H, obj.HI, obj.Dp, obj.Dm, obj.e_1, obj.e_m] = ...
+                        sbp.implementations.d1_upwind_7(m,obj.h);
                 case 8
-                    [H, HI, Dp, Dm, e_1, e_m] = ...
-                        sbp.implementations.d1_upwind_8(m,h);
+                    [obj.H, obj.HI, obj.Dp, obj.Dm, obj.e_1, obj.e_m] = ...
+                        sbp.implementations.d1_upwind_8(m,obj.h);
                 case 9
-                    [H, HI, Dp, Dm, e_1, e_m] = ...
-                        sbp.implementations.d1_upwind_9(m,h);
+                    [obj.H, obj.HI, obj.Dp, obj.Dm, obj.e_1, obj.e_m] = ...
+                        sbp.implementations.d1_upwind_9(m,obj.h);
                 otherwise
                     error('Invalid operator order %d.',order);
             end
 
-            obj.h = h;
             obj.m = m;
+        	obj.borrowing = [];
 
-            obj.norms.H = H;
-            obj.norms.HI = HI;
-
-            obj.boundary.e_1 = e_1;
-            obj.boundary.e_m = e_m;
-
-            obj.derivatives.Dp = Dp;
-            obj.derivatives.Dm = Dm;
         end
     end
 

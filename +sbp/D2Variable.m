@@ -1,41 +1,39 @@
 classdef D2Variable < sbp.OpSet
     properties
-        norms % Struct containing norm matrices such as H,Q, M
-        boundary  % Struct contanging vectors for boundry point approximations
-        derivatives % Struct containging differentiation operators
-        borrowing % Struct with borrowing limits for different norm matrices
+        D1 % SBP operator approximating first derivative
+        H % Norm matrix
+        HI % H^-1
+        Q % Skew-symmetric matrix
+        e_1 % Left boundary operator
+        e_m % Right boundary operator
+        D2 % SBP operator for second derivative
+        M % Norm matrix, second derivative
+        S_1 % Left boundary first derivative
+        S_m % Right boundary first derivative
         m % Number of grid points.
         h % Step size
+        x % grid
+        borrowing % Struct with borrowing limits for different norm matrices
     end
 
     methods
-        function obj = D2Variable(m,h,order)
+        function obj = D2Variable(m,L,order)
+            
+            obj.h = L/(m-1);
+            obj.x = linspace(0,L,m)';
 
             switch order
                 case 4
-                    [H, HI, D1, D2, e_1, e_m, S_1, S_m] = ...
-                        sbp.implementations.d2_variable_4(m,h);
+                    [obj.H, obj.HI, obj.D1, obj.D2, obj.e_1,...
+                        obj.e_m, obj.S_1, obj.S_m] = ...
+                        sbp.implementations.d2_variable_4(m,obj.h);
                     obj.borrowing.M.S = 0.2505765857;
                 otherwise
                     error('Invalid operator order %d.',order);
             end
 
-            obj.h = h;
             obj.m = m;
-
-            obj.norms.H = H;
-            obj.norms.HI = HI;
-            % obj.norms.Q = Q;
-            % obj.norms.M = M;
-
-            obj.boundary.e_1 = e_1;
-            obj.boundary.S_1 = S_1;
-
-            obj.boundary.e_m = e_m;
-            obj.boundary.S_m = S_m;
-
-            obj.derivatives.D1 = D1;
-            obj.derivatives.D2 = D2;
+            obj.M = [];
 
         end
     end
