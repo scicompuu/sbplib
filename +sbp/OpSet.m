@@ -12,7 +12,4 @@ classdef (Abstract) OpSet
 
     end
 
-    methods (Abstract, Static)
-        lambda = smallestGrid()
-    end
 end

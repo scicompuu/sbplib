@@ -58,12 +58,6 @@ classdef D4CompatibleVariable < sbp.OpSet
         end
     end
 
-    methods (Static)
-        function lambda = smallestGrid(obj)
-            error('Not implmented')
-        end
-    end
-
 
 
 end

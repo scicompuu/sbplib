@@ -79,11 +79,7 @@ classdef D1Nonequidistant < sbp.OpSet
         end
     end
     
-    methods (Static)
-        function lambda = smallestGrid(obj)
-            error('Not implmented')
-        end
-    end
+
 end
 
 
