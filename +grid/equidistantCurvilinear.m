@@ -31,5 +31,5 @@ function g = equidistantCurvilinear(mapping, m, varargin)
     end
 
     g = grid.Curvilinear(mapping, X{:});
-    g.h = h;
+    g.logic.h = h;
 end
