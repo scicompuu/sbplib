@@ -9,6 +9,7 @@ classdef D1Nonequidistant < sbp.OpSet
         m % Number of grid points.
         h % Step size
         x % grid
+        borrowing % Struct with borrowing limits for different norm matrices
     end
     
     methods
@@ -17,7 +18,7 @@ classdef D1Nonequidistant < sbp.OpSet
             default_arg('option','Accurate');
             % 'Accurate' operators are optimized for accuracy
             % 'Minimal' operators have the smallest possible boundary
-            % closure
+            %  closure
             
             switch option
                 
@@ -62,6 +63,8 @@ classdef D1Nonequidistant < sbp.OpSet
             
             obj.HI = inv(obj.H);
             obj.Q = obj.H*obj.D1 - obj.e_m*obj.e_m' + obj.e_0*obj.e_0';
+            
+            obj.borrowing = [];
             
         end
     end
