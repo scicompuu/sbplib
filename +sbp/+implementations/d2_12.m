@@ -2,6 +2,11 @@ function [H, HI, D1, D2, e_1, e_m, M, Q, S_1, S_m] = d2_12(m,h)
 
 % D2 = D1*D1, wide!
 
+BP = 15;
+if(m<2*BP)
+    error(['Operator requires at least ' num2str(2*BP) ' grid points']);
+end
+
 H=diag(ones(m,1),0);
 H(1:15,1:15)=diag([2.880607858916397e-01,...
     1.560376162339675e+00,...

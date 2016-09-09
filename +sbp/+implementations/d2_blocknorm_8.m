@@ -1,5 +1,11 @@
 function [H, HI, D1, D2, e_1, e_m, M, Q, S_1, S_m] = d2_blocknorm_8(m,h)
     % Eighth order
+    
+    BP = 8;
+    if(m<2*BP)
+        error(['Operator requires at least ' num2str(2*BP) ' grid points']);
+    end
+    
     e_1=zeros(m,1);e_1(1)=1;
     e_m=zeros(m,1);e_m(m)=1;
 

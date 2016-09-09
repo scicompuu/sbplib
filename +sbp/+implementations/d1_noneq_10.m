@@ -6,6 +6,10 @@ if(nargin < 2)
     L = 1;
 end
 
+if(N<20)
+    error('Operator requires at least 20 grid points');
+end
+
 % BP: Number of boundary points
 % m:  Number of nonequidistant spacings
 % order: Accuracy of interior stencil

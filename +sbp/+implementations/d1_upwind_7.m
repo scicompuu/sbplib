@@ -1,5 +1,10 @@
 function [H, HI, Dp, Dm, e_1, e_m] = d1_upwind_7(m,h)
 
+    BP = 6;
+    if(m<2*BP)
+        error(['Operator requires at least ' num2str(2*BP) ' grid points']);
+    end
+
     Hv=ones(m,1);
     Hv(1:6) = [0.19087e5/0.60480e5; 0.84199e5/0.60480e5; 0.18869e5/0.30240e5; 0.37621e5/0.30240e5; 0.55031e5/0.60480e5; 0.61343e5/0.60480e5; ];
     Hv(m-5:m)=rot90(Hv(1:6),2);

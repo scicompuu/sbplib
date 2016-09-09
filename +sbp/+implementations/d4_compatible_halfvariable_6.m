@@ -25,6 +25,11 @@ function [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1,...
     % with the unknown stored as c(1), c(2), ..., c_m
     % x=1:h:m*h;x=x';
     % c=x.^0;
+    
+    BP = 6;
+    if(m<2*BP)
+        error(['Operator requires at least ' num2str(2*BP) ' grid points']);
+    end
 
 
     H=diag(ones(m,1),0);

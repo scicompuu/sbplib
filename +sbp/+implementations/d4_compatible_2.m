@@ -25,6 +25,11 @@ function [H, HI, D1, D4, e_1, e_m, M4, Q, S2_1, S2_m,...
 
     % Vi b?rjar med normen. Notera att alla SBP operatorer delar samma norm,
     % vilket ?r n?dv?ndigt f?r stabilitet
+    
+    BP = 1;
+    if(m<2*BP)
+        error(['Operator requires at least ' num2str(2*BP) ' grid points']);
+    end
 
     H=diag(ones(m,1),0);H(1,1)=1/2;H(m,m)=1/2;
 

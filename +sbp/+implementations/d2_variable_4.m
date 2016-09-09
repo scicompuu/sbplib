@@ -1,4 +1,10 @@
 function [H, HI, D1, D2, e_l, e_r, d_l, d_r] = d2_variable_4(m,h)
+    
+    BP = 4;
+    if(m<2*BP)
+        error(['Operator requires at least ' num2str(2*BP) ' grid points']);
+    end
+
     N = m;
 
     H = speye(N);

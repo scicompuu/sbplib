@@ -12,6 +12,11 @@ function [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1,...
     %m=20; %problemstorlek
     %h=1/(m-1);
     %h=1;
+    
+    BP = 4;
+    if(m<2*BP)
+        error(['Operator requires at least ' num2str(2*BP) ' grid points']);
+    end
 
     c=ones(m,1);
 

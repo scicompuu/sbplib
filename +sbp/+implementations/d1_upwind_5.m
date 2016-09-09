@@ -1,4 +1,9 @@
 function [H, HI, Dp, Dm, e_1, e_m] = d1_upwind_5(m,h)
+    
+    if(m<8)
+        error('Operator requires at least 8 grid points');
+    end
+
     Hv=ones(m,1);
     Hv(1:4)=[0.251e3/0.720e3; 0.299e3/0.240e3; 0.211e3/0.240e3; 0.739e3/0.720e3;];
     Hv(m-3:m)=rot90(Hv(1:4),2);
