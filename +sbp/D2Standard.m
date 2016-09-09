@@ -56,6 +56,8 @@ classdef D2Standard < sbp.OpSet
                 obj.e_m, obj.M, obj.Q, obj.S_1, obj.S_m] =...
                 sbp.implementations.ordinary12(m,obj.h);
                 obj.borrowing.M.S = []; % Need to compute!
+                warning('D2=D1*D1 (wide stencil).');
+                warning('The borrowing constant has not been computed.')
             else
                 error('Invalid operator order %d.',order);
             end
