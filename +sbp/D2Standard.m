@@ -18,10 +18,13 @@ classdef D2Standard < sbp.OpSet
     end
 
     methods
-        function obj = D2Standard(m,L,order)
+        function obj = D2Standard(m,lim,order)
 
+            x_l = lim{1};
+            x_r = lim{2};
+            L = x_r-x_l;
             obj.h = L/(m-1);
-            obj.x = linspace(0,L,m)';
+            obj.x = linspace(x_l,x_r,m)';
 
             if order == 2
                 [obj.H, obj.HI, obj.D1, obj.D2, obj.e_1,...

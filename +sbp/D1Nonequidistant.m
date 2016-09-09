@@ -13,12 +13,16 @@ classdef D1Nonequidistant < sbp.OpSet
     end
     
     methods
-        function obj = D1Nonequidistant(m,L,order,option)
+        function obj = D1Nonequidistant(m,lim,order,option)
             
             default_arg('option','Accurate');
             % 'Accurate' operators are optimized for accuracy
             % 'Minimal' operators have the smallest possible boundary
             %  closure
+            
+            x_l = lim{1};
+            x_r = lim{2};
+            L = x_r-x_l;
             
             switch option
                 
@@ -65,6 +69,8 @@ classdef D1Nonequidistant < sbp.OpSet
                     end
                     
             end
+            
+            obj.x = obj.x + x_l;
             
             obj.e_1 = sparse(m,1);
             obj.e_m = sparse(m,1);

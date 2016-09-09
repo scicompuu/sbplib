@@ -13,10 +13,13 @@ classdef D1Upwind < sbp.OpSet
     end
 
     methods
-        function obj = D1Upwind(m,L,order)
+        function obj = D1Upwind(m,lim,order)
             
+            x_l = lim{1};
+            x_r = lim{2};
+            L = x_r-x_l;
             obj.h = L/(m-1);
-            obj.x = linspace(0,L,m)';
+            obj.x = linspace(x_l,x_r,m)';
 
             switch order
                 case 2

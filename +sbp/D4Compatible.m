@@ -27,10 +27,14 @@ classdef D4Compatible < sbp.OpSet
 
 
     methods
-        function obj = D4Compatible(m,L,order)
+        function obj = D4Compatible(m,lim,order)
             
+            
+            x_l = lim{1};
+            x_r = lim{2};
+            L = x_r-x_l;
             obj.h = L/(m-1);
-            obj.x = linspace(0,L,m)';
+            obj.x = linspace(x_l,x_r,m)';
 
             if order == 2
                 [obj.H, obj.HI, obj.D1, obj.D4, obj.e_1, obj.e_m, obj.M4,...
