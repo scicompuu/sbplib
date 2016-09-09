@@ -10,6 +10,7 @@ classdef Rungekutta4proper < time.Timestepper
 
 
     methods
+        % Timesteps v_t = F(v,t), using RK4 fromt t = t0 with timestep k and initial conditions v = v0
         function obj = Rungekutta4proper(F, k, t0, v0)
             obj.F = F;
             obj.k = k;
