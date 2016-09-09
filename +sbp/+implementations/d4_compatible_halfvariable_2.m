@@ -27,12 +27,12 @@ function [H, HI, D1, D2, D3, D4, e_1, e_m, M4, Q, S2_1,...
     % Vi b?rjar med normen. Notera att alla SBP operatorer delar samma norm,
     % vilket ?r n?dv?ndigt f?r stabilitet
     
-    BP = 1;
+    BP = 4;
     if(m<2*BP)
         error(['Operator requires at least ' num2str(2*BP) ' grid points']);
     end
 
-    H=diag(ones(m,1),0);H(1,1)=1/2;H(m,m)=1/2;
+    H=speye(m,m);H(1,1)=1/2;H(m,m)=1/2;
 
 
     H=H*h;
@@ -42,16 +42,20 @@ function [H, HI, D1, D2, D3, D4, e_1, e_m, M4, Q, S2_1,...
     % First derivative SBP operator, 1st order accurate at first 6 boundary points
 
     q1=1/2;
-    Q=q1*(diag(ones(m-1,1),1)-diag(ones(m-1,1),-1));
+%     Q=q1*(diag(ones(m-1,1),1)-diag(ones(m-1,1),-1));
+    stencil = [-q1,0,q1];
+    d = (length(stencil)-1)/2;
+    diags = -d:d;
+    Q = stripeMatrix(stencil, diags, m);
 
     %Q=(-1/12*diag(ones(m-2,1),2)+8/12*diag(ones(m-1,1),1)-8/12*diag(ones(m-1,1),-1)+1/12*diag(ones(m-2,1),-2));
 
 
-    e_1=zeros(m,1);e_1(1)=1;
-    e_m=zeros(m,1);e_m(m)=1;
+    e_1=sparse(m,1);e_1(1)=1;
+    e_m=sparse(m,1);e_m(m)=1;
 
 
-    D1=HI*(Q-1/2*e_1*e_1'+1/2*e_m*e_m') ;
+    D1=HI*(Q-1/2*(e_1*e_1')+1/2*(e_m*e_m')) ;
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -69,9 +73,9 @@ function [H, HI, D1, D2, D3, D4, e_1, e_m, M4, Q, S2_1,...
     % Require a vector c with the koeffients
 
     S_U=[-3/2 2 -1/2]/h;
-    S_1=zeros(1,m);
+    S_1=sparse(1,m);
     S_1(1:3)=S_U;
-    S_m=zeros(1,m);
+    S_m=sparse(1,m);
     S_m(m-2:m)=fliplr(-S_U);
 
     S_1 = S_1';
@@ -115,35 +119,43 @@ function [H, HI, D1, D2, D3, D4, e_1, e_m, M4, Q, S2_1,...
     % Third derivative, 1st order accurate at first 6 boundary points
 
     q2=1/2;q1=-1;
-    Q3=q2*(diag(ones(m-2,1),2)-diag(ones(m-2,1),-2))+q1*(diag(ones(m-1,1),1)-diag(ones(m-1,1),-1));
+%     Q3=q2*(diag(ones(m-2,1),2)-diag(ones(m-2,1),-2))+q1*(diag(ones(m-1,1),1)-diag(ones(m-1,1),-1));
+    stencil = [-q2,-q1,0,q1,q2];
+    d = (length(stencil)-1)/2;
+    diags = -d:d;
+    Q3 = stripeMatrix(stencil, diags, m);
 
     %QQ3=(-1/8*diag(ones(m-3,1),3) + 1*diag(ones(m-2,1),2) - 13/8*diag(ones(m-1,1),1) +13/8*diag(ones(m-1,1),-1) -1*diag(ones(m-2,1),-2) + 1/8*diag(ones(m-3,1),-3));
 
 
     Q3_U = [0 -0.13e2 / 0.16e2 0.7e1 / 0.8e1 -0.1e1 / 0.16e2; 0.13e2 / 0.16e2 0 -0.23e2 / 0.16e2 0.5e1 / 0.8e1; -0.7e1 / 0.8e1 0.23e2 / 0.16e2 0 -0.17e2 / 0.16e2; 0.1e1 / 0.16e2 -0.5e1 / 0.8e1 0.17e2 / 0.16e2 0;];
     Q3(1:4,1:4)=Q3_U;
-    Q3(m-3:m,m-3:m)=flipud( fliplr( -Q3_U ) );
+    Q3(m-3:m,m-3:m)=rot90(  -Q3_U ,2 );
     Q3=Q3/h^2;
 
 
 
     S2_U=[1 -2 1;]/h^2;
-    S2_1=zeros(1,m);
+    S2_1=sparse(1,m);
     S2_1(1:3)=S2_U;
-    S2_m=zeros(1,m);
+    S2_m=sparse(1,m);
     S2_m(m-2:m)=fliplr(S2_U);
     S2_1 = S2_1';
     S2_m = S2_m';
 
 
 
-    D3=HI*(Q3 - e_1*S2_1' + e_m*S2_m' +1/2*S_1*S_1' -1/2*S_m*S_m' ) ;
+    D3=HI*(Q3 - e_1*S2_1' + e_m*S2_m' +1/2*(S_1*S_1') -1/2*(S_m*S_m') ) ;
 
     % Fourth derivative, 0th order accurate at first 6 boundary points (still
     % yield 4th order convergence if stable: for example u_tt=-u_xxxx
 
     m2=1;m1=-4;m0=6;
-    M4=m2*(diag(ones(m-2,1),2)+diag(ones(m-2,1),-2))+m1*(diag(ones(m-1,1),1)+diag(ones(m-1,1),-1))+m0*diag(ones(m,1),0);
+%     M4=m2*(diag(ones(m-2,1),2)+diag(ones(m-2,1),-2))+m1*(diag(ones(m-1,1),1)+diag(ones(m-1,1),-1))+m0*diag(ones(m,1),0);
+    stencil = [m2,m1,m0,m1,m2];
+    d = (length(stencil)-1)/2;
+    diags = -d:d;
+    M4 = stripeMatrix(stencil, diags, m);
 
     %M4=(-1/6*(diag(ones(m-3,1),3)+diag(ones(m-3,1),-3) ) + 2*(diag(ones(m-2,1),2)+diag(ones(m-2,1),-2)) -13/2*(diag(ones(m-1,1),1)+diag(ones(m-1,1),-1)) + 28/3*diag(ones(m,1),0));
 
@@ -152,13 +164,13 @@ function [H, HI, D1, D2, D3, D4, e_1, e_m, M4, Q, S2_1,...
 
     M4(1:4,1:4)=M4_U;
 
-    M4(m-3:m,m-3:m)=flipud( fliplr( M4_U ) );
+    M4(m-3:m,m-3:m)=rot90(  M4_U ,2 );
     M4=M4/h^3;
 
     S3_U=[-1 3 -3 1;]/h^3;
-    S3_1=zeros(1,m);
+    S3_1=sparse(1,m);
     S3_1(1:4)=S3_U;
-    S3_m=zeros(1,m);
+    S3_m=sparse(1,m);
     S3_m(m-3:m)=fliplr(-S3_U);
     S3_1 = S3_1';
     S3_m = S3_m';

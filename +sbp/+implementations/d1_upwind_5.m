@@ -23,14 +23,14 @@ function [H, HI, Dp, Dm, e_1, e_m] = d1_upwind_5(m,h)
     ];
 
     Qp(1:4,1:4)=Q_U;
-    Qp(m-3:m,m-3:m)=flipud( fliplr(Q_U(1:4,1:4) ) )'; %%% This is different from standard SBP
+    Qp(m-3:m,m-3:m)=rot90( Q_U(1:4,1:4) ,2 )'; %%% This is different from standard SBP
 
     Qm=-Qp';
 
-    e_1=zeros(m,1);e_1(1)=1;
-    e_m=zeros(m,1);e_m(m)=1;
+    e_1=sparse(m,1);e_1(1)=1;
+    e_m=sparse(m,1);e_m(m)=1;
 
-    Dp=HI*(Qp-1/2*e_1*e_1'+1/2*e_m*e_m') ;
+    Dp=HI*(Qp-1/2*(e_1*e_1')+1/2*(e_m*e_m')) ;
 
-    Dm=HI*(Qm-1/2*e_1*e_1'+1/2*e_m*e_m') ;
+    Dm=HI*(Qm-1/2*(e_1*e_1')+1/2*(e_m*e_m')) ;
 end

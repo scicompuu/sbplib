@@ -30,7 +30,7 @@ x8 =  7.4309689056870e+00;
 x9 =  8.4309689056870e+00;
 x10 =  9.4309689056870e+00;
 
-xb = zeros(m+1,1);
+xb = sparse(m+1,1);
 for i = 0:m
     xb(i+1) = eval(['x' num2str(i)]);
 end
@@ -45,7 +45,7 @@ x = h*[xb; linspace(xb(end)+1,L/h-xb(end)-1,N-2*(m+1))'; L/h-flip(xb) ];
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%% Norm matrix %%%%%%%%
-P = zeros(BP,1);
+P = sparse(BP,1);
 %#ok<*NASGU>
 P0 =  1.0000000000000e-01;
 P1 =  5.8980851260667e-01;

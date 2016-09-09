@@ -7,7 +7,7 @@ function [H, HI, D1, D2, e_l, e_r, d_l, d_r] = d2_variable_4(m,h)
 
     N = m;
 
-    H = speye(N);
+    H = spspeye(N);
     H(1,1) = 17/48; H(2,2) = 59/48; H(3,3) = 43/48; H(4,4) = 49/48;
     H(N,N) = 17/48; H(N-1,N-1) = 59/48; H(N-2,N-2) = 43/48; H(N-3,N-3) = 49/48;
     H = h*H;
@@ -38,7 +38,7 @@ function [H, HI, D1, D2, e_l, e_r, d_l, d_r] = d2_variable_4(m,h)
     Q(1:4,1:4)=Q_U;
     Q(m-3:m,m-3:m)=rot90( -Q_U(1:4,1:4) ,2 );
 
-    D1=HI*(Q-1/2*e_l*e_l'+1/2*e_r*e_r') ;
+    D1=HI*(Q-1/2*(e_l*e_l')+1/2*(e_r*e_r')) ;
 
     function D2 = D2_fun(c)
         M = 78+(N-12)*5;
@@ -62,7 +62,7 @@ function [H, HI, D1, D2, e_l, e_r, d_l, d_r] = d2_variable_4(m,h)
 
 
 
-        R = zeros(M,1);
+        R = sparse(M,1);
         R(1:24) = reshape(U(1:4,:)',24,1);
         R(25:30) = U(5,:);
         R(31) = -c(5+1) / 0.6e1 + c(5) / 0.8e1 + c(5+2) / 0.8e1;
@@ -92,10 +92,10 @@ function [H, HI, D1, D2, e_l, e_r, d_l, d_r] = d2_variable_4(m,h)
 
 
 
-        BS = sparse(N,N);
-        BS(1,1:4) = -c(1)*1/h*[(-11/6);3;(-3/2);1/3];
-        BS(N,N-3:N) = c(N)*1/h*[(-1/3);3/2;(-3);11/6];
-        BS = sparse(BS);
+%         BS = sparse(N,N);
+%         BS(1,1:4) = -c(1)*1/h*[(-11/6);3;(-3/2);1/3];
+%         BS(N,N-3:N) = c(N)*1/h*[(-1/3);3/2;(-3);11/6];
+%         BS = sparse(BS);
 
     % %%Row and column indices%%
         M = 78+(N-12)*5;
@@ -107,7 +107,7 @@ function [H, HI, D1, D2, e_l, e_r, d_l, d_r] = d2_variable_4(m,h)
                     (N-4)*ones(7,1);...
                     kron([N-3;N-2;N-1;N],ones(6,1))];
 
-        cols = zeros(M,1);
+        cols = sparse(M,1);
         cols(1:24) = kron(ones(4,1),[1;2;3;4;5;6]);
         cols(25:39) = [(1:7)';(1:8)'];
         cols(M-23:M) = kron(ones(4,1),[N-5;N-4;N-3;N-2;N-1;N]);

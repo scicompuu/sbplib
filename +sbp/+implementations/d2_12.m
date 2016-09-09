@@ -7,7 +7,7 @@ if(m<2*BP)
     error(['Operator requires at least ' num2str(2*BP) ' grid points']);
 end
 
-H=diag(ones(m,1),0);
+H=speye(m,m);
 H(1:15,1:15)=diag([2.880607858916397e-01,...
     1.560376162339675e+00,...
     2.403139445479289e-01,...
@@ -29,14 +29,9 @@ H(m-14:m,m-14:m)=rot90(H(1:15,1:15),2);
 H=H*h;
 HI = inv(H);
 
-a1 = 6/7; a2 = -15/56; a3 = 5/63; a4 = -1/56; a5 = 1/385; a6 = -1/5544;
-
-D1=a6*(diag(ones(m-6,1),6)-diag(ones(m-6,1),-6))+...
-    a5*(diag(ones(m-5,1),5)-diag(ones(m-5,1),-5))+...
-    a4*(diag(ones(m-4,1),4)-diag(ones(m-4,1),-4))+...
-    a3*(diag(ones(m-3,1),3)-diag(ones(m-3,1),-3))+...
-    a2*(diag(ones(m-2,1),2)-diag(ones(m-2,1),-2))+...
-    a1*(diag(ones(m-1,1),1)-diag(ones(m-1,1),-1));
+diags   = -6:6;
+stencil = [1/5544,-1/385,1/56,-5/63,15/56,-6/7,0,6/7,-15/56,5/63,-1/56,1/385,-1/5544];
+D1 = stripeMatrix(stencil, diags, m);
 
 
 D1(1,     1)=    -1.735744761135539e+00;
@@ -281,14 +276,14 @@ D1=D1/h;
 
 D2=D1*D1;
 
-e_1 = zeros(m,1);
+e_1 = sparse(m,1);
 e_1(1)= 1;
-e_m = zeros(m,1);
+e_m = sparse(m,1);
 e_m(end)= 1;
 
 S_1 = (e_1'*D1)';
 S_m = (e_m'*D1)';
 
-Q = H*D1-(-e_1*e_1' + e_m*e_m');
+Q = H*D1-(-(e_1*e_1') + (e_m*e_m'));
 M = -(H*D2-(-e_1*S_1' + e_m*S_m'));
 end

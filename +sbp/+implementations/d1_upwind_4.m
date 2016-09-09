@@ -30,7 +30,7 @@ function [H, HI, Dp, Dm, e_1, e_m] = d1_upwind_4(m,h)
     e_1=sparse(m,1);e_1(1)=1;
     e_m=sparse(m,1);e_m(m)=1;
 
-    Dp=HI*(Qp-1/2*e_1*e_1'+1/2*e_m*e_m') ;
+    Dp=HI*(Qp-1/2*(e_1*e_1')+1/2*(e_m*e_m')) ;
 
-    Dm=HI*(Qm-1/2*e_1*e_1'+1/2*e_m*e_m') ;
+    Dm=HI*(Qm-1/2*(e_1*e_1')+1/2*(e_m*e_m')) ;
 end

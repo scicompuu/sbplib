@@ -5,12 +5,12 @@ function [H, HI, D1, D2, e_1, e_m, M, Q, S_1, S_m] = d2_4(m,h)
         error(['Operator requires at least ' num2str(2*BP) ' grid points']);
     end
 
-    e_1=zeros(m,1);e_1(1)=1;
-    e_m=zeros(m,1);e_m(m)=1;
+    e_1=sparse(m,1);e_1(1)=1;
+    e_m=sparse(m,1);e_m(m)=1;
 
     e=ones(m,1);
     H=spdiags(e,0,m,m);
-    %H=diag(ones(m,1),0);
+    %H=speye(m,m);
 
     H(1:4,1:4)=diag([17/48 59/48 43/48 49/48]);
     H(m-3:m,m-3:m)=rot90(diag([17/48 59/48 43/48 49/48]),2);
@@ -24,7 +24,7 @@ function [H, HI, D1, D2, e_1, e_m, M, Q, S_1, S_m] = d2_4(m,h)
     Q(1:4,1:4)=Q_U;
     Q(m-3:m,m-3:m)=rot90( -Q_U(1:4,1:4) ,2 );
 
-    D1=HI*(Q-1/2*e_1*e_1'+1/2*e_m*e_m') ;
+    D1=H\(Q-1/2*(e_1*e_1')+1/2*(e_m*e_m')) ;
 
     M=-spdiags([-e 16*e -30*e 16*e -e], -2:2, m, m)/12;
 
@@ -37,13 +37,13 @@ function [H, HI, D1, D2, e_1, e_m, M, Q, S_1, S_m] = d2_4(m,h)
     M=M/h;
 
     S_U=[-0.11e2 / 0.6e1 3 -0.3e1 / 0.2e1 0.1e1 / 0.3e1;]/h;
-    S_1=sparse(zeros(1,m));
+    S_1=sparse(sparse(1,m));
     S_1(1:4)=S_U;
-    S_m=sparse(zeros(1,m));
+    S_m=sparse(sparse(1,m));
     S_m(m-3:m)=fliplr(-S_U);
 
 
-    D2=HI*(-M-e_1*S_1+e_m*S_m);
+    D2=H\(-M-e_1*S_1+e_m*S_m);
     S_1 = S_1';
     S_m = S_m';
 end
