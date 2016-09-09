@@ -4,8 +4,8 @@ classdef D1Nonequidistant < sbp.OpSet
         H % Norm matrix
         HI % H^-1
         Q % Skew-symmetric matrix
-        e_1 % Left boundary operator
-        e_m % Right boundary operator
+        e_l % Left boundary operator
+        e_r % Right boundary operator
         m % Number of grid points.
         h % Step size
         x % grid
@@ -72,13 +72,13 @@ classdef D1Nonequidistant < sbp.OpSet
             
             obj.x = obj.x + x_l;
             
-            obj.e_1 = sparse(m,1);
-            obj.e_m = sparse(m,1);
-            obj.e_1(1) = 1;
-            obj.e_m(m) = 1;
+            obj.e_l = sparse(m,1);
+            obj.e_r = sparse(m,1);
+            obj.e_l(1) = 1;
+            obj.e_r(m) = 1;
             
             obj.HI = inv(obj.H);
-            obj.Q = obj.H*obj.D1 - obj.e_m*obj.e_m' + obj.e_0*obj.e_0';
+            obj.Q = obj.H*obj.D1 - obj.e_r*obj.e_r' + obj.e_l*obj.e_l';
             
             obj.borrowing = [];
             

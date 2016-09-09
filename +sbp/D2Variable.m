@@ -4,12 +4,12 @@ classdef D2Variable < sbp.OpSet
         H % Norm matrix
         HI % H^-1
         Q % Skew-symmetric matrix
-        e_1 % Left boundary operator
-        e_m % Right boundary operator
+        e_l % Left boundary operator
+        e_r % Right boundary operator
         D2 % SBP operator for second derivative
         M % Norm matrix, second derivative
-        S_1 % Left boundary first derivative
-        S_m % Right boundary first derivative
+        d1_l % Left boundary first derivative
+        d1_r % Right boundary first derivative
         m % Number of grid points.
         h % Step size
         x % grid
@@ -27,8 +27,8 @@ classdef D2Variable < sbp.OpSet
 
             switch order
                 case 4
-                    [obj.H, obj.HI, obj.D1, obj.D2, obj.e_1,...
-                        obj.e_m, obj.S_1, obj.S_m] = ...
+                    [obj.H, obj.HI, obj.D1, obj.D2, obj.e_l,...
+                        obj.e_r, obj.d1_l, obj.d1_r] = ...
                         sbp.implementations.d2_variable_4(m,obj.h);
                     obj.borrowing.M.S = 0.2505765857;
                 otherwise

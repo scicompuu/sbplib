@@ -4,20 +4,20 @@ classdef D4Compatible < sbp.OpSet
         H % Norm matrix
         HI % H^-1
         Q % Skew-symmetric matrix
-        e_1 % Left boundary operator
-        e_m % Right boundary operator
+        e_l % Left boundary operator
+        e_r % Right boundary operator
         D2 % SBP operator for second derivative
         M % Norm matrix, second derivative
-        S_1 % Left boundary first derivative
-        S_m % Right boundary first derivative
+        d1_l % Left boundary first derivative
+        d1_r % Right boundary first derivative
         D3 % SBP operator for third derivative
         Q3 % Skew-symmetric matrix in third derivative
-        S2_1 % Left boundary second derivative
-        S2_m % Right boundary second derivative
+        d2_l % Left boundary second derivative
+        d2_r % Right boundary second derivative
         D4 % SBP operator for fourth derivative
         M4 % Norm matrix, fourth derivative
-        S3_1 % Left boundary third derivative
-        S3_m % Right boundary third derivative
+        d3_l % Left boundary third derivative
+        d3_r % Right boundary third derivative
         m % Number of grid points.
         h % Step size
         x % grid
@@ -37,23 +37,23 @@ classdef D4Compatible < sbp.OpSet
             obj.x = linspace(x_l,x_r,m)';
 
             if order == 2
-                [obj.H, obj.HI, obj.D1, obj.D4, obj.e_1, obj.e_m, obj.M4,...
-                 obj.Q, obj.S2_1, obj.S2_m, obj.S3_1, obj.S3_m,...
-                    obj.S_1, obj.S_m] =...
+                [obj.H, obj.HI, obj.D1, obj.D4, obj.e_l, obj.e_r, obj.M4,...
+                 obj.Q, obj.d2_l, obj.d2_r, obj.d3_l, obj.d3_r,...
+                    obj.d1_l, obj.d1_r] =...
                     sbp.implementations.d4_compatible_2(m,obj.h);
                 obj.borrowing.N.S2 = 0.7500;
                 obj.borrowing.N.S3 = 0.3000;
             elseif order == 4
-                [obj.H, obj.HI, obj.D1, obj.D4, obj.e_1, obj.e_m, obj.M4,...
-                 obj.Q, obj.S2_1, obj.S2_m, obj.S3_1, obj.S3_m,...
-                    obj.S_1, obj.S_m] =...
+                [obj.H, obj.HI, obj.D1, obj.D4, obj.e_l, obj.e_r, obj.M4,...
+                 obj.Q, obj.d2_l, obj.d2_r, obj.d3_l, obj.d3_r,...
+                    obj.d1_l, obj.d1_r] =...
                     sbp.implementations.d4_compatible_4(m,obj.h);
                 obj.borrowing.N.S2 = 0.4210;
                 obj.borrowing.N.S3 = 0.7080;
             elseif order == 6
-                [obj.H, obj.HI, obj.D1, obj.D4, obj.e_1, obj.e_m, obj.M4,...
-                 obj.Q, obj.S2_1, obj.S2_m, obj.S3_1, obj.S3_m,...
-                    obj.S_1, obj.S_m] =...
+                [obj.H, obj.HI, obj.D1, obj.D4, obj.e_l, obj.e_r, obj.M4,...
+                 obj.Q, obj.d2_l, obj.d2_r, obj.d3_l, obj.d3_r,...
+                    obj.d1_l, obj.d1_r] =...
                     sbp.implementations.d4_compatible_6(m,obj.h);
                 obj.borrowing.N.S2 = 0.06925;
                 obj.borrowing.N.S3 = 0.05128;
