@@ -8,7 +8,8 @@ function dest = copyWithDefault(src, default)
     end
 
     % src has a value and is not a struct => use src
-    if ~isstruct(src)
+    % src has a value and default is not a struct => use src
+    if ~isstruct(src) || ~isstruct(default)
         dest = src;
         return
     end
