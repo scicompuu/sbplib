@@ -1,5 +1,4 @@
-function [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1,...
-    S3_m, S_1, S_m] = d4_compatible_halfvariable_6(m,h)
+function [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = d4_variable_6(m,h)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% 6:te ordn. SBP Finita differens         %%%
     %%% operatorer med diagonal norm            %%%
@@ -25,7 +24,7 @@ function [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1,...
     % with the unknown stored as c(1), c(2), ..., c_m
     % x=1:h:m*h;x=x';
     % c=x.^0;
-    
+
     BP = 8;
     if(m<2*BP)
         error(['Operator requires at least ' num2str(2*BP) ' grid points']);
@@ -43,9 +42,9 @@ function [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1,...
 
 
 %     D1=(1/60*diag(ones(m-3,1),3)-9/60*diag(ones(m-2,1),2)+45/60*diag(ones(m-1,1),1)-45/60*diag(ones(m-1,1),-1)+9/60*diag(ones(m-2,1),-2)-1/60*diag(ones(m-3,1),-3));
-% 
-% 
-% 
+%
+%
+%
 %     D1(1:6,1:9)=[-21600/13649, 43200/13649*x1-7624/40947, -172800/13649*x1+ ...
 %     	     715489/81894, 259200/13649*x1-187917/13649, -172800/13649* ...
 %     	     x1+735635/81894, 43200/13649*x1-89387/40947, 0, 0, 0; ...

@@ -1,6 +1,5 @@
 % Returns D2 as a function handle
-function [H, HI, D1, D2, D3, D4, e_1, e_m, M4, Q, S2_1,...
-    S2_m, S3_1, S3_m, S_1, S_m] = d4_compatible_halfvariable_2(m,h)
+function [H, HI, D1, D2, D3, D4, e_1, e_m, M4, Q, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = d4_variable_2(m,h)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% 4:de ordn. SBP Finita differens         %%%
     %%% operatorer framtagna av Ken Mattsson    %%%
@@ -26,7 +25,7 @@ function [H, HI, D1, D2, D3, D4, e_1, e_m, M4, Q, S2_1,...
 
     % Vi b?rjar med normen. Notera att alla SBP operatorer delar samma norm,
     % vilket ?r n?dv?ndigt f?r stabilitet
-    
+
     BP = 4;
     if(m<2*BP)
         error(['Operator requires at least ' num2str(2*BP) ' grid points']);

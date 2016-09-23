@@ -1,5 +1,4 @@
-function [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1,...
-    S3_m, S_1, S_m] = d4_compatible_halfvariable_4(m,h)
+function [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = d4_variable_4(m,h)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% 4:de ordn. SBP Finita differens         %%%
     %%%                                         %%%
@@ -12,7 +11,7 @@ function [H, HI, D2, D4, e_1, e_m, M4, S2_1, S2_m, S3_1,...
     %m=20; %problemstorlek
     %h=1/(m-1);
     %h=1;
-    
+
     BP = 6;
     if(m<2*BP)
         error(['Operator requires at least ' num2str(2*BP) ' grid points']);
