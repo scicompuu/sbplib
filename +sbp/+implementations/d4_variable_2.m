@@ -37,7 +37,7 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
 
     d3_l = sparse(m,1);
     d3_l(1:4) = 1/h^3*[-1 3 -3 1];
-    d3_r = -rot90(d3_l, 2)
+    d3_r = -rot90(d3_l, 2);
 
 
     % First derivative SBP operator, 1st order accurate at first 6 boundary points
@@ -45,7 +45,7 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
     diags = [-1 0 1];
     Q = stripeMatrix(stencil, diags, m);
 
-    D1 = HI*(Q-1/2*(e_1*e_1') + 1/2*(e_m*e_m'));
+    D1 = HI*(Q - 1/2*e_l*e_l' + 1/2*e_r*e_r');
 
     % Second derivative, 1st order accurate at first boundary points
     M = sparse(m,m);
@@ -85,5 +85,5 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
     M4(m-3:m,m-3:m) = rot90(M4_U, 2);
     M4 = 1/h^3*M4;
 
-    D4=HI*(M4-e_1*S3_1'+e_m*S3_m'  + S_1*S2_1'-S_m*S2_m');
+    D4=HI*(M4 - e_l*d3_l'+e_r*d3_r' + d1_l*d2_l'-d1_r*d2_r');
 end
