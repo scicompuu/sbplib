@@ -31,14 +31,28 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
 
     H(m-7:m,m-7:m) = fliplr(flipud(H(1:8,1:8)));
 
-    e_1 = zeros(m,1);e_1(1) = 1;
-    e_m = zeros(m,1);e_m(m) = 1;
+    e_1 = zeros(m,1);
+    e_1(1) = 1;
+    e_m = zeros(m,1);
+    e_m(m) = 1;
 
     S_U = [-0.49e2/0.20e2 6 -0.15e2/0.2e1 0.20e2/0.3e1 -0.15e2/0.4e1 0.6e1/0.5e1 -0.1e1/0.6e1]/h;
     S_1 = zeros(1,m);
     S_1(1:7) = S_U;
     S_m = zeros(1,m);
     S_m(m-6:m) = fliplr(-S_U);
+
+    S2_U = [0.203e3/0.45e2 -0.87e2/0.5e1 0.117e3/0.4e1 -0.254e3/0.9e1 0.33e2/0.2e1 -0.27e2/0.5e1 0.137e3/0.180e3]/h^2;
+    S2_1 = zeros(1,m);
+    S2_1(1:7) = S2_U;
+    S2_m = zeros(1,m);
+    S2_m(m-6:m) = fliplr(S2_U);
+
+    S3_U = [-0.49e2/0.8e1 29 -0.461e3/0.8e1 62 -0.307e3/0.8e1 13 -0.15e2/0.8e1]/h^3;
+    S3_1 = zeros(1,m);
+    S3_1(1:7) = S3_U;
+    S3_m = zeros(1,m);
+    S3_m(m-6:m) = fliplr(-S3_U);
 
     H = h*H;
     HI = inv(H);
@@ -81,13 +95,6 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
     %
     % D2 = HI*(-M-diag(c)*e_1*S_1+diag(c)*e_m*S_m);
 
-    S2_U = [0.203e3/0.45e2 -0.87e2/0.5e1 0.117e3/0.4e1 -0.254e3/0.9e1 0.33e2/0.2e1 -0.27e2/0.5e1 0.137e3/0.180e3]/h^2;
-    S2_1 = zeros(1,m);
-    S2_1(1:7) = S2_U;
-    S2_m = zeros(1,m);
-    S2_m(m-6:m) = fliplr(S2_U);
-
-
     % Fourth derivative, 1th order accurate at first 8 boundary points (still
     % yield 5th order convergence if stable: for example u_tt = -u_xxxx
 
@@ -117,12 +124,6 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
 
     M4(m-7:m,m-7:m) = flipud( fliplr( M4_U ) );
     M4 = M4/h^3;
-
-    S3_U = [-0.49e2/0.8e1 29 -0.461e3/0.8e1 62 -0.307e3/0.8e1 13 -0.15e2/0.8e1]/h^3;
-    S3_1 = zeros(1,m);
-    S3_1(1:7) = S3_U;
-    S3_m = zeros(1,m);
-    S3_m(m-6:m) = fliplr(-S3_U);
 
     D4 = HI*(M4-e_1*S3_1+e_m*S3_m  + S_1'*S2_1-S_m'*S2_m);
 end

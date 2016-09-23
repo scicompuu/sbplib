@@ -16,15 +16,6 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
     %%% DI=D4*B*H*D4                            %%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-    %m=10;          %problemstorlek
-    %h=1/(m-1);
-
-    % Variable koefficicients are stored in vector: c, size m,
-    % with the unknown stored as c(1), c(2), ..., c_m
-    % x=1:h:m*h;x=x';
-    % c=x.^0;
-
     BP = 8;
     if(m<2*BP)
         error(['Operator requires at least ' num2str(2*BP) ' grid points']);
@@ -76,7 +67,24 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
     S_m(m-4:m)=fliplr(-S_U);
     S_1 = S_1';
     S_m = S_m';
-
+    e_1 = sparse(e_1);
+    e_m = sparse(e_m);
+    S_1 = sparse(S_1);
+    S_m = sparse(S_m);
+    S2_U=[0.35e2/0.12e2 -0.26e2/0.3e1 0.19e2/0.2e1 -0.14e2/0.3e1 0.11e2/0.12e2;]/h^2;
+    S2_1=sparse(1,m);
+    S2_1(1:5)=S2_U;
+    S2_m=sparse(1,m);
+    S2_m(m-4:m)=fliplr(S2_U);
+    S2_1 = S2_1';
+    S2_m = S2_m';
+    S3_U = [-5/2 9 -12 7 -3/2]/h^3;
+    S3_1 = sparse(1,m);
+    S3_1(1:5)=S3_U;
+    S3_m = sparse(1,m);
+    S3_m(m-4:m) = fliplr(-S3_U);
+    S3_1 = S3_1';
+    S3_m = S3_m';
 
 
     %DS=sparse(m,m);
@@ -90,10 +98,6 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
 
 
     M=sparse(m,m);
-    e_1 = sparse(e_1);
-    e_m = sparse(e_m);
-    S_1 = sparse(S_1);
-    S_m = sparse(S_m);
 
     scheme_width = 7;
     scheme_radius = (scheme_width-1)/2;
@@ -145,13 +149,7 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
     end
     D2 = @D2_fun;
 
-    S2_U=[0.35e2/0.12e2 -0.26e2/0.3e1 0.19e2/0.2e1 -0.14e2/0.3e1 0.11e2/0.12e2;]/h^2;
-    S2_1=sparse(1,m);
-    S2_1(1:5)=S2_U;
-    S2_m=sparse(1,m);
-    S2_m(m-4:m)=fliplr(S2_U);
-    S2_1 = S2_1';
-    S2_m = S2_m';
+
 
 
 
@@ -189,13 +187,7 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
     M4(m-7:m,m-7:m) = rot90(  M4_U ,2 );
     M4 = M4/h^3;
 
-    S3_U = [-5/2 9 -12 7 -3/2]/h^3;
-    S3_1 = sparse(1,m);
-    S3_1(1:5)=S3_U;
-    S3_m = sparse(1,m);
-    S3_m(m-4:m) = fliplr(-S3_U);
-    S3_1 = S3_1';
-    S3_m = S3_m';
+
 
     D4=HI*(M4-e_1*S3_1'+e_m*S3_m'  + S_1*S2_1'-S_m*S2_m');
 

@@ -22,6 +22,27 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
     H(1:6,1:6) = diag([13649/43200,12013/8640,2711/4320,5359/4320,7877/8640, 43801/43200]);
     H(m-5:m,m-5:m) = fliplr(flipud(diag([13649/43200,12013/8640, 2711/4320,5359/4320,7877/8640,43801/43200])));
 
+    e_1 = zeros(m,1);e_1(1)=1;
+    e_m = zeros(m,1);e_m(m)=1;
+
+    S_U = [-25/12, 4, -3, 4/3, -1/4]/h;
+    S_1 = zeros(1,m);
+    S_1(1:5) = S_U;
+    S_m = zeros(1,m);
+    S_m(m-4:m) = fliplr(-S_U);
+
+    S2_U = [0.35e2/0.12e2 -0.26e2/0.3e1 0.19e2/0.2e1 -0.14e2/0.3e1 0.11e2/0.12e2;]/h^2;
+    S2_1 = zeros(1,m);
+    S2_1(1:5) = S2_U;
+    S2_m = zeros(1,m);
+    S2_m(m-4:m) = fliplr(S2_U);
+
+    S3_U = [-0.5e1/0.2e1 9 -12 7 -0.3e1/0.2e1;]/h^3;
+    S3_1 = zeros(1,m);
+    S3_1(1:5) = S3_U;
+    S3_m = zeros(1,m);
+    S3_m(m-4:m) = fliplr(-S3_U);
+
 
     x1=0.70127127127127;
 
@@ -38,21 +59,6 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
     ];
     D1(m-5:m,m-8:m) = flipud( fliplr(-D1(1:6,1:9)));
     D1 = D1/h;
-
-    e_1 = zeros(m,1);e_1(1)=1;
-    e_m = zeros(m,1);e_m(m)=1;
-
-    S_U = [-25/12, 4, -3, 4/3, -1/4]/h;
-    S_1 = zeros(1,m);
-    S_1(1:5) = S_U;
-    S_m = zeros(1,m);
-    S_m(m-4:m) = fliplr(-S_U);
-
-
-    %DS=zeros(m,m);
-    %DS(1,1:5)=-[-25/12, 4, -3, 4/3, -1/4];
-    %DS(m,m-4:m)=fliplr(-[-25/12, 4, -3, 4/3, -1/4]);
-    %DS=diag(c)*DS/h;
 
 
     H = h*H;
@@ -97,15 +103,6 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
 
     D2 = HI*(-M-diag(c)*e_1*S_1+diag(c)*e_m*S_m);
 
-    S2_U = [0.35e2/0.12e2 -0.26e2/0.3e1 0.19e2/0.2e1 -0.14e2/0.3e1 0.11e2/0.12e2;]/h^2;
-    S2_1 = zeros(1,m);
-    S2_1(1:5) = S2_U;
-    S2_m = zeros(1,m);
-    S2_m(m-4:m) = fliplr(S2_U);
-
-
-
-
 
     % Fourth derivative, 1th order accurate at first 8 boundary points (still
     % yield 5th order convergence if stable: for example u_tt=-u_xxxx
@@ -133,12 +130,6 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
 
     M4(m-5:m,m-5:m) = flipud( fliplr( M4_U ) );
     M4 = M4/h^3;
-
-    S3_U = [-0.5e1/0.2e1 9 -12 7 -0.3e1/0.2e1;]/h^3;
-    S3_1 = zeros(1,m);
-    S3_1(1:5) = S3_U;
-    S3_m = zeros(1,m);
-    S3_m(m-4:m) = fliplr(-S3_U);
 
     D4 = HI*(M4-e_1*S3_1+e_m*S3_m  + S_1'*S2_1-S_m'*S2_m);
 
