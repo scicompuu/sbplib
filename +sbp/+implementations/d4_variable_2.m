@@ -1,5 +1,5 @@
 % Returns D2 as a function handle
-function [H, HI, D1, D2, D3, D4, e_1, e_m, M4, Q, S2_1, S2_m, S3_1, S3_m, S_1, S_m] = d4_variable_2(m,h)
+function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] = d4_variable_2(m,h)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% 4:de ordn. SBP Finita differens         %%%
     %%% operatorer framtagna av Ken Mattsson    %%%
@@ -7,32 +7,17 @@ function [H, HI, D1, D2, D3, D4, e_1, e_m, M4, Q, S2_1, S2_m, S3_1, S3_m, S_1, S
     %%% 6 randpunkter, diagonal norm            %%%
     %%%                                         %%%
     %%% Datum: 2013-11-11                       %%%
-    %%%                                         %%%
-    %%%                                         %%%
-    %%% H           (Normen)                    %%%
-    %%% D1          (approx f?rsta derivatan)   %%%
-    %%% D2          (approx andra derivatan)    %%%
-    %%% D3          (approx tredje derivatan)   %%%
-    %%% D2          (approx fj?rde derivatan)   %%%
-    %%%                                         %%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    % M?ste ange antal punkter (m) och stegl?ngd (h)
-    % Notera att dessa opetratorer ?r framtagna f?r att anv?ndas n?r
-    % vi har 3de och 4de derivator i v?r PDE
-    % I annat fall anv?nd de "traditionella" som har noggrannare
-    % randsplutningar f?r D1 och D2
-
-    % Vi b?rjar med normen. Notera att alla SBP operatorer delar samma norm,
-    % vilket ?r n?dv?ndigt f?r stabilitet
 
     BP = 4;
     if(m<2*BP)
         error(['Operator requires at least ' num2str(2*BP) ' grid points']);
     end
 
-    H=speye(m,m);H(1,1)=1/2;H(m,m)=1/2;
 
+    H=speye(m,m);
+    H(1,1)=1/2;
+    H(m,m)=1/2;
 
     H=H*h;
     HI=inv(H);
@@ -49,15 +34,12 @@ function [H, HI, D1, D2, D3, D4, e_1, e_m, M4, Q, S2_1, S2_m, S3_1, S3_m, S_1, S
 
     %Q=(-1/12*diag(ones(m-2,1),2)+8/12*diag(ones(m-1,1),1)-8/12*diag(ones(m-1,1),-1)+1/12*diag(ones(m-2,1),-2));
 
-
-    e_1=sparse(m,1);e_1(1)=1;
-    e_m=sparse(m,1);e_m(m)=1;
-
+    e_1=sparse(m,1);
+    e_1(1)=1;
+    e_m=sparse(m,1);
+    e_m(m)=1;
 
     D1=HI*(Q-1/2*(e_1*e_1')+1/2*(e_m*e_m')) ;
-
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 
     % Second derivative, 1st order accurate at first boundary points
@@ -127,7 +109,12 @@ function [H, HI, D1, D2, D3, D4, e_1, e_m, M4, Q, S2_1, S2_m, S3_1, S3_m, S_1, S
     %QQ3=(-1/8*diag(ones(m-3,1),3) + 1*diag(ones(m-2,1),2) - 13/8*diag(ones(m-1,1),1) +13/8*diag(ones(m-1,1),-1) -1*diag(ones(m-2,1),-2) + 1/8*diag(ones(m-3,1),-3));
 
 
-    Q3_U = [0 -0.13e2 / 0.16e2 0.7e1 / 0.8e1 -0.1e1 / 0.16e2; 0.13e2 / 0.16e2 0 -0.23e2 / 0.16e2 0.5e1 / 0.8e1; -0.7e1 / 0.8e1 0.23e2 / 0.16e2 0 -0.17e2 / 0.16e2; 0.1e1 / 0.16e2 -0.5e1 / 0.8e1 0.17e2 / 0.16e2 0;];
+    Q3_U = [
+        0 -0.13e2/0.16e2 0.7e1/0.8e1 -0.1e1/0.16e2;
+        0.13e2/0.16e2 0 -0.23e2/0.16e2 0.5e1/0.8e1;
+        -0.7e1/0.8e1 0.23e2/0.16e2 0 -0.17e2/0.16e2;
+        0.1e1/0.16e2 -0.5e1/0.8e1 0.17e2/0.16e2 0;
+    ];
     Q3(1:4,1:4)=Q3_U;
     Q3(m-3:m,m-3:m)=rot90(  -Q3_U ,2 );
     Q3=Q3/h^2;
@@ -158,8 +145,12 @@ function [H, HI, D1, D2, D3, D4, e_1, e_m, M4, Q, S2_1, S2_m, S3_1, S3_m, S_1, S
 
     %M4=(-1/6*(diag(ones(m-3,1),3)+diag(ones(m-3,1),-3) ) + 2*(diag(ones(m-2,1),2)+diag(ones(m-2,1),-2)) -13/2*(diag(ones(m-1,1),1)+diag(ones(m-1,1),-1)) + 28/3*diag(ones(m,1),0));
 
-    M4_U=[0.13e2 / 0.10e2 -0.12e2 / 0.5e1 0.9e1 / 0.10e2 0.1e1 / 0.5e1; -0.12e2 / 0.5e1 0.26e2 / 0.5e1 -0.16e2 / 0.5e1 0.2e1 / 0.5e1; 0.9e1 / 0.10e2 -0.16e2 / 0.5e1 0.47e2 / 0.10e2 -0.17e2 / 0.5e1; 0.1e1 / 0.5e1 0.2e1 / 0.5e1 -0.17e2 / 0.5e1 0.29e2 / 0.5e1;];
-
+    M4_U=[
+        0.13e2/0.10e2 -0.12e2/0.5e1 0.9e1/0.10e2 0.1e1/0.5e1;
+        -0.12e2/0.5e1 0.26e2/0.5e1 -0.16e2/0.5e1 0.2e1/0.5e1;
+        0.9e1/0.10e2 -0.16e2/0.5e1 0.47e2/0.10e2 -0.17e2/0.5e1;
+        0.1e1/0.5e1 0.2e1/0.5e1 -0.17e2/0.5e1 0.29e2/0.5e1;
+    ];
 
     M4(1:4,1:4)=M4_U;
 
