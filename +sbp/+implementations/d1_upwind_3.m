@@ -1,12 +1,12 @@
 function [H, HI, Dp, Dm, e_1, e_m] = d1_upwind_3(m,h)
-    
+
     if(m<6)
         error('Operator requires at least 6 grid points');
     end
 
     Hv = ones(m,1);
     Hv(1:3) = [3/8; 7/6; 23/24];
-    Hv(m-2:m) = rot90(Hv(1:3),2);
+    Hv(m-2:m) = rot90(Hv(1:3), 2);
     Hv = Hv*h;
     H = spdiag(Hv,0);
     HI = spdiag(1./Hv,0);

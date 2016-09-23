@@ -10,160 +10,80 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     BP = 4;
-    if(m<2*BP)
-        error(['Operator requires at least ' num2str(2*BP) ' grid points']);
+    if(m < 2*BP)
+        error('Operator requires at least %d grid points', 2*BP);
     end
 
+    % Norm
+    Hv = ones(m,1);
+    Hv(1) = 1/2;
+    Hv(m) = 1/2;
+    Hv = h*Hv;
+    H = spdiag(Hv, 0);
+    HI = spdiag(1./Hv, 0);
 
-    H=speye(m,m);
-    H(1,1)=1/2;
-    H(m,m)=1/2;
+    % Boundary operators
+    e_l = sparse(m,1);
+    e_l(1) = 1;
+    e_r = rot90(e_l, 2);
 
-    H=H*h;
-    HI=inv(H);
+    d1_l = sparse(m,1);
+    d1_l(1:3) = 1/h*[-3/2 2 -1/2];
+    d1_r = -rot90(d1_l);
+
+    d2_l = sparse(m,1);
+    d2_l(1:3) = 1/h^2*[1 -2 1];
+    d2_r = rot90(d2_l, 2);
+
+    d3_l = sparse(m,1);
+    d3_l(1:4) = 1/h^3*[-1 3 -3 1];
+    d3_r = -rot90(d3_l, 2)
 
 
     % First derivative SBP operator, 1st order accurate at first 6 boundary points
-
-    q1=1/2;
-%     Q=q1*(diag(ones(m-1,1),1)-diag(ones(m-1,1),-1));
-    stencil = [-q1,0,q1];
-    d = (length(stencil)-1)/2;
-    diags = -d:d;
+    stencil = [-1/2, 0, 1/2];
+    diags = [-1 0 1];
     Q = stripeMatrix(stencil, diags, m);
 
-    %Q=(-1/12*diag(ones(m-2,1),2)+8/12*diag(ones(m-1,1),1)-8/12*diag(ones(m-1,1),-1)+1/12*diag(ones(m-2,1),-2));
-
-    e_1=sparse(m,1);
-    e_1(1)=1;
-    e_m=sparse(m,1);
-    e_m(m)=1;
-
-    D1=HI*(Q-1/2*(e_1*e_1')+1/2*(e_m*e_m')) ;
-
+    D1 = HI*(Q-1/2*(e_1*e_1') + 1/2*(e_m*e_m'));
 
     % Second derivative, 1st order accurate at first boundary points
-
-    % below for constant coefficients
-    % m1=-1;m0=2;
-    % M=m1*(diag(ones(m-1,1),1)+diag(ones(m-1,1),-1))+m0*diag(ones(m,1),0);M(1,1)=1;M(m,m)=1;
-    % M=M/h;
-    %D2=HI*(-M-e_1*S_1+e_m*S_m);
-
-    % Below for variable coefficients
-    % Require a vector c with the koeffients
-
-    S_U=[-3/2 2 -1/2]/h;
-    S_1=sparse(1,m);
-    S_1(1:3)=S_U;
-    S_m=sparse(1,m);
-    S_m(m-2:m)=fliplr(-S_U);
-
-    S_1 = S_1';
-    S_m = S_m';
-
-    M=sparse(m,m);
-    e_1 = sparse(e_1);
-    e_m = sparse(e_m);
-    S_1 = sparse(S_1);
-    S_m = sparse(S_m);
+    M = sparse(m,m);
 
     scheme_width = 3;
     scheme_radius = (scheme_width-1)/2;
     r = (1+scheme_radius):(m-scheme_radius);
 
     function D2 = D2_fun(c)
-
         Mm1 = -c(r-1)/2 - c(r)/2;
         M0  =  c(r-1)/2 + c(r)   + c(r+1)/2;
         Mp1 =            -c(r)/2 - c(r+1)/2;
 
         M(r,:) = spdiags([Mm1 M0 Mp1],0:2*scheme_radius,length(r),m);
 
+        M(1:2,1:2) = [c(1)/2 + c(2)/2 -c(1)/2 - c(2)/2; -c(1)/2 - c(2)/2 c(1)/2 + c(2) + c(3)/2;];
+        M(m-1:m,m-1:m) = [c(m-2)/2 + c(m-1) + c(m)/2 -c(m-1)/2 - c(m)/2; -c(m-1)/2 - c(m)/2 c(m-1)/2 + c(m)/2;];
+        M = 1/h*M;
 
-        M(1:2,1:2)=[c(1)/2 + c(2)/2 -c(1)/2 - c(2)/2; -c(1)/2 - c(2)/2 c(1)/2 + c(2) + c(3)/2;];
-        M(m-1:m,m-1:m)=[c(m-2)/2 + c(m-1) + c(m)/2 -c(m-1)/2 - c(m)/2; -c(m-1)/2 - c(m)/2 c(m-1)/2 + c(m)/2;];
-        M=M/h;
-
-        D2=HI*(-M-c(1)*e_1*S_1'+c(m)*e_m*S_m');
+        D2 = HI*(-M - c(1)*e_1*d1_l' + c(m)*e_r*d1_r');
     end
     D2 = @D2_fun;
 
-
-
-
-
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-    % Third derivative, 1st order accurate at first 6 boundary points
-
-    q2=1/2;q1=-1;
-%     Q3=q2*(diag(ones(m-2,1),2)-diag(ones(m-2,1),-2))+q1*(diag(ones(m-1,1),1)-diag(ones(m-1,1),-1));
-    stencil = [-q2,-q1,0,q1,q2];
-    d = (length(stencil)-1)/2;
-    diags = -d:d;
-    Q3 = stripeMatrix(stencil, diags, m);
-
-    %QQ3=(-1/8*diag(ones(m-3,1),3) + 1*diag(ones(m-2,1),2) - 13/8*diag(ones(m-1,1),1) +13/8*diag(ones(m-1,1),-1) -1*diag(ones(m-2,1),-2) + 1/8*diag(ones(m-3,1),-3));
-
-
-    Q3_U = [
-        0 -0.13e2/0.16e2 0.7e1/0.8e1 -0.1e1/0.16e2;
-        0.13e2/0.16e2 0 -0.23e2/0.16e2 0.5e1/0.8e1;
-        -0.7e1/0.8e1 0.23e2/0.16e2 0 -0.17e2/0.16e2;
-        0.1e1/0.16e2 -0.5e1/0.8e1 0.17e2/0.16e2 0;
-    ];
-    Q3(1:4,1:4)=Q3_U;
-    Q3(m-3:m,m-3:m)=rot90(  -Q3_U ,2 );
-    Q3=Q3/h^2;
-
-
-
-    S2_U=[1 -2 1;]/h^2;
-    S2_1=sparse(1,m);
-    S2_1(1:3)=S2_U;
-    S2_m=sparse(1,m);
-    S2_m(m-2:m)=fliplr(S2_U);
-    S2_1 = S2_1';
-    S2_m = S2_m';
-
-
-
-    D3=HI*(Q3 - e_1*S2_1' + e_m*S2_m' +1/2*(S_1*S_1') -1/2*(S_m*S_m') ) ;
-
-    % Fourth derivative, 0th order accurate at first 6 boundary points (still
-    % yield 4th order convergence if stable: for example u_tt=-u_xxxx
-
-    m2=1;m1=-4;m0=6;
-%     M4=m2*(diag(ones(m-2,1),2)+diag(ones(m-2,1),-2))+m1*(diag(ones(m-1,1),1)+diag(ones(m-1,1),-1))+m0*diag(ones(m,1),0);
-    stencil = [m2,m1,m0,m1,m2];
-    d = (length(stencil)-1)/2;
-    diags = -d:d;
+    % Fourth derivative, 0th order accurate at first 6 boundary points
+    stencil = [1, -4, 6, -4, 1];
+    diags = -2:2;
     M4 = stripeMatrix(stencil, diags, m);
 
-    %M4=(-1/6*(diag(ones(m-3,1),3)+diag(ones(m-3,1),-3) ) + 2*(diag(ones(m-2,1),2)+diag(ones(m-2,1),-2)) -13/2*(diag(ones(m-1,1),1)+diag(ones(m-1,1),-1)) + 28/3*diag(ones(m,1),0));
-
-    M4_U=[
-        0.13e2/0.10e2 -0.12e2/0.5e1 0.9e1/0.10e2 0.1e1/0.5e1;
-        -0.12e2/0.5e1 0.26e2/0.5e1 -0.16e2/0.5e1 0.2e1/0.5e1;
-        0.9e1/0.10e2 -0.16e2/0.5e1 0.47e2/0.10e2 -0.17e2/0.5e1;
-        0.1e1/0.5e1 0.2e1/0.5e1 -0.17e2/0.5e1 0.29e2/0.5e1;
+    M4_U = [
+         0.13e2/0.10e2 -0.12e2/0.5e1   0.9e1/0.10e2   0.1e1/0.5e1;
+        -0.12e2/0.5e1   0.26e2/0.5e1  -0.16e2/0.5e1   0.2e1/0.5e1;
+         0.9e1/0.10e2  -0.16e2/0.5e1   0.47e2/0.10e2 -0.17e2/0.5e1;
+         0.1e1/0.5e1    0.2e1/0.5e1   -0.17e2/0.5e1   0.29e2/0.5e1;
     ];
 
-    M4(1:4,1:4)=M4_U;
-
-    M4(m-3:m,m-3:m)=rot90(  M4_U ,2 );
-    M4=M4/h^3;
-
-    S3_U=[-1 3 -3 1;]/h^3;
-    S3_1=sparse(1,m);
-    S3_1(1:4)=S3_U;
-    S3_m=sparse(1,m);
-    S3_m(m-3:m)=fliplr(-S3_U);
-    S3_1 = S3_1';
-    S3_m = S3_m';
+    M4(1:4,1:4) = M4_U;
+    M4(m-3:m,m-3:m) = rot90(M4_U, 2);
+    M4 = 1/h^3*M4;
 
     D4=HI*(M4-e_1*S3_1'+e_m*S3_m'  + S_1*S2_1'-S_m*S2_m');
 end
