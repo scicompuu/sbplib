@@ -21,12 +21,34 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
         error(['Operator requires at least ' num2str(2*BP) ' grid points']);
     end
 
+    % Norm
+    Hv = ones(m,1);
+    Hv(1:6) = [13649/43200,12013/8640,2711/4320,5359/4320,7877/8640, 43801/43200];
+    Hv(m-5:m) = rot90(Hv(1:6),2);
+    Hv = h*Hv;
+    H = spdiag(Hv, 0);
+    HI = spdiag(1./Hv, 0);
 
-    H=speye(m,m);
-    H(1:6,1:6)=diag([13649/43200,12013/8640,2711/4320,5359/4320,7877/8640, 43801/43200]);
-    H(m-5:m,m-5:m)=rot90(diag([13649/43200,12013/8640,2711/4320,5359/4320,7877/8640,43801/43200]),2);
+
+    % Boundary operators
+    e_l = sparse(m,1);
+    e_l(1) = 1;
+    e_r = rot90(e_l, 2);
+
+    d1_l = sparse(m,1);
+    d1_l(1:5) = [-25/12, 4, -3, 4/3, -1/4]/h;
+    d1_r = -rot90(d1_l);
+
+    d2_l = sparse(m,1);
+    d2_l(1:5) = [0.35e2/0.12e2 -0.26e2/0.3e1 0.19e2/0.2e1 -0.14e2/0.3e1 0.11e2/0.12e2;]/h^2;
+    d2_r = rot90(d2_l, 2);
+
+    d3_l = sparse(m,1);
+    d3_l(1:5) = [-5/2 9 -12 7 -3/2]/h^3;
+    d3_r = -rot90(d3_l, 2);
 
 
+    % First derivtive
 %     x1=0.70127127127127;
 
 
@@ -55,48 +77,8 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
 %     D1(m-5:m,m-8:m)=rot90( -D1(1:6,1:9),2);
 %     D1=D1/h;
 
-    e_1=sparse(m,1);
-    e_1(1)=1;
-    e_m=sparse(m,1);
-    e_m(m)=1;
 
-    S_U=[-25/12, 4, -3, 4/3, -1/4]/h;
-    S_1=sparse(1,m);
-    S_1(1:5)=S_U;
-    S_m=sparse(1,m);
-    S_m(m-4:m)=fliplr(-S_U);
-    S_1 = S_1';
-    S_m = S_m';
-    e_1 = sparse(e_1);
-    e_m = sparse(e_m);
-    S_1 = sparse(S_1);
-    S_m = sparse(S_m);
-    S2_U=[0.35e2/0.12e2 -0.26e2/0.3e1 0.19e2/0.2e1 -0.14e2/0.3e1 0.11e2/0.12e2;]/h^2;
-    S2_1=sparse(1,m);
-    S2_1(1:5)=S2_U;
-    S2_m=sparse(1,m);
-    S2_m(m-4:m)=fliplr(S2_U);
-    S2_1 = S2_1';
-    S2_m = S2_m';
-    S3_U = [-5/2 9 -12 7 -3/2]/h^3;
-    S3_1 = sparse(1,m);
-    S3_1(1:5)=S3_U;
-    S3_m = sparse(1,m);
-    S3_m(m-4:m) = fliplr(-S3_U);
-    S3_1 = S3_1';
-    S3_m = S3_m';
-
-
-    %DS=sparse(m,m);
-    %DS(1,1:5)=-[-25/12, 4, -3, 4/3, -1/4];
-    %DS(m,m-4:m)=fliplr(-[-25/12, 4, -3, 4/3, -1/4]);
-    %DS=diag(c)*DS/h;
-
-
-    H=h*H;
-    HI=inv(H);
-
-
+    % Second derivative
     M=sparse(m,m);
 
     scheme_width = 7;
@@ -150,26 +132,11 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
     D2 = @D2_fun;
 
 
-
-
-
-
-
     % Fourth derivative, 1th order accurate at first 8 boundary points (still
     % yield 5th order convergence if stable: for example u_tt=-u_xxxx
-
-    m4=7/240;
-    m3=-2/5;
-    m2=169/60;
-    m1=-122/15;
-    m0=91/8;
-%     M4=m4*(diag(ones(m-4,1),4)+diag(ones(m-4,1),-4))+m3*(diag(ones(m-3,1),3)+diag(ones(m-3,1),-3))+m2*(diag(ones(m-2,1),2)+diag(ones(m-2,1),-2))+m1*(diag(ones(m-1,1),1)+diag(ones(m-1,1),-1))+m0*diag(ones(m,1),0);
-    stencil = [m4,m3,m2,m1,m0,m1,m2,m3,m4];
-    d = (length(stencil)-1)/2;
-    diags = -d:d;
+    stencil = [7/240, -2/5, 169/60, -122/15, 91/8, -122/15, 169/60, -2/5, 7/240];
+    diags = -4:4;
     M4 = stripeMatrix(stencil, diags, m);
-
-    %M4=(-1/6*(diag(ones(m-3,1),3)+diag(ones(m-3,1),-3) ) + 2*(diag(ones(m-2,1),2)+diag(ones(m-2,1),-2)) -13/2*(diag(ones(m-1,1),1)+diag(ones(m-1,1),-1)) + 28/3*diag(ones(m,1),0));
 
     M4_U = [
         0.1394226315049e13/0.367201486080e12 -0.1137054563243e13/0.114750464400e12 0.16614189027367e14/0.1836007430400e13 -0.1104821700277e13/0.306001238400e12 0.1355771086763e13/0.1836007430400e13 -0.27818686453e11/0.459001857600e12 -0.40671054239e11/0.1836007430400e13 0.5442887371e10/0.306001238400e12;
@@ -183,12 +150,10 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
     ];
 
     M4(1:8,1:8) = M4_U;
-
     M4(m-7:m,m-7:m) = rot90(  M4_U ,2 );
     M4 = M4/h^3;
 
 
 
-    D4=HI*(M4-e_1*S3_1'+e_m*S3_m'  + S_1*S2_1'-S_m*S2_m');
-
+    D4=HI*(M4 - e_l*d3_l'+e_r*d3_r' + d1_l*d2_l'-d1_r*d2_r');
 end
