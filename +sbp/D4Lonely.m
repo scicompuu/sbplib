@@ -34,7 +34,7 @@ classdef D4Lonely < sbp.OpSet
                 switch opt
                     case 'min_boundary_points'
                         [H, HI, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] = ...
-                            sbp.implementations.d4_variable_4_min_boundary_points(m, obj.h);
+                            sbp.implementations.d4_lonely_4_min_boundary_points(m, obj.h);
                         % obj.borrowing.N.S2 = 0.5055;
                         % obj.borrowing.N.S3 = 0.9290;
                     otherwise
@@ -48,17 +48,17 @@ classdef D4Lonely < sbp.OpSet
                 switch opt
                     case '2'
                         [H, HI, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] = ...
-                            sbp.implementations.d4_variable_6_2(m, obj.h);
+                            sbp.implementations.d4_lonely_6_2(m, obj.h);
                         % obj.borrowing.N.S2 = 0.3259;
                         % obj.borrowing.N.S3 = 0.1580;
                     case '3'
                         [H, HI, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] = ...
-                            sbp.implementations.d4_variable_6_3(m, obj.h);
+                            sbp.implementations.d4_lonely_6_3(m, obj.h);
                         % obj.borrowing.N.S2 = 0.3259;
                         % obj.borrowing.N.S3 = 0.1580;
                     case 'min_boundary_points'
                         [H, HI, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] = ...
-                            sbp.implementations.d4_variable_6_min_boundary_points(m, obj.h);
+                            sbp.implementations.d4_lonely_6_min_boundary_points(m, obj.h);
                         % obj.borrowing.N.S2 = 0.3259;
                         % obj.borrowing.N.S3 = 0.1580;
                     otherwise
@@ -72,12 +72,12 @@ classdef D4Lonely < sbp.OpSet
                 switch opt
                     case 'min_boundary_points'
                         [H, HI, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] = ...
-                            sbp.implementations.d4_variable_8_min_boundary_points(m, obj.h);
+                            sbp.implementations.d4_lonely_8_min_boundary_points(m, obj.h);
                         % obj.borrowing.N.S2 = 0.3259;
                         % obj.borrowing.N.S3 = 0.1580;
                     otherwise
                         [H, HI, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] = ...
-                            sbp.implementations.d4_variable_8_higher_boundary_order(m, obj.h);
+                            sbp.implementations.d4_lonely_8_higher_boundary_order(m, obj.h);
                         % obj.borrowing.N.S2 = 0.3259;
                         % obj.borrowing.N.S3 = 0.1580;
                     end
