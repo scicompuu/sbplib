@@ -20,69 +20,37 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
     % Denna ?r noggrannare, och har 2a ordningens randdslutning och b?r ge 6te
     % ordningens konvergens. Hade 2 fria parametrar att optimera
 
+    % Norm
+    Hv = ones(m,1);
+    Hv(1:7) = [0.414837907e9/0.1191965760e10, 0.475278367e9/0.397321920e9, 0.13872751e8/0.12416310e8, 0.346739027e9/0.595982880e9, 0.560227469e9/0.397321920e9, 0.322971631e9/0.397321920e9, 0.616122491e9/0.595982880e9];
+    Hv(m-6:m) = rot90(Hv(1:7),2);
+    Hv = h*Hv;
+    H = spdiag(Hv, 0);
+    HI = spdiag(1./Hv, 0);
 
 
-    H=diag(ones(m,1),0);
-    H(1:7,1:7)=[
-        0.414837907e9/0.1191965760e10 0 0 0 0 0 0;
-        0 0.475278367e9/0.397321920e9 0 0 0 0 0;
-        0 0 0.13872751e8/0.12416310e8 0 0 0 0;
-        0 0 0 0.346739027e9/0.595982880e9 0 0 0;
-        0 0 0 0 0.560227469e9/0.397321920e9 0 0;
-        0 0 0 0 0 0.322971631e9/0.397321920e9 0;
-        0 0 0 0 0 0 0.616122491e9/0.595982880e9;
-    ];
+    % Boundary operators
+    e_l = sparse(m,1);
+    e_l(1) = 1;
+    e_r = rot90(e_l, 2);
 
-    H(m-6:m,m-6:m) = fliplr(flipud(H(1:7,1:7)));
+    d1_l = sparse(m,1);
+    d1_l(1:6) = [-0.137e3/0.60e2 5 -5 0.10e2/0.3e1 -0.5e1/0.4e1 0.1e1/0.5e1;]/h;
+    d1_r = -rot90(d1_l);
 
+    d2_l = sparse(m,1);
+    d2_l(1:6) = [0.15e2/0.4e1 -0.77e2/0.6e1 0.107e3/0.6e1 -13 0.61e2/0.12e2 -0.5e1/0.6e1;]/h^2;
+    d2_r = rot90(d2_l, 2);
 
-    e_1=zeros(m,1);
-    e_1(1)=1;
-    e_m=zeros(m,1);
-    e_m(m)=1;
-
-    S_U=[-0.137e3/0.60e2 5 -5 0.10e2/0.3e1 -0.5e1/0.4e1 0.1e1/0.5e1;]/h;
-    S_1=zeros(1,m);
-    S_1(1:6)=S_U;
-    S_m=zeros(1,m);
-    S_m(m-5:m)=fliplr(-S_U);
+    d3_l = sparse(m,1);
+    d3_l(1:6) = [-0.17e2/0.4e1 0.71e2/0.4e1 -0.59e2/0.2e1 0.49e2/0.2e1 -0.41e2/0.4e1 0.7e1/0.4e1;]/h^3;
+    d3_r = -rot90(d3_l, 2);
 
 
-    S2_U = [0.15e2/0.4e1 -0.77e2/0.6e1 0.107e3/0.6e1 -13 0.61e2/0.12e2 -0.5e1/0.6e1;]/h^2;
-    S2_1 = zeros(1,m);
-    S2_1(1:6) = S2_U;
-    S2_m = zeros(1,m);
-    S2_m(m-5:m) = fliplr(S2_U);
-
-
-    S3_U = [-0.17e2/0.4e1 0.71e2/0.4e1 -0.59e2/0.2e1 0.49e2/0.2e1 -0.41e2/0.4e1 0.7e1/0.4e1;]/h^3;
-    S3_1 = zeros(1,m);
-    S3_1(1:6) = S3_U;
-    S3_m = zeros(1,m);
-    S3_m(m-5:m) = fliplr(-S3_U);
-
-    %DS=zeros(m,m);
-    %DS(1,1:5)=-[-25/12, 4, -3, 4/3, -1/4];
-    %DS(m,m-4:m)=fliplr(-[-25/12, 4, -3, 4/3, -1/4]);
-    %DS=diag(c)*DS/h;
-
-
-    H=h*H;
-    HI=inv(H);
-
-
-    % Fourth derivative, 1th order accurate at first 8 boundary points (still
-    % yield 5th order convergence if stable: for example u_tt=-u_xxxx
-
-    m4 = 7/240;
-    m3 = -2/5;
-    m2 = 169/60;
-    m1 = -122/15;
-    m0 = 91/8;
-
-    M4 = m4*(diag(ones(m-4,1),4)+diag(ones(m-4,1),-4))+m3*(diag(ones(m-3,1),3)+diag(ones(m-3,1),-3))+m2*(diag(ones(m-2,1),2)+diag(ones(m-2,1),-2))+m1*(diag(ones(m-1,1),1)+diag(ones(m-1,1),-1))+m0*diag(ones(m,1),0);
-
-    %M4=(-1/6*(diag(ones(m-3,1),3)+diag(ones(m-3,1),-3) ) + 2*(diag(ones(m-2,1),2)+diag(ones(m-2,1),-2)) -13/2*(diag(ones(m-1,1),1)+diag(ones(m-1,1),-1)) + 28/3*diag(ones(m,1),0));
+    % Fourth derivative, 1th order accurate at first 8 boundary points
+    stencil = [7/240, -2/5, 169/60, -122/15, 91/8, -122/15, 169/60, -2/5, 7/240];
+    diags = -4:4;
+    M4 = stripeMatrix(stencil, diags, m);
 
     M4_U = [
         0.1399708478939e13/0.263487168000e12 -0.13482796013041e14/0.834376032000e12 0.344344095859e12/0.17565811200e11 -0.3166261424681e13/0.250312809600e12 0.1508605165681e13/0.333750412800e12 -0.486270829441e12/0.834376032000e12 -0.221976356359e12/0.5006256192000e13;
@@ -95,9 +63,8 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
     ];
 
     M4(1:7,1:7) = M4_U;
+    M4(m-6:m,m-6:m) = rot90(M4_U, 2);
+    M4 = 1/h^3*M4;
 
-    M4(m-6:m,m-6:m) = flipud( fliplr( M4_U ) );
-    M4 = M4/h^3;
-
-    D4 = HI*(M4-e_1*S3_1+e_m*S3_m  + S_1'*S2_1-S_m'*S2_m);
+    D4=HI*(M4 - e_l*d3_l'+e_r*d3_r' + d1_l*d2_l'-d1_r*d2_r');
 end
