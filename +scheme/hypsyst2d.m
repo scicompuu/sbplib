@@ -50,12 +50,12 @@ classdef hypsyst2d < scheme.Scheme
             obj.E=obj.matrixBuild(matrices.E);
             
             obj.n=length(matrices.A(obj.params,0,0));
-           
-            I_n=  eye(obj.n);         
+            
+            I_n=  eye(obj.n);
             I_x = speye(m_x); obj.I_x=I_x;
             I_y = speye(m_y); obj.I_y=I_y;
-      
-           
+            
+            
             D1_x = kr(kr(I_n,ops_x.D1),I_y);
             obj.Hxi= kr(kr(I_n,ops_x.HI),I_y);
             D1_y=kr(I_n,kr(I_x,ops_y.D1));
@@ -69,10 +69,11 @@ classdef hypsyst2d < scheme.Scheme
             obj.m=m;
             obj.h=[ops_x.h ops_y.h];
             obj.order=order;
-                
+            
             obj.D=-obj.A*D1_x-obj.B*D1_y-obj.E;
-           
+            
         end
+        
         % Closure functions return the opertors applied to the own doamin to close the boundary
         % Penalty functions return the opertors to force the solution. In the case of an interface it returns the operator applied to the other doamin.
         %       boundary            is a string specifying the boundary e.g. 'l','r' or 'e','w','n','s'.
@@ -81,9 +82,7 @@ classdef hypsyst2d < scheme.Scheme
         %       neighbour_scheme    is an instance of Scheme that should be interfaced to.
         %       neighbour_boundary  is a string specifying which boundary to interface to.
         function [closure, penalty] = boundary_condition(obj,boundary,type,L)
-            default_arg('type','neumann');
-            default_arg('data',0);
-            
+            default_arg('type','char');
             switch type
                 case{'c','char'}
                     [closure,penalty]=GetBoundarydata_char(obj,boundary);
@@ -102,47 +101,40 @@ classdef hypsyst2d < scheme.Scheme
             N = obj.m;
         end
         
-        function [ret]=matrixBuild(obj,mat,x,y)
-            %extra info for coordinate transfomration mult my y_ny  and
-            %x,ny osv...
+        function [ret]=matrixBuild(obj,mat,X,Y)
             params=obj.params;
-            X=obj.X;
-            Y=obj.Y;
+            default_arg('X',obj.X);
+            default_arg('Y',obj.Y)
             
             if isa(mat,'function_handle')
-            [rows,cols]=size(mat(params,0,0));
-            matVec=mat(params,X',Y');
-            matVec=sparse(matVec);
-            side=max(length(X),length(Y));
-           else
-               matVec=mat;
-               [rows,cols]=size(matVec);
-               side=max(length(x),length(y));
-               cols=cols/side;
-           end    
-           
-           
-           ret=kron(ones(rows,cols),speye(side));
-           
-           for ii=1:rows
-               for jj=1:cols
-                   ret((ii-1)*side+1:ii*side,(jj-1)*side+1:jj*side)=diag(matVec(ii,(jj-1)*side+1:jj*side));
-               end
-           end
-          
-          end
-    
-          
+                [rows,cols]=size(mat(params,0,0));
+                matVec=mat(params,X',Y');
+                matVec=sparse(matVec);
+                side=max(length(X),length(Y));
+            else
+                matVec=mat;
+                [rows,cols]=size(matVec);
+                side=max(length(X),length(Y));
+                cols=cols/side;
+            end
+            ret=kron(ones(rows,cols),speye(side));
+            
+            for ii=1:rows
+                for jj=1:cols
+                    ret((ii-1)*side+1:ii*side,(jj-1)*side+1:jj*side)=diag(matVec(ii,(jj-1)*side+1:jj*side));
+                end
+            end
+        end
+        
+        
         function [closure, penalty]=GetBoundarydata_char(obj,boundary)
             params=obj.params;
-            x=obj.x;
-            y=obj.y;
-            
+            x=obj.x; y=obj.y;
             side=max(length(x),length(y));
             
             switch boundary
                 case {'w','W','west'}
-                     e_=obj.e_w;
+                    e_=obj.e_w;
                     mat=obj.matrices.A;
                     boundPos='l';
                     Hi=obj.Hxi;
@@ -152,13 +144,13 @@ classdef hypsyst2d < scheme.Scheme
                     mat=obj.matrices.A;
                     boundPos='r';
                     Hi=obj.Hxi;
-                    [V,Vi,D,signVec]=obj.matrixDiag(mat,x(end),y);             
+                    [V,Vi,D,signVec]=obj.matrixDiag(mat,x(end),y);
                 case {'s','S','south'}
                     e_=obj.e_s;
-                    mat=obj.matrices.B;  
+                    mat=obj.matrices.B;
                     boundPos='l';
                     Hi=obj.Hxi;
-                    [V,Vi,D,signVec]=obj.matrixDiag(mat,x,y(1));  
+                    [V,Vi,D,signVec]=obj.matrixDiag(mat,x,y(1));
                 case {'n','N','north'}
                     e_=obj.e_n;
                     mat=obj.matrices.B;
@@ -166,96 +158,88 @@ classdef hypsyst2d < scheme.Scheme
                     Hi=obj.Hxi;
                     [V,Vi,D,signVec]=obj.matrixDiag(mat,x,y(end));
             end
-           
-             pos=signVec(1); zeroval=signVec(2); neg=signVec(3);
-                   
-            switch boundPos
-                case {'l'}  
-                    tau=sparse(obj.n*side,pos*side);  
-                    Vi_plus=Vi(1:pos*side,:); 
-                    tau(1:pos*side,:)=-abs(D(1:pos*side,1:pos*side));             
-                    closure=Hi*e_*V*tau*Vi_plus*e_';
-                    penalty=-Hi*e_*V*tau*Vi_plus;
-       
-                case {'r'}                
-                    tau=sparse(obj.n*side,neg*side);
-                    tau((pos+zeroval)*side+1:obj.n*side,:)=-abs(D((pos+zeroval)*side+1:obj.n*side,(pos+zeroval)*side+1:obj.n*side));
-                    Vi_minus=Vi((pos+zeroval)*side+1:obj.n*side,:);              
-                    closure=Hi*e_*V*tau*Vi_minus*e_';
-                    penalty=-Hi*e_*V*tau*Vi_minus;
-                    
-            end   
-        end
-          
-        
-        function [closure,penalty]=GeneralBoundaryCond(obj,boundary,L)
-              params=obj.params;
-            x=obj.x;
-            y=obj.y;
-            L=obj.matrixBuild(L,x,y);
-            side=max(length(x),length(y));
             
-             
-            switch boundary
-                case {'w','W','west'}
-                     e_=obj.e_w;
-                    mat=obj.matrices.A;
-                    boundPos='l';
-                    Hi=obj.Hxi;
-                    [V,Vi,D,signVec]=obj.matrixDiag(mat,x(1),y);
-                case {'e','E','east'}
-                    e_=obj.e_e;
-                    mat=obj.matrices.A;
-                    boundPos='r';
-                    Hi=obj.Hxi;
-                    [V,Vi,D,signVec]=obj.matrixDiag(mat,x(end),y);             
-                case {'s','S','south'}
-                    e_=obj.e_s;
-                    mat=obj.matrices.B;  
-                    boundPos='l';
-                    Hi=obj.Hxi;
-                    [V,Vi,D,signVec]=obj.matrixDiag(mat,x,y(1));  
-                case {'n','N','north'}
-                    e_=obj.e_n;
-                    mat=obj.matrices.B;
-                    boundPos='r';
-                    Hi=obj.Hxi;
-                    [V,Vi,D,signVec]=obj.matrixDiag(mat,x,y(end));
-            end
-           
-             pos=signVec(1); zeroval=signVec(2); neg=signVec(3);
-            
-            
+            pos=signVec(1); zeroval=signVec(2); neg=signVec(3);
             
             switch boundPos
                 case {'l'}
-                    tau=sparse(obj.n*side,pos*side);  
-                    Vi_plus=Vi(1:pos*side,:); 
-                    Vi_minus=Vi(pos*side+1:obj.n*side,:);
-                    
-                    V_plus=Vi(:,1:pos*side); 
-                    V_minus=Vi(:,(pos+zeroval)*side+1:obj.n*side);
-                    
-                    tau(1:pos*side,:)=-abs(D(1:pos*side,1:pos*side));  
-                    R=-inv(L*V_plus)*(L*V_minus);
-                    closure=Hi*e_*V*tau*(Vi_plus-R*Vi_minus)*e_';
-                    penalty=-Hi*e_*V*tau*inv(L*V_plus)*L;
-                    
-       
+                    tau=sparse(obj.n*side,pos*side);
+                    Vi_plus=Vi(1:pos*side,:);
+                    tau(1:pos*side,:)=-abs(D(1:pos*side,1:pos*side));
+                    closure=Hi*e_*V*tau*Vi_plus*e_';
+                    penalty=-Hi*e_*V*tau*Vi_plus;
                 case {'r'}
                     tau=sparse(obj.n*side,neg*side);
                     tau((pos+zeroval)*side+1:obj.n*side,:)=-abs(D((pos+zeroval)*side+1:obj.n*side,(pos+zeroval)*side+1:obj.n*side));
-                    Vi_plus=Vi(1:pos*side,:); 
+                    Vi_minus=Vi((pos+zeroval)*side+1:obj.n*side,:);
+                    closure=Hi*e_*V*tau*Vi_minus*e_';
+                    penalty=-Hi*e_*V*tau*Vi_minus;
+            end
+        end
+        
+        
+        function [closure,penalty]=GeneralBoundaryCond(obj,boundary,L)
+            params=obj.params;
+            x=obj.x; y=obj.y;
+            side=max(length(x),length(y));
+            
+            switch boundary
+                case {'w','W','west'}
+                    e_=obj.e_w;
+                    mat=obj.matrices.A;
+                    boundPos='l';
+                    Hi=obj.Hxi;
+                    [V,Vi,D,signVec]=obj.matrixDiag(mat,x(1),y);
+                    L=obj.matrixBuild(L,x(1),y);
+                case {'e','E','east'}
+                    e_=obj.e_e;
+                    mat=obj.matrices.A;
+                    boundPos='r';
+                    Hi=obj.Hxi;
+                    [V,Vi,D,signVec]=obj.matrixDiag(mat,x(end),y);
+                    L=obj.matrixBuild(L,x(end),y);
+                case {'s','S','south'}
+                    e_=obj.e_s;
+                    mat=obj.matrices.B;
+                    boundPos='l';
+                    Hi=obj.Hxi;
+                    [V,Vi,D,signVec]=obj.matrixDiag(mat,x,y(1));
+                    L=obj.matrixBuild(L,x,y(1));
+                case {'n','N','north'}
+                    e_=obj.e_n;
+                    mat=obj.matrices.B;
+                    boundPos='r';
+                    Hi=obj.Hxi;
+                    [V,Vi,D,signVec]=obj.matrixDiag(mat,x,y(end));
+                    L=obj.matrixBuild(L,x,y(end));
+            end
+            
+            pos=signVec(1); zeroval=signVec(2); neg=signVec(3);
+            
+            switch boundPos
+                case {'l'}
+                    tau=sparse(obj.n*side,pos*side);
+                    Vi_plus=Vi(1:pos*side,:);
+                    Vi_minus=Vi(pos*side+1:obj.n*side,:);
+                    V_plus=V(:,1:pos*side);
+                    V_minus=V(:,(pos+zeroval)*side+1:obj.n*side);
+                    
+                    tau(1:pos*side,:)=-abs(D(1:pos*side,1:pos*side));
+                    R=-inv(L*V_plus)*(L*V_minus);
+                    closure=Hi*e_*V*tau*(Vi_plus-R*Vi_minus)*e_';
+                    penalty=-Hi*e_*V*tau*inv(L*V_plus)*L;
+                case {'r'}
+                    tau=sparse(obj.n*side,neg*side);
+                    tau((pos+zeroval)*side+1:obj.n*side,:)=-abs(D((pos+zeroval)*side+1:obj.n*side,(pos+zeroval)*side+1:obj.n*side));
+                    Vi_plus=Vi(1:pos*side,:);
                     Vi_minus=Vi((pos+zeroval)*side+1:obj.n*side,:);
                     
-                    V_plus=Vi(:,1:pos*side); 
-                    V_minus=Vi(:,(pos+zeroval)*side+1:obj.n*side);
+                    V_plus=V(:,1:pos*side);
+                    V_minus=V(:,(pos+zeroval)*side+1:obj.n*side);
                     R=-inv(L*V_minus)*(L*V_plus);
                     closure=Hi*e_*V*tau*(Vi_minus-R*Vi_plus)*e_';
                     penalty=-Hi*e_*V*tau*inv(L*V_minus)*L;
-          
-                    
-            end   
+            end
         end
         
         
@@ -266,7 +250,7 @@ classdef hypsyst2d < scheme.Scheme
             xs=1;ys=1;
             DD=eval(diag(D));
             
-            poseig=find(DD>0); 
+            poseig=find(DD>0);
             zeroeig=find(DD==0);
             negeig=find(DD<0);
             syms xs ys
@@ -274,9 +258,7 @@ classdef hypsyst2d < scheme.Scheme
             
             D=diag([DD(poseig);DD(zeroeig); DD(negeig)]);
             V=[V(:,poseig) V(:,zeroeig) V(:,negeig)];
-          
             xs=x; ys=y;
-       
             
             side=max(length(x),length(y));
             Dret=zeros(obj.n,side*obj.n);
@@ -287,7 +269,7 @@ classdef hypsyst2d < scheme.Scheme
                     Vret(jj,(ii-1)*side+1:side*ii)=eval(V(jj,ii));
                 end
             end
-           
+            
             D=sparse(Dret);
             V=sparse(normc(Vret));
             V=obj.matrixBuild(V,x,y);
@@ -307,6 +289,6 @@ classdef hypsyst2d < scheme.Scheme
             [vv,vu] = schm_v.interface(bound_v,schm_u,bound_u);
         end
         
-      
+        
     end
 end
