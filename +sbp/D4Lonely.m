@@ -35,8 +35,8 @@ classdef D4Lonely < sbp.OpSet
                     case 'min_boundary_points'
                         [H, HI, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] = ...
                             sbp.implementations.d4_lonely_4_min_boundary_points(m, obj.h);
-                        % obj.borrowing.N.S2 = 0.5055;
-                        % obj.borrowing.N.S3 = 0.9290;
+                        obj.borrowing.N.S2 = 0.6244;
+                        obj.borrowing.N.S3 = 1.3961;
                     otherwise
                         [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] = ...
                             sbp.implementations.d4_variable_4(m, obj.h);
@@ -49,18 +49,18 @@ classdef D4Lonely < sbp.OpSet
                     case '2'
                         [H, HI, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] = ...
                             sbp.implementations.d4_lonely_6_2(m, obj.h);
-                        % obj.borrowing.N.S2 = 0.3259;
-                        % obj.borrowing.N.S3 = 0.1580;
+                        obj.borrowing.N.S2 = 0.2931;
+                        obj.borrowing.N.S3 = 0.0807;
                     case '3'
                         [H, HI, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] = ...
                             sbp.implementations.d4_lonely_6_3(m, obj.h);
-                        % obj.borrowing.N.S2 = 0.3259;
-                        % obj.borrowing.N.S3 = 0.1580;
+                        obj.borrowing.N.S2 = 0.2842;
+                        obj.borrowing.N.S3 = 0.0709;
                     case 'min_boundary_points'
                         [H, HI, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] = ...
                             sbp.implementations.d4_lonely_6_min_boundary_points(m, obj.h);
-                        % obj.borrowing.N.S2 = 0.3259;
-                        % obj.borrowing.N.S3 = 0.1580;
+                        obj.borrowing.N.S2 = 0.3569;
+                        obj.borrowing.N.S3 = 0.1908;
                     otherwise
                         [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] = ...
                             sbp.implementations.d4_variable_6(m, obj.h);
@@ -73,13 +73,13 @@ classdef D4Lonely < sbp.OpSet
                     case 'min_boundary_points'
                         [H, HI, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] = ...
                             sbp.implementations.d4_lonely_8_min_boundary_points(m, obj.h);
-                        % obj.borrowing.N.S2 = 0.3259;
-                        % obj.borrowing.N.S3 = 0.1580;
+                        obj.borrowing.N.S2 = 0.2804;
+                        obj.borrowing.N.S3 = 0.0740;
                     otherwise
                         [H, HI, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] = ...
                             sbp.implementations.d4_lonely_8_higher_boundary_order(m, obj.h);
-                        % obj.borrowing.N.S2 = 0.3259;
-                        % obj.borrowing.N.S3 = 0.1580;
+                        obj.borrowing.N.S2 = 0.2475;
+                        obj.borrowing.N.S3 = 0.0401;
                     end
             else
                 error('Invalid operator order.');
