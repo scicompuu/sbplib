@@ -29,7 +29,7 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
 
     d1_l = sparse(m,1);
     d1_l(1:4) = 1/h*[-11/6 3 -3/2 1/3];
-    d1_r = -rot90(d1_l);
+    d1_r = -rot90(d1_l, 2);
 
     d2_l = sparse(m,1);
     d2_l(1:4) = 1/h^2*[2 -5 4 -1];
