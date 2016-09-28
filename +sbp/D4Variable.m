@@ -1,24 +1,20 @@
 classdef D4Variable < sbp.OpSet
     properties
-        D1   % SBP operator approximating first derivative
-        H    % Norm matrix
-        HI   % H^-1
-        Q    % Skew-symmetric matrix
-        e_l  % Left boundary operator
-        e_r  % Right boundary operator
-        d1_l % Left boundary first derivative
-        d1_r % Right boundary first derivative
-        d2_l % Left boundary second derivative
-        d2_r % Right boundary second derivative
-        d3_l % Left boundary third derivative
-        d3_r % Right boundary third derivative
-        D2   % SBP operator for second derivative
-        M    % Norm matrix, second derivative
-        D4   % SBP operator for fourth derivative
-        M4   % Norm matrix, fourth derivative
         m    % Number of grid points.
         h    % Step size
         x    % grid
+        H    % Norm matrix
+        HI   % H^-1
+        D1   % SBP operator approximating first derivative
+        D2   % SBP operator for second derivative
+        D4   % SBP operator for fourth derivative
+        Q    % Skew-symmetric matrix
+        M    % Norm matrix, second derivative
+        M4   % Norm matrix, fourth derivative
+        e_l,  e_r  % Left and right boundary operator
+        d1_l, d1_r % Left and right boundary first derivative
+        d2_l, d2_r % Left and right boundary second derivative
+        d3_l, d3_r % Left and right boundary third derivative
         borrowing % Struct with borrowing limits for different norm matrices
     end
 

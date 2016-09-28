@@ -1,16 +1,16 @@
 classdef D4Lonely < sbp.OpSet
     properties
+        m    % Number of grid points.
+        h    % Step size
+        x    % grid
         H    % Norm matrix
         HI   % H^-1
+        D4   % SBP operator for fourth derivative
+        M4   % Norm matrix, fourth derivative
         e_l,  e_r  % Left and right boundary operator
         d1_l, d1_r % Left and right boundary first derivative
         d2_l, d2_r % Left and right boundary second derivative
         d3_l, d3_r % Left and right boundary third derivative
-        D4   % SBP operator for fourth derivative
-        M4   % Norm matrix, fourth derivative
-        m    % Number of grid points.
-        h    % Step size
-        x    % grid
         borrowing % Struct with borrowing limits for different norm matrices
     end
 

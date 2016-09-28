@@ -10,7 +10,7 @@ classdef Beam < scheme.Scheme
         H % Discrete norm
         Hi
 
-        e_l, e_r
+        e_l,  e_r
         d1_l, d1_r
         d2_l, d2_r
         d3_l, d3_r
@@ -26,6 +26,8 @@ classdef Beam < scheme.Scheme
         function obj = Beam(grid, order, alpha, opsGen, opt)
             default_arg('alpha', -1);
 
+            % default_arg('opsGen', @sbp.D4);
+            default_arg('opsGen', @sbp.D4Variable); % Supposed to be better
 
             opt_default.interface_l.tuning = 1.1;
             opt_default.interface_l.tau = [];
@@ -36,8 +38,7 @@ classdef Beam < scheme.Scheme
             default_struct('opt', opt_default);
 
 
-            % default_arg('opsGen', @sbp.Higher);
-            default_arg('opsGen', @sbp.HigherVariable); % Supposed to be better
+
 
             if ~isa(grid, 'grid.Cartesian') || grid.D() ~= 1
                 error('Grid must be 1d cartesian');
@@ -50,25 +51,24 @@ classdef Beam < scheme.Scheme
             m = grid.m;
             h = grid.scaling();
 
-            ops = opsGen(m, h, order);
+            x_lim = {grid.x{1}(1), grid.x{1}(end)};
+            ops = opsGen(m, x_lim, order);
 
-            I = speye(m);
-
-            D4 = sparse(ops.derivatives.D4);
-            obj.H =  sparse(ops.norms.H);
-            obj.Hi = sparse(ops.norms.HI);
-            obj.e_l = sparse(ops.boundary.e_1);
-            obj.e_r = sparse(ops.boundary.e_m);
-            obj.d1_l = sparse(ops.boundary.S_1);
-            obj.d1_r = sparse(ops.boundary.S_m);
-            obj.d2_l  = sparse(ops.boundary.S2_1);
-            obj.d2_r  = sparse(ops.boundary.S2_m);
-            obj.d3_l  = sparse(ops.boundary.S3_1);
-            obj.d3_r  = sparse(ops.boundary.S3_m);
+            D4       = ops.D4;
+            obj.H    = ops.H;
+            obj.Hi   = ops.HI;
+            obj.e_l  = ops.e_l;
+            obj.e_r  = ops.e_r;
+            obj.d1_l = ops.d1_l;
+            obj.d1_r = ops.d1_r;
+            obj.d2_l = ops.d2_l;
+            obj.d2_r = ops.d2_r;
+            obj.d3_l = ops.d3_l;
+            obj.d3_r = ops.d3_r;
 
             obj.D = alpha*D4;
 
-            alphaII = ops.borrowing.N.S2/2;
+            alphaII  = ops.borrowing.N.S2/2;
             alphaIII = ops.borrowing.N.S3/2;
 
             obj.gamm = h*alphaII;
