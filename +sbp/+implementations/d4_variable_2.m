@@ -65,7 +65,7 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
         M(m-1:m,m-1:m) = [c(m-2)/2 + c(m-1) + c(m)/2 -c(m-1)/2 - c(m)/2; -c(m-1)/2 - c(m)/2 c(m-1)/2 + c(m)/2;];
         M = 1/h*M;
 
-        D2 = HI*(-M - c(1)*e_1*d1_l' + c(m)*e_r*d1_r');
+        D2 = HI*(-M - c(1)*e_l*d1_l' + c(m)*e_r*d1_r');
     end
     D2 = @D2_fun;
 

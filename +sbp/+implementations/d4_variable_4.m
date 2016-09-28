@@ -93,7 +93,7 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
         ];
 
         M = M/h;
-        D2 = HI*(-M-c(1)*e_1*S_1'+c(m)*e_m*S_m');
+        D2 = HI*(-M - c(1)*e_l*d1_l' + c(m)*e_r*d1_r');
     end
     D2 = @D2_fun;
 

@@ -37,9 +37,6 @@ classdef Beam < scheme.Scheme
             opt_default.interface_r.sig = [];
             default_struct('opt', opt_default);
 
-
-
-
             if ~isa(grid, 'grid.Cartesian') || grid.D() ~= 1
                 error('Grid must be 1d cartesian');
             end
