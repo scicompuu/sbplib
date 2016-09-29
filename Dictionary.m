@@ -98,14 +98,11 @@ classdef Dictionary
         % Should probably use mat2str with some kind of normalization to make all variables valied fieldname
         %  and make it possible to recover the value
         function fName = getFieldname(obj, val)
-            if isnumeric(val)
-                valStr = num2str(val);
-            elseif ischar(val)
-                valStr = val;
-            else
-                error('Dont know what to do with val!');
+            if ~ischar(val)
+                val = toString(val);
             end
-            fName = sprintf('f%s',valStr);
+
+            fName = matlab.lang.makeValidName(val);
         end
     end
 end
