@@ -16,6 +16,7 @@ classdef D4Variable < sbp.OpSet
         d2_l, d2_r % Left and right boundary second derivative
         d3_l, d3_r % Left and right boundary third derivative
         borrowing % Struct with borrowing limits for different norm matrices
+        order
     end
 
     methods
@@ -46,6 +47,7 @@ classdef D4Variable < sbp.OpSet
             end
 
             obj.m = m;
+            obj.order = order;
 
             obj.H    = H;
             obj.HI   = HI;
@@ -61,6 +63,10 @@ classdef D4Variable < sbp.OpSet
             obj.d2_r = d2_r;
             obj.d3_l = d3_l;
             obj.d3_r = d3_r;
+        end
+
+        function str = string(obj)
+            str = [class(obj) '_' num2str(obj.order)];
         end
     end
 end

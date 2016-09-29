@@ -12,11 +12,16 @@ classdef D4Lonely < sbp.OpSet
         d2_l, d2_r % Left and right boundary second derivative
         d3_l, d3_r % Left and right boundary third derivative
         borrowing % Struct with borrowing limits for different norm matrices
+        opt
+        order
     end
 
     methods
         function obj = D4Lonely(m, lim, order, opt)
             default_arg('opt', '')
+
+            obj.opt = opt;
+            obj.order = order;
 
             x_l = lim{1};
             x_r = lim{2};
@@ -25,10 +30,15 @@ classdef D4Lonely < sbp.OpSet
             obj.x = linspace(x_l, x_r,m)';
 
             if order == 2
-                [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] = ...
-                    sbp.implementations.d4_variable_2(m, obj.h);
-                obj.borrowing.N.S2 = 1.2500;
-                obj.borrowing.N.S3 = 0.4000;
+                switch opt
+                    case ''
+                        [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] = ...
+                            sbp.implementations.d4_variable_2(m, obj.h);
+                        obj.borrowing.N.S2 = 1.2500;
+                        obj.borrowing.N.S3 = 0.4000;
+                    otherwise
+                        error('Invalid operator option.');
+                end
 
             elseif order == 4
                 switch opt
@@ -37,11 +47,13 @@ classdef D4Lonely < sbp.OpSet
                             sbp.implementations.d4_lonely_4_min_boundary_points(m, obj.h);
                         obj.borrowing.N.S2 = 0.6244;
                         obj.borrowing.N.S3 = 1.3961;
-                    otherwise
+                    case ''
                         [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] = ...
                             sbp.implementations.d4_variable_4(m, obj.h);
                         obj.borrowing.N.S2 = 0.5055;
                         obj.borrowing.N.S3 = 0.9290;
+                    otherwise
+                        error('Invalid operator option.');
                 end
 
             elseif order == 6
@@ -61,11 +73,13 @@ classdef D4Lonely < sbp.OpSet
                             sbp.implementations.d4_lonely_6_min_boundary_points(m, obj.h);
                         obj.borrowing.N.S2 = 0.3569;
                         obj.borrowing.N.S3 = 0.1908;
-                    otherwise
+                    case ''
                         [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] = ...
                             sbp.implementations.d4_variable_6(m, obj.h);
                         obj.borrowing.N.S2 = 0.3259;
                         obj.borrowing.N.S3 = 0.1580;
+                    otherwise
+                        error('Invalid operator option.');
                 end
 
             elseif order == 8
@@ -75,11 +89,13 @@ classdef D4Lonely < sbp.OpSet
                             sbp.implementations.d4_lonely_8_min_boundary_points(m, obj.h);
                         obj.borrowing.N.S2 = 0.2804;
                         obj.borrowing.N.S3 = 0.0740;
-                    otherwise
+                    case ''
                         [H, HI, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] = ...
                             sbp.implementations.d4_lonely_8_higher_boundary_order(m, obj.h);
                         obj.borrowing.N.S2 = 0.2475;
                         obj.borrowing.N.S3 = 0.0401;
+                    otherwise
+                        error('Invalid operator option.');
                     end
             else
                 error('Invalid operator order.');
@@ -99,6 +115,10 @@ classdef D4Lonely < sbp.OpSet
             obj.d2_r = d2_r;
             obj.d3_l = d3_l;
             obj.d3_r = d3_r;
+        end
+
+        function str = string(obj)
+            str = [class(obj) '_' num2str(obj.order) '_' obj.opt];
         end
     end
 end
