@@ -182,6 +182,23 @@ classdef Ti
             obj = parametrization.Ti(g1,g2,g3,g4);
         end
 
+        % Like the constructor but allows inputing line curves as 2-cell arrays:
+        %     example: parametrization.Ti.linesAndCurves(g1, g2, {a, b} g4)
+        function obj = linesAndCurves(C1, C2, C3, C4)
+            C = {C1, C2, C3, C4};
+            c = cell(1,4);
+
+            for i = 1:4
+                if ~iscell(C{i})
+                    c{i} = C{i};
+                else
+                    c{i} = parametrization.Curve.line(C{i}{:});
+                end
+            end
+
+            obj = parametrization.Ti(c{:});
+        end
+
         function label(varargin)
             if nargin == 2 && ischar(varargin{2})
                 label_impl(varargin{:});
