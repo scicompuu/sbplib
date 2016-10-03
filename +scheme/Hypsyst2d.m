@@ -9,14 +9,13 @@ classdef Hypsyst2d < scheme.Scheme
 
         D % non-stabalized scheme operator
         A, B, E
-
+    
         H % Discrete norm
         % Norms in the x and y directions
         Hxi,Hyi % Kroneckerd norms. 1'*Hx*v corresponds to integration in the x dir.
         I_x,I_y, I_N
         e_w, e_e, e_s, e_n
-        params %parameters for the coeficient matrices
-        matrices
+        params %parameters for the coeficient matrice
     end
 
 
@@ -29,12 +28,14 @@ classdef Hypsyst2d < scheme.Scheme
             if length(m) == 1
                 m = [m m];
             end
+            
+            obj.A=A;
+            obj.B=B;
+            obj.E=E;
 
             m_x = m(1);
             m_y = m(2);
             obj.params = params;
-
-            obj.matrices = matrices;
 
             ops_x = sbp.D2Standard(m_x,xlim,order);
             ops_y = sbp.D2Standard(m_y,ylim,order);
@@ -43,13 +44,13 @@ classdef Hypsyst2d < scheme.Scheme
             obj.y = ops_y.x;
 
             obj.X = kr(obj.x,ones(m_y,1));
-            obj.Y = kr(ones(m_x,1),obj.y);
+            obj.Y = kr(ones(m_x,1),obj.y);         
 
-            obj.A = obj.evaluateCoefficientMatrix(matrices.A, obj.X, obj.Y);
-            obj.B = obj.evaluateCoefficientMatrix(matrices.B, obj.X, obj.Y);
-            obj.E = obj.evaluateCoefficientMatrix(matrices.E, obj.X, obj.Y);
+            Aevaluated = obj.evaluateCoefficientMatrix(A, obj.X, obj.Y);
+            Bevaluated = obj.evaluateCoefficientMatrix(B, obj.X, obj.Y);
+            Eevaluated = obj.evaluateCoefficientMatrix(E, obj.X, obj.Y);
 
-            obj.n = length(matrices.A(obj.params,0,0));
+            obj.n = length(A(obj.params,0,0));
 
             I_n = eye(obj.n);I_x = speye(m_x);
             obj.I_x = I_x;
@@ -59,8 +60,8 @@ classdef Hypsyst2d < scheme.Scheme
 
             D1_x = kr(I_n, ops_x.D1, I_y);
             obj.Hxi = kr(I_n, ops_x.HI, I_y);
-            D1_y = kr(I_n, I_x, ops_y.D1));
-            obj.Hyi = kr(I_n, I_x, ops_y.HI));
+            D1_y = kr(I_n, I_x, ops_y.D1);
+            obj.Hyi = kr(I_n, I_x, ops_y.HI);
 
             obj.e_w = kr(I_n, ops_x.e_l, I_y);
             obj.e_e = kr(I_n, ops_x.e_r, I_y);
@@ -71,7 +72,7 @@ classdef Hypsyst2d < scheme.Scheme
             obj.h=[ops_x.h ops_y.h];
             obj.order=order;
 
-            obj.D=-obj.A*D1_x-obj.B*D1_y-obj.E;
+            obj.D=-Aevaluated*D1_x-Bevaluated*D1_y-Eevaluated;
 
         end
 
@@ -132,27 +133,27 @@ classdef Hypsyst2d < scheme.Scheme
             switch boundary
                 case {'w','W','west'}
                     e_=obj.e_w;
-                    mat=obj.matrices.A;
+                    mat=obj.A;
                     boundPos='l';
                     Hi=obj.Hxi;
                     [V,Vi,D,signVec]=obj.matrixDiag(mat,x(1),y);
                 case {'e','E','east'}
                     e_=obj.e_e;
-                    mat=obj.matrices.A;
+                    mat=obj.A;
                     boundPos='r';
                     Hi=obj.Hxi;
                     [V,Vi,D,signVec]=obj.matrixDiag(mat,x(end),y);
                 case {'s','S','south'}
                     e_=obj.e_s;
-                    mat=obj.matrices.B;
+                    mat=obj.B;
                     boundPos='l';
-                    Hi=obj.Hxi;
+                    Hi=obj.Hyi;
                     [V,Vi,D,signVec]=obj.matrixDiag(mat,x,y(1));
                 case {'n','N','north'}
                     e_=obj.e_n;
-                    mat=obj.matrices.B;
+                    mat=obj.B;
                     boundPos='r';
-                    Hi=obj.Hxi;
+                    Hi=obj.Hyi;
                     [V,Vi,D,signVec]=obj.matrixDiag(mat,x,y(end));
             end
 
@@ -183,30 +184,30 @@ classdef Hypsyst2d < scheme.Scheme
             switch boundary
                 case {'w','W','west'}
                     e_=obj.e_w;
-                    mat=obj.matrices.A;
+                    mat=obj.A;
                     boundPos='l';
                     Hi=obj.Hxi;
                     [V,Vi,D,signVec]=obj.matrixDiag(mat,x(1),y);
                     L=obj.evaluateCoefficientMatrix(L,x(1),y);
                 case {'e','E','east'}
                     e_=obj.e_e;
-                    mat=obj.matrices.A;
+                    mat=obj.A;
                     boundPos='r';
                     Hi=obj.Hxi;
                     [V,Vi,D,signVec]=obj.matrixDiag(mat,x(end),y);
                     L=obj.evaluateCoefficientMatrix(L,x(end),y);
                 case {'s','S','south'}
                     e_=obj.e_s;
-                    mat=obj.matrices.B;
+                    mat=obj.B;
                     boundPos='l';
-                    Hi=obj.Hxi;
+                    Hi=obj.Hyi;
                     [V,Vi,D,signVec]=obj.matrixDiag(mat,x,y(1));
                     L=obj.evaluateCoefficientMatrix(L,x,y(1));
                 case {'n','N','north'}
                     e_=obj.e_n;
-                    mat=obj.matrices.B;
+                    mat=obj.B;
                     boundPos='r';
-                    Hi=obj.Hxi;
+                    Hi=obj.Hyi;
                     [V,Vi,D,signVec]=obj.matrixDiag(mat,x,y(end));
                     L=obj.evaluateCoefficientMatrix(L,x,y(end));
             end
