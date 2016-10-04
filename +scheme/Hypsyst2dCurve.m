@@ -305,8 +305,8 @@ classdef Hypsyst2dCurve < scheme.Scheme
             Vi=inv(V);
             xs=x; 
             ys=y;
-            xs_=x_';
-            ys_=y_';
+            xs_=x_;
+            ys_=y_;
 
             side=max(length(x),length(y));
             Dret=zeros(obj.n,side*obj.n);
