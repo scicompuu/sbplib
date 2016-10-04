@@ -68,17 +68,21 @@ classdef Curve
         end
 
         function h= show(obj,name)
+            default_arg('name', '')
             p = obj.g(1/2);
             n = obj.normal(1/2);
             p = p + n*0.1;
 
             % Add arrow
 
-            h = text(p(1),p(2),name);
-            h.HorizontalAlignment = 'center';
-            h.VerticalAlignment = 'middle';
 
-            obj.plot();
+            if ~isempty(name)
+                h = text(p(1),p(2),name);
+                h.HorizontalAlignment = 'center';
+                h.VerticalAlignment = 'middle';
+            end
+
+            h = obj.plot();
         end
             % Shows curve with name and arrow for direction.
 
@@ -266,9 +270,13 @@ classdef Curve
                 v(1,:) = p1(1) + t.*(p2(1)-p1(1));
                 v(2,:) = p1(2) + t.*(p2(2)-p1(2));
             end
-            g = @g_fun;
 
-            obj = parametrization.Curve(g);
+            function v = g_fun_deriv(t)
+                v(1,:) = t.*0 + (p2(1)-p1(1));
+                v(2,:) = t.*0 + (p2(2)-p1(2));
+            end
+
+            obj = parametrization.Curve(@g_fun, @g_fun_deriv);
         end
 
         function obj = circle(c,r,phi)
