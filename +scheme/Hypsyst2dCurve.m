@@ -87,12 +87,12 @@ classdef Hypsyst2dCurve < scheme.Scheme
             [x_xi,x_eta] = gridDerivatives(X,ops_xi.D1,ops_eta.D1);
             [y_xi,y_eta] = gridDerivatives(Y,ops_xi.D1, ops_eta.D1);
                     
-            obj.X=reshape(X,m_xi*m_eta,1);
-            obj.Y=reshape(Y,m_xi*m_eta,1);
-            obj.X_xi=reshape(x_xi,m_xi*m_eta,1);
-            obj.Y_xi=reshape(y_xi,m_xi*m_eta,1);
-            obj.X_eta=reshape(x_eta,m_xi*m_eta,1);
-            obj.Y_eta=reshape(y_eta,m_xi*m_eta,1);
+            obj.X=reshape(X,m_tot,1);
+            obj.Y=reshape(Y,m_tot,1);
+            obj.X_xi=reshape(x_xi,m_tot,1);
+            obj.Y_xi=reshape(y_xi,m_tot,1);
+            obj.X_eta=reshape(x_eta,m_tot,1);
+            obj.Y_eta=reshape(y_eta,m_tot,1);
            
             Ahat_evaluated = obj.evaluateCoefficientMatrix(obj.Ahat, obj.X, obj.Y,obj.X_eta,obj.Y_eta);
             Bhat_evaluated = obj.evaluateCoefficientMatrix(obj.Bhat, obj.X, obj.Y,obj.X_xi,obj.Y_xi);
@@ -101,8 +101,8 @@ classdef Hypsyst2dCurve < scheme.Scheme
             obj.m=m;
             obj.h=[ops_xi.h ops_eta.h];
             obj.order=order;
-            obj.J=x_xi.*y_eta - x_eta.*y_xi;  
-            obj.Ji =kr(I_n,spdiags(1./obj.J(:),0,m_xi*m_eta,m_xi*m_eta));
+            obj.J=obj.X_xi.*obj.Y_eta - obj.X_eta.*obj.Y_xi;  
+            obj.Ji =kr(I_n,spdiags(1./obj.J,0,m_tot,m_tot));
 
             obj.D=obj.Ji*(-Ahat_evaluated*D1_xi-Bhat_evaluated*D1_eta)-E_evaluated;
 
@@ -161,6 +161,7 @@ classdef Hypsyst2dCurve < scheme.Scheme
 
         function [closure, penalty]=boundary_condition_char(obj,boundary)
             params=obj.params;
+            X=obj.X; Y=obj.Y;
             xi=obj.xi; eta=obj.eta;
             side=max(length(xi),length(eta));
 
@@ -170,40 +171,40 @@ classdef Hypsyst2dCurve < scheme.Scheme
                     mat=obj.Ahat;
                     boundPos='l';
                     Hi=obj.Hxii;
-                    [V,Vi,D,signVec]=obj.matrixDiag(mat,xi(1),eta,obj.X_eta(obj.index_w),obj.Y_eta(obj.index_w));
+                    [V,Vi,D,signVec]=obj.matrixDiag(mat,X(obj.index_w),Y(obj.index_w),obj.X_eta(obj.index_w),obj.Y_eta(obj.index_w));
                 case {'e','E','east'}
                     e_=obj.e_e;
                     mat=obj.Ahat;
                     boundPos='r';
                     Hi=obj.Hxii;
-                    [V,Vi,D,signVec]=obj.matrixDiag(mat,xi(end),eta,obj.X_eta(obj.index_e),obj.Y_eta(obj.index_e));
+                    [V,Vi,D,signVec]=obj.matrixDiag(mat,X(obj.index_e),Y(obj.index_e),obj.X_eta(obj.index_e),obj.Y_eta(obj.index_e));
                 case {'s','S','south'}
                     e_=obj.e_s;
                     mat=obj.Bhat;
                     boundPos='l';
                     Hi=obj.Hetai;
-                    [V,Vi,D,signVec]=obj.matrixDiag(mat,xi,eta(1),obj.X_xi(obj.index_s),obj.Y_xi(obj.index_s));
+                    [V,Vi,D,signVec]=obj.matrixDiag(mat,X(obj.index_s),Y(obj.index_s),obj.X_xi(obj.index_s),obj.Y_xi(obj.index_s));
                 case {'n','N','north'}
                     e_=obj.e_n;
                     mat=obj.Bhat;
                     boundPos='r';
                     Hi=obj.Hetai;
-                    [V,Vi,D,signVec]=obj.matrixDiag(mat,xi,eta(end),obj.X_xi(obj.index_n),obj.Y_xi(obj.index_n));
+                    [V,Vi,D,signVec]=obj.matrixDiag(mat,X(obj.index_n),Y(obj.index_n),obj.X_xi(obj.index_n),obj.Y_xi(obj.index_n));
             end
 
             pos=signVec(1); zeroval=signVec(2); neg=signVec(3);
 
             switch boundPos
                 case {'l'}
-                    tau=sparse(obj.n*side,pos*side);
-                    Vi_plus=Vi(1:pos*side,:);
-                    tau(1:pos*side,:)=-abs(D(1:pos*side,1:pos*side));
+                    tau=sparse(obj.n*side,pos);
+                    Vi_plus=Vi(1:pos,:);
+                    tau(1:pos,:)=-abs(D(1:pos,1:pos));
                     closure=Hi*e_*V*tau*Vi_plus*e_';
                     penalty=-Hi*e_*V*tau*Vi_plus;
                 case {'r'}
-                    tau=sparse(obj.n*side,neg*side);
-                    tau((pos+zeroval)*side+1:obj.n*side,:)=-abs(D((pos+zeroval)*side+1:obj.n*side,(pos+zeroval)*side+1:obj.n*side));
-                    Vi_minus=Vi((pos+zeroval)*side+1:obj.n*side,:);
+                    tau=sparse(obj.n*side,neg);
+                    tau((pos+zeroval)+1:obj.n*side,:)=-abs(D((pos+zeroval)+1:obj.n*side,(pos+zeroval)+1:obj.n*side));
+                    Vi_minus=Vi((pos+zeroval)+1:obj.n*side,:);
                     closure=Hi*e_*V*tau*Vi_minus*e_';
                     penalty=-Hi*e_*V*tau*Vi_minus;
             end
@@ -212,7 +213,7 @@ classdef Hypsyst2dCurve < scheme.Scheme
 
         function [closure,penalty]=boundary_condition_general(obj,boundary,L)
             params=obj.params;
-            xi=obj.xi; eta=obj.eta;
+            X=obj.X; Y=obj.Y;
             side=max(length(xi),length(eta));
 
             switch boundary
@@ -221,53 +222,53 @@ classdef Hypsyst2dCurve < scheme.Scheme
                     mat=obj.Ahat;
                     boundPos='l';
                     Hi=obj.Hxii;
-                    [V,Vi,D,signVec]=obj.matrixDiag(mat,xi(1),eta,obj.x_eta,obj.y_eta);
-                    L=obj.evaluateCoefficientMatrix(L,xi(1),eta);
+                    [V,Vi,D,signVec]=obj.matrixDiag(mat,X(obj.index_w),Y(obj.index_w),obj.X_eta(obj.index_w),obj.Y_eta(obj.index_w));
+                    L=obj.evaluateCoefficientMatrix(L,X(obj.index_w),Y(obj.index_w));
                 case {'e','E','east'}
                     e_=obj.e_e;
-                    mat=obj.Ahat; 
+                    mat=obj.Ahat;
                     boundPos='r';
                     Hi=obj.Hxii;
-                    [V,Vi,D,signVec]=obj.matrixDiag(mat,xi(end),eta,obj.x_eta,obj.y_eta);
-                    L=obj.evaluateCoefficientMatrix(L,xi(end),eta,[],[]);
+                    [V,Vi,D,signVec]=obj.matrixDiag(mat,X(obj.index_e),Y(obj.index_e),obj.X_eta(obj.index_e),obj.Y_eta(obj.index_e));
+                    L=obj.evaluateCoefficientMatrix(L,X(obj.index_e),Y(obj.index_e),[],[]);
                 case {'s','S','south'}
-                    e_=obj.e_s;
+                   e_=obj.e_s;
                     mat=obj.Bhat;
                     boundPos='l';
                     Hi=obj.Hetai;
-                    [V,Vi,D,signVec]=obj.matrixDiag(mat,xi,eta(1),obj.x_xi,obj.y_xi);
-                    L=obj.evaluateCoefficientMatrix(L,xi,eta(1));
+                    [V,Vi,D,signVec]=obj.matrixDiag(mat,X(obj.index_s),Y(obj.index_s),obj.X_xi(obj.index_s),obj.Y_xi(obj.index_s));
+                    L=obj.evaluateCoefficientMatrix(L,X(obj.index_s),Y(obj.index_s),[],[]);
                 case {'n','N','north'}
-                    e_=obj.e_n;
+                   e_=obj.e_n;
                     mat=obj.Bhat;
                     boundPos='r';
                     Hi=obj.Hetai;
-                    [V,Vi,D,signVec]=obj.matrixDiag(mat,xi,eta(end),obj.x_xi,obj.y_xi);
-                    L=obj.evaluateCoefficientMatrix(L,xi,eta(end));
+                    [V,Vi,D,signVec]=obj.matrixDiag(mat,X(obj.index_n),Y(obj.index_n),obj.X_xi(obj.index_n),obj.Y_xi(obj.index_n));
+                    L=obj.evaluateCoefficientMatrix(L,X(obj.index_n),Y(obj.index_n));
             end
 
             pos=signVec(1); zeroval=signVec(2); neg=signVec(3);
 
             switch boundPos
                 case {'l'}
-                    tau=sparse(obj.n*side,pos*side);
-                    Vi_plus=Vi(1:pos*side,:);
-                    Vi_minus=Vi(pos*side+1:obj.n*side,:);
-                    V_plus=V(:,1:pos*side);
-                    V_minus=V(:,(pos+zeroval)*side+1:obj.n*side);
+                    tau=sparse(obj.n*side,pos);
+                    Vi_plus=Vi(1:pos,:);
+                    Vi_minus=Vi(pos+1:obj.n*side,:);
+                    V_plus=V(:,1:pos);
+                    V_minus=V(:,(pos+zeroval)+1:obj.n*side);
 
-                    tau(1:pos*side,:)=-abs(D(1:pos*side,1:pos*side));
+                    tau(1:pos*side,:)=-abs(D(1:pos,1:pos));
                     R=-inv(L*V_plus)*(L*V_minus);
                     closure=Hi*e_*V*tau*(Vi_plus-R*Vi_minus)*e_';
                     penalty=-Hi*e_*V*tau*inv(L*V_plus)*L;
                 case {'r'}
-                    tau=sparse(obj.n*side,neg*side);
-                    tau((pos+zeroval)*side+1:obj.n*side,:)=-abs(D((pos+zeroval)*side+1:obj.n*side,(pos+zeroval)*side+1:obj.n*side));
-                    Vi_plus=Vi(1:pos*side,:);
-                    Vi_minus=Vi((pos+zeroval)*side+1:obj.n*side,:);
+                    tau=sparse(obj.n*side,neg);
+                    tau((pos+zeroval)+1:obj.n*side,:)=-abs(D((pos+zeroval)+1:obj.n*side,(pos+zeroval)+1:obj.n*side));
+                    Vi_plus=Vi(1:pos,:);
+                    Vi_minus=Vi((pos+zeroval)+1:obj.n*side,:);
 
-                    V_plus=V(:,1:pos*side);
-                    V_minus=V(:,(pos+zeroval)*side+1:obj.n*side);
+                    V_plus=V(:,1:pos);
+                    V_minus=V(:,(pos+zeroval)+1:obj.n*side);
                     R=-inv(L*V_minus)*(L*V_plus);
                     closure=Hi*e_*V*tau*(Vi_minus-R*Vi_plus)*e_';
                     penalty=-Hi*e_*V*tau*inv(L*V_minus)*L;
@@ -291,18 +292,8 @@ classdef Hypsyst2dCurve < scheme.Scheme
             end
             
             [V, D]=eig(mat(params,xs,ys,xs_,ys_));
-            xs=1;ys=1; xs_=x_(1); ys_=y_(1);
-            DD=eval(diag(D));
-
-            poseig=find(DD>0);
-            zeroeig=find(DD==0);
-            negeig=find(DD<0);
             syms xs ys xs_ ys_
-            DD=diag(D);
-
-            D=diag([DD(poseig);DD(zeroeig); DD(negeig)]);
-            V=[V(:,poseig) V(:,zeroeig) V(:,negeig)];
-            Vi=inv(V);
+            
             xs=x; 
             ys=y;
             xs_=x_;
@@ -311,22 +302,27 @@ classdef Hypsyst2dCurve < scheme.Scheme
             side=max(length(x),length(y));
             Dret=zeros(obj.n,side*obj.n);
             Vret=zeros(obj.n,side*obj.n);
-            Viret=zeros(obj.n,side*obj.n);
             for ii=1:obj.n
                 for jj=1:obj.n
                     Dret(jj,(ii-1)*side+1:side*ii)=eval(D(jj,ii));
                     Vret(jj,(ii-1)*side+1:side*ii)=eval(V(jj,ii));
-                    Viret(jj,(ii-1)*side+1:side*ii)=eval(Vi(jj,ii));
                 end
             end
 
             D=sparse(Dret);
-            V=sparse(Vret);
-            Vi=sparse(Viret);
+            V=sparse(Vret);        
             V=obj.evaluateCoefficientMatrix(V,x,y,x_,y_);
-            D=obj.evaluateCoefficientMatrix(D,x,y,x_,y_);
-            Vi=obj.evaluateCoefficientMatrix(Vi,x,y,x_,y_);
-            signVec=[length(poseig),length(zeroeig),length(negeig)];
+            D=obj.evaluateCoefficientMatrix(D,x,y,x_,y_);                       
+            DD=diag(D);
+            
+            poseig=(DD>0);
+            zeroeig=(DD==0);
+            negeig=(DD<0);
+            
+            D=diag([DD(poseig); DD(zeroeig); DD(negeig)]);
+            V=[V(:,poseig) V(:,zeroeig) V(:,negeig)];            
+            Vi=inv(V);
+            signVec=[sum(poseig),sum(zeroeig),sum(negeig)];
         end
 
     end
