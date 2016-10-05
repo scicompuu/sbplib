@@ -5,7 +5,7 @@ classdef Hypsyst2dCurve < scheme.Scheme
         h % Grid spacing
         X,Y % Values of x and y for each grid point
         
-        J, Ji
+        J, Ji %Jacobaian and inverse Jacobian
         xi,eta
         Xi,Eta
         
@@ -18,8 +18,7 @@ classdef Hypsyst2dCurve < scheme.Scheme
         Ahat, Bhat, E
     
         H % Discrete norm
-        % Norms in the x and y directions
-        Hxii,Hetai % Kroneckerd norms. 1'*Hx*v corresponds to integration in the x dir.
+        Hxii,Hetai % Kroneckerd norms in xi and eta. 
         I_xi,I_eta, I_N, onesN
         e_w, e_e, e_s, e_n
         index_w, index_e,index_s,index_n
@@ -39,8 +38,7 @@ classdef Hypsyst2dCurve < scheme.Scheme
             obj.params = params;
             obj.A=A;
             obj.B=B;
-            
-            
+                        
             obj.Ahat=@(params,x,y,x_eta,y_eta)(A(params,x,y).*y_eta-B(params,x,y).*x_eta);
             obj.Bhat=@(params,x,y,x_xi,y_xi)(B(params,x,y).*x_xi-A(params,x,y).*y_xi);
             obj.E=@(params,x,y,~,~)E(params,x,y);
@@ -61,10 +59,10 @@ classdef Hypsyst2dCurve < scheme.Scheme
             obj.n = length(A(obj.params,0,0));
             obj.onesN=ones(obj.n);
             
-            obj.index_w=1:m_xi;
-            obj.index_e=(m_tot-m_xi+1):m_tot;
-            obj.index_s=1:m_xi:(m_tot-m_xi+1);
-            obj.index_n=(m_xi):m_xi:m_tot;
+            obj.index_w=1:m_eta;
+            obj.index_e=(m_tot-m_eta+1):m_tot;
+            obj.index_s=1:m_eta:(m_tot-m_eta+1);
+            obj.index_n=(m_eta):m_eta:m_tot;
 
             I_n = eye(obj.n);
             I_xi = speye(m_xi);
@@ -138,8 +136,8 @@ classdef Hypsyst2dCurve < scheme.Scheme
 
             if isa(mat,'function_handle')
                 [rows,cols]=size(mat(params,0,0,0,0));
-                x_=kr(x_,obj.onesN);
-                y_=kr(y_,obj.onesN);
+                x_=kr(obj.onesN,x_);
+                y_=kr(obj.onesN,y_);
                 matVec=mat(params,X',Y',x_',y_');
                 matVec=sparse(matVec);
                 side=max(length(X),length(Y));
@@ -163,7 +161,7 @@ classdef Hypsyst2dCurve < scheme.Scheme
             params=obj.params;
             X=obj.X; Y=obj.Y;
             xi=obj.xi; eta=obj.eta;
-            side=max(length(xi),length(eta));
+           
 
             switch boundary
                 case {'w','W','west'}
@@ -172,24 +170,28 @@ classdef Hypsyst2dCurve < scheme.Scheme
                     boundPos='l';
                     Hi=obj.Hxii;
                     [V,Vi,D,signVec]=obj.matrixDiag(mat,X(obj.index_w),Y(obj.index_w),obj.X_eta(obj.index_w),obj.Y_eta(obj.index_w));
+                     side=max(length(eta));
                 case {'e','E','east'}
                     e_=obj.e_e;
                     mat=obj.Ahat;
                     boundPos='r';
                     Hi=obj.Hxii;
                     [V,Vi,D,signVec]=obj.matrixDiag(mat,X(obj.index_e),Y(obj.index_e),obj.X_eta(obj.index_e),obj.Y_eta(obj.index_e));
+                     side=max(length(eta));
                 case {'s','S','south'}
                     e_=obj.e_s;
                     mat=obj.Bhat;
                     boundPos='l';
                     Hi=obj.Hetai;
                     [V,Vi,D,signVec]=obj.matrixDiag(mat,X(obj.index_s),Y(obj.index_s),obj.X_xi(obj.index_s),obj.Y_xi(obj.index_s));
+                     side=max(length(xi));
                 case {'n','N','north'}
                     e_=obj.e_n;
                     mat=obj.Bhat;
                     boundPos='r';
                     Hi=obj.Hetai;
                     [V,Vi,D,signVec]=obj.matrixDiag(mat,X(obj.index_n),Y(obj.index_n),obj.X_xi(obj.index_n),obj.Y_xi(obj.index_n));
+                    side=max(length(xi));
             end
 
             pos=signVec(1); zeroval=signVec(2); neg=signVec(3);
@@ -214,7 +216,7 @@ classdef Hypsyst2dCurve < scheme.Scheme
         function [closure,penalty]=boundary_condition_general(obj,boundary,L)
             params=obj.params;
             X=obj.X; Y=obj.Y;
-            side=max(length(xi),length(eta));
+            xi=obj.xi; eta=obj.eta;
 
             switch boundary
                 case {'w','W','west'}
@@ -223,28 +225,54 @@ classdef Hypsyst2dCurve < scheme.Scheme
                     boundPos='l';
                     Hi=obj.Hxii;
                     [V,Vi,D,signVec]=obj.matrixDiag(mat,X(obj.index_w),Y(obj.index_w),obj.X_eta(obj.index_w),obj.Y_eta(obj.index_w));
-                    L=obj.evaluateCoefficientMatrix(L,X(obj.index_w),Y(obj.index_w));
+                   
+                    Ji_vec=diag(obj.Ji);
+                    Ji=diag(Ji_vec(obj.index_w));
+                    xi_x=Ji*obj.Y_eta(obj.index_w);
+                    xi_y=-Ji*obj.X_eta(obj.index_w);
+                    L=obj.evaluateCoefficientMatrix(L,xi_x,xi_y,[],[]);
+                    side=max(length(eta));
                 case {'e','E','east'}
                     e_=obj.e_e;
                     mat=obj.Ahat;
                     boundPos='r';
                     Hi=obj.Hxii;
-                    [V,Vi,D,signVec]=obj.matrixDiag(mat,X(obj.index_e),Y(obj.index_e),obj.X_eta(obj.index_e),obj.Y_eta(obj.index_e));
-                    L=obj.evaluateCoefficientMatrix(L,X(obj.index_e),Y(obj.index_e),[],[]);
+                    [V,Vi,D,signVec]=obj.matrixDiag(mat,X(obj.index_e),Y(obj.index_e),obj.X_eta(obj.index_e),obj.Y_eta(obj.index_e));       
+                    
+                    Ji_vec=diag(obj.Ji);
+                    Ji=diag(Ji_vec(obj.index_e));
+                    xi_x=Ji*obj.Y_eta(obj.index_e);
+                    xi_y=-Ji*obj.X_eta(obj.index_e);
+                    L=obj.evaluateCoefficientMatrix(L,-xi_x,-xi_y,[],[]);
+                    side=max(length(eta));
                 case {'s','S','south'}
                    e_=obj.e_s;
                     mat=obj.Bhat;
                     boundPos='l';
                     Hi=obj.Hetai;
                     [V,Vi,D,signVec]=obj.matrixDiag(mat,X(obj.index_s),Y(obj.index_s),obj.X_xi(obj.index_s),obj.Y_xi(obj.index_s));
-                    L=obj.evaluateCoefficientMatrix(L,X(obj.index_s),Y(obj.index_s),[],[]);
+                    
+                    Ji_vec=diag(obj.Ji);
+                    Ji=diag(Ji_vec(obj.index_s));
+                    eta_x=Ji*obj.Y_xi(obj.index_s);
+                    eta_y=-Ji*obj.X_xi(obj.index_s);
+                    L=obj.evaluateCoefficientMatrix(L,eta_x,eta_y,[],[]);
+                    side=max(length(xi));
                 case {'n','N','north'}
                    e_=obj.e_n;
                     mat=obj.Bhat;
                     boundPos='r';
                     Hi=obj.Hetai;
                     [V,Vi,D,signVec]=obj.matrixDiag(mat,X(obj.index_n),Y(obj.index_n),obj.X_xi(obj.index_n),obj.Y_xi(obj.index_n));
-                    L=obj.evaluateCoefficientMatrix(L,X(obj.index_n),Y(obj.index_n));
+                   
+                    Ji_vec=diag(obj.Ji);
+                    Ji=diag(Ji_vec(obj.index_n));
+                    eta_x=Ji*obj.Y_xi(obj.index_n);
+                    eta_y=-Ji*obj.X_xi(obj.index_n);
+                    L=obj.evaluateCoefficientMatrix(L,-eta_x,-eta_y,[],[]);
+                
+                    side=max(length(xi));
+                    
             end
 
             pos=signVec(1); zeroval=signVec(2); neg=signVec(3);
@@ -255,9 +283,9 @@ classdef Hypsyst2dCurve < scheme.Scheme
                     Vi_plus=Vi(1:pos,:);
                     Vi_minus=Vi(pos+1:obj.n*side,:);
                     V_plus=V(:,1:pos);
-                    V_minus=V(:,(pos+zeroval)+1:obj.n*side);
+                    V_minus=V(:,(pos)+1:obj.n*side);
 
-                    tau(1:pos*side,:)=-abs(D(1:pos,1:pos));
+                    tau(1:pos,:)=-abs(D(1:pos,1:pos));
                     R=-inv(L*V_plus)*(L*V_minus);
                     closure=Hi*e_*V*tau*(Vi_plus-R*Vi_minus)*e_';
                     penalty=-Hi*e_*V*tau*inv(L*V_plus)*L;
