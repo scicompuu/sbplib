@@ -27,7 +27,7 @@ classdef Euler1d < scheme.Scheme
 
     methods
         function obj = Euler1d(m,xlim,order,gama,opsGen,do_upwind)
-            default_arg('opsGen',@sbp.Ordinary);
+            default_arg('opsGen',@sbp.D2Standard);
             default_arg('gama', 1.4);
             default_arg('do_upwind', false);
             gamma = gama;
@@ -35,21 +35,22 @@ classdef Euler1d < scheme.Scheme
             [x, h] = util.get_grid(xlim{:},m);
 
             if do_upwind
-                ops = sbp.Upwind(m,h,order);
-                Dp = ops.derivatives.Dp;
-                Dm = ops.derivatives.Dm;
+                ops = sbp.D1Upwind(m,xlim,order);
+                Dp = ops.Dp;
+                Dm = ops.Dm;
 
                 D1 = (Dp + Dm)/2;
                 Ddisp = (Dp - Dm)/2;
             else
-                ops = opsGen(m,h,order);
-                D1 = sparse(ops.derivatives.D1);
+                ops = opsGen(m,xlim,order);
+                printExpr('issparse(ops.D1)');
+                D1 = ops.D1;
             end
 
-            H =  sparse(ops.norms.H);
-            Hi = sparse(ops.norms.HI);
-            e_l = sparse(ops.boundary.e_1);
-            e_r = sparse(ops.boundary.e_m);
+            H =  sparse(ops.H);
+            Hi = sparse(ops.HI);
+            e_l = sparse(ops.e_l);
+            e_r = sparse(ops.e_r);
 
             I_x = speye(m);
             I_3 = speye(3);

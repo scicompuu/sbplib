@@ -1,9 +1,8 @@
 classdef D1Upwind < sbp.OpSet
     properties
-        D1 % SBP operator approximating first derivative
+        Dp, Dm % SBP operator approximating first derivative
         H % Norm matrix
         HI % H^-1
-        Q % Skew-symmetric matrix
         e_l % Left boundary operator
         e_r % Right boundary operator
         m % Number of grid points.
@@ -14,7 +13,7 @@ classdef D1Upwind < sbp.OpSet
 
     methods
         function obj = D1Upwind(m,lim,order)
-            
+
             x_l = lim{1};
             x_r = lim{2};
             L = x_r-x_l;
