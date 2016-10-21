@@ -105,11 +105,11 @@ classdef DiffOp < scheme.Scheme
             ops = sparse2cell(op, obj.NNN);
         end
 
-        % Creates the closere and penalty matrix for a given boundary condition,
+        % Creates the closure and penalty matrix for a given boundary condition,
         %    boundary -- the name of the boundary on the form [id][name] where
         %                id is the number of a block and name is the name of a
         %                boundary of that block example: 1s or 3w
-        function [closure, penalty] = boundary_condition(obj,boundary,type)
+        function [closure, penalty] = boundary_condition(obj, boundary, type)
             I = boundary{1};
             name = boundary{2};
 
@@ -122,7 +122,7 @@ classdef DiffOp < scheme.Scheme
             closure{I,I} = blockClosure;
             closure = blockmatrix.toMatrix(closure);
 
-            div{2} = 1; % Penalty is a column vector
+            div{2} = size(blockPenalty, 2); % Penalty is a column vector
             if ~iscell(blockPenalty)
                 p = blockmatrix.zero(div);
                 p{I} = blockPenalty;
