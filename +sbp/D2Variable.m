@@ -18,7 +18,7 @@ classdef D2Variable < sbp.OpSet
 
     methods
         function obj = D2Variable(m,lim,order)
-            
+
             x_l = lim{1};
             x_r = lim{2};
             L = x_r-x_l;
@@ -39,7 +39,12 @@ classdef D2Variable < sbp.OpSet
             obj.M = [];
 
         end
+
+        function str = string(obj)
+            str = [class(obj) '_' num2str(obj.order)];
+        end
     end
+
 
 end
 
