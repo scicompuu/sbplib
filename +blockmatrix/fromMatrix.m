@@ -13,7 +13,7 @@ function bm = fromMatrix(A, div)
         for j = 1:length(d2)
             Asub = A(I:(I + d1(i)-1), J:(J + d2(j)-1));
             if nnz(Asub) == 0
-                bm{i,j} = [];
+                bm{i,j} = sparse(d1(i), d2(j));
             else
                 bm{i,j} = Asub;
             end
