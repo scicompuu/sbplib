@@ -91,7 +91,7 @@ classdef Beam < scheme.Scheme
             delt = obj.delt;
 
             switch type
-                case {'dn'} % Dirichlet-neumann boundary condition
+                case {'dn', 'clamped'} % Dirichlet-neumann boundary condition
                     alpha = obj.alpha;
 
                     % tau1 < -alpha^2/gamma
@@ -111,6 +111,19 @@ classdef Beam < scheme.Scheme
 
                     penalty{1} = -obj.Hi*tau;
                     penalty{2} = -obj.Hi*sig;
+
+
+                case {'free'}
+                    a = -obj.alpha;
+
+                    tau =  s*a*d1;
+                    sig = -s*a*e;
+
+                    closure = obj.Hi*(tau*d2' + sig*d3');
+                    penalty{1} = -obj.Hi*tau;
+                    penalty{1} = -obj.Hi*sig;
+
+
                 otherwise % Unknown, boundary condition
                     error('No such boundary condition: type = %s',type);
             end
