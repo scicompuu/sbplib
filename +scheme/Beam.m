@@ -114,7 +114,7 @@ classdef Beam < scheme.Scheme
 
 
                 case {'free'}
-                    a = -obj.alpha;
+                    a = obj.alpha;
 
                     tau =  s*a*d1;
                     sig = -s*a*e;
