@@ -259,7 +259,8 @@ classdef Hypsyst2dCurve < scheme.Scheme
                     L=obj.evaluateCoefficientMatrix(L,eta_x,eta_y,[],[]);
                     side=max(length(xi));
                 case {'n','N','north'}
-                   e_=obj.e_n;
+                   e_=obj.e_n;            for ii=1:rows
+
                     mat=obj.Bhat;
                     boundPos='r';
                     Hi=obj.Hetai;

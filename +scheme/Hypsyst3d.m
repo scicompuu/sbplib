@@ -10,6 +10,7 @@ classdef Hypsyst3d < scheme.Scheme
         
         D % non-stabalized scheme operator
         A, B, C, E
+        Aevaluated,Bevaluated,Cevaluated, Eevaluated
         
         H % Discrete norm
         % Norms in the x, y and z directions
@@ -61,10 +62,10 @@ classdef Hypsyst3d < scheme.Scheme
             obj.Xz=kr(obj.x,ones(m_y,1));
             obj.Yz=kr(ones(m_z,1),obj.y);
             
-            Aevaluated = obj.evaluateCoefficientMatrix(A, obj.X, obj.Y,obj.Z);
-            Bevaluated = obj.evaluateCoefficientMatrix(B, obj.X, obj.Y,obj.Z);
-            Cevaluated = obj.evaluateCoefficientMatrix(C, obj.X, obj.Y,obj.Z);
-            Eevaluated = obj.evaluateCoefficientMatrix(E, obj.X, obj.Y,obj.Z);
+            obj.Aevaluated = obj.evaluateCoefficientMatrix(A, obj.X, obj.Y,obj.Z);
+            obj.Bevaluated = obj.evaluateCoefficientMatrix(B, obj.X, obj.Y,obj.Z);
+            obj.Cevaluated = obj.evaluateCoefficientMatrix(C, obj.X, obj.Y,obj.Z);
+            obj.Eevaluated = obj.evaluateCoefficientMatrix(E, obj.X, obj.Y,obj.Z);
             
             obj.n = length(A(obj.params,0,0,0));
             
@@ -82,7 +83,7 @@ classdef Hypsyst3d < scheme.Scheme
             D1_y = kr(I_n, I_x, ops_y.D1,I_z);
             obj.Hyi = kr(I_n, I_x, ops_y.HI,I_z);
             D1_z = kr(I_n, I_x, I_y,ops_z.D1);
-            obj.Hzi = kr(I_n, I_x,I_y, ops_y.HI);
+            obj.Hzi = kr(I_n, I_x,I_y, ops_z.HI);
             
             obj.e_w = kr(I_n, ops_x.e_l, I_y,I_z);
             obj.e_e = kr(I_n, ops_x.e_r, I_y,I_z);
@@ -95,7 +96,7 @@ classdef Hypsyst3d < scheme.Scheme
             obj.h=[ops_x.h ops_y.h ops_x.h];
             obj.order=order;
             
-            obj.D=-Aevaluated*D1_x-Bevaluated*D1_y-Cevaluated*D1_z-Eevaluated;
+            obj.D=-obj.Aevaluated*D1_x-obj.Bevaluated*D1_y-obj.Cevaluated*D1_z-obj.Eevaluated;
         end
         
         % Closure functions return the opertors applied to the own doamin to close the boundary

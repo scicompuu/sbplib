@@ -25,34 +25,34 @@ classdef Ti3D
                 one=0*ETA+1;
                 zero=0*ETA;
                 
-                Sw = gw((1-ETA),(1-ZETA));
-                Se = ge(ETA,ZETA);
-                Ss = gs(XI,(1-ZETA));
-                Sn = gn((1-XI),ZETA);
-                Sb = gb(XI,ETA);
-                St = gt((1-XI),(1-ETA));
+                Sw = gw(ETA,(1-ZETA));
+                Se = ge((1-ETA),(1-ZETA));
+                Ss = gs(XI,ZETA);
+                Sn = gn((1-XI),(1-ZETA));
+                Sb = gb((1-XI),ETA);
+                St = gt(XI,ETA);
                 
-                Ewt = gw(1-ETA,zero);
-                Ewb = gw(1-ETA,one);
-                Ews = gw(one,1-ZETA);
-                Ewn = gw(zero,1-ZETA);
-                Eet = ge(ETA,one);
-                Eeb = ge(ETA,zero);
-                Ees = ge(0*one,ZETA);
-                Een = ge(one,ZETA);
-                Enb = gn(1-XI,zero);
-                Ent = gn(1-XI,one);
-                Est = gs(XI,zero);
-                Esb = gs(XI,one);
+                Ewt = gw(ETA,zero);
+                Ewb = gw(ETA,one);               
+                Ews = gw(zero,1-ZETA);
+                Ewn = gw(one,1-ZETA);
+                Eet = ge(1-ETA,zero);
+                Eeb = ge(1-ETA,one);
+                Ees = ge(one,1-ZETA);
+                Een = ge(zero,1-ZETA);
+                Enb = gn(1-XI,one);
+                Ent = gn(1-XI,zero);
+                Est = gs(XI,one);
+                Esb = gs(XI,zero);
                 
-                Cwbs = gw(one,one);
-                Cwbn = gw(zero,one);
-                Cwts = gw(one,zero);
-                Cwtn = gw(zero,zero);
-                Cebs = ge(zero,zero);
-                Cebn = ge(one,zero);
-                Cets = ge(zero,one);
-                Cetn = ge(one,one);
+                Cwbs = gw(zero,one);
+                Cwbn = gw(one,one);
+                Cwts = gw(zero,zero);
+                Cwtn = gw(one,zero);
+                Cebs = ge(one,one);
+                Cebn = ge(zero,one);
+                Cets = ge(one,zero);
+                Cetn = ge(zero,zero);
                 
                 
                 X1 = (1-XI).*Sw(1,:,:) + XI.*Se(1,:,:);
@@ -104,7 +104,7 @@ classdef Ti3D
             obj.V = @V_fun;
         end
         
-        
+        %Should be rewritten so that the input is xi eta zeta 
         function [X,Y,Z] = map(obj,XI,ETA,ZETA)
             
             V = obj.V;
@@ -247,6 +247,6 @@ classdef Ti3D
         %                 grid.place_label(ps,'s');
         %                 grid.place_label(pn,'n');
         %             end
-        %         end
+ %                end
     end
 end
