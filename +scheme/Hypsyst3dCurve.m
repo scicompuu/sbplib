@@ -210,13 +210,16 @@ classdef Hypsyst3dCurve < scheme.Scheme
                 side=max(length(X),length(Y));
                 cols=cols/side;
             end
-            ret=kron(ones(rows,cols),speye(side));
+            ret=cell(rows,cols);
+            
             
             for ii=1:rows
                 for jj=1:cols
-                    ret((ii-1)*side+1:ii*side,(jj-1)*side+1:jj*side)=diag(matVec(ii,(jj-1)*side+1:jj*side));
+                    ret{ii,jj}=diag(matVec(ii,(jj-1)*side+1:jj*side));
                 end
             end
+            
+            ret=cell2mat(ret);            
         end
         
         
@@ -409,8 +412,7 @@ classdef Hypsyst3dCurve < scheme.Scheme
             else
                 y_2s=0;
             end
-            
-             
+                    
             if(sum(abs(z_1))>eps)
                 syms z_1s
             else
@@ -425,22 +427,17 @@ classdef Hypsyst3dCurve < scheme.Scheme
             
             syms xs ys zs 
             [V, D]=eig(mat(obj,xs,ys,zs,x_1s,x_2s,y_1s,y_2s,z_1s,z_2s));
-            Vi=inv(V);
-            
-            syms x_1s x_2s y_1s y_2s z_1s z_2s
-%             V= matlabFunction(V);
-%             D= matlabFunction(D);
-%             Vi= matlabFunction(Vi);
-%             
-%             xs=x;
-%             ys=y;
-%             zs=z;
-%             x_1s=x_1;
-%             x_2s=x_2;
-%             y_1s=y_1;
-%             y_2s=y_2;
-%             z_1s=z_1;
-%             z_2s=z_2;
+            Vi=inv(V);            
+        %    syms x_1s x_2s y_1s y_2s z_1s z_2s
+            xs=x;
+            ys=y;
+            zs=z;
+            x_1s=x_1;
+            x_2s=x_2;
+            y_1s=y_1;
+            y_2s=y_2;
+            z_1s=z_1;
+            z_2s=z_2;
                          
             side=max(length(x),length(y));
             Dret=zeros(obj.n,side*obj.n);
@@ -449,15 +446,12 @@ classdef Hypsyst3dCurve < scheme.Scheme
             
             for ii=1:obj.n
                 for jj=1:obj.n
-                    Dpart=matlabFunction(D(jj,ii),'Vars',[xs ys zs x_1s x_2s y_1s y_2s z_1s z_2s]);
-                    Vpart=matlabFunction(V(jj,ii),'Vars',[xs ys zs x_1s x_2s y_1s y_2s z_1s z_2s]);
-                    Vipart=matlabFunction(V(jj,ii),'Vars',[xs ys zs x_1s x_2s y_1s y_2s z_1s z_2s]);
-                    Dret(jj,(ii-1)*side+1:side*ii)=sparse(Dpart(x,y,z,x_1,x_2,y_1,y_2,z_1,z_2));
-                    Vret(jj,(ii-1)*side+1:side*ii)=sparse(Vpart(x,y,z,x_1,x_2,y_1,y_2,z_1,z_2));
-                    Viret(jj,(ii-1)*side+1:side*ii)=sparse(Vipart(x,y,z,x_1,x_2,y_1,y_2,z_1,z_2));
+                    Dret(jj,(ii-1)*side+1:side*ii)=eval(D(jj,ii));
+                    Vret(jj,(ii-1)*side+1:side*ii)=eval(V(jj,ii));
+                    Viret(jj,(ii-1)*side+1:side*ii)=eval(Vi(jj,ii));
                 end
             end
-            
+                   
             D=sparse(Dret);
             V=sparse(Vret);
             Vi=sparse(Viret);
@@ -472,7 +466,7 @@ classdef Hypsyst3dCurve < scheme.Scheme
             
             D=diag([DD(poseig); DD(zeroeig); DD(negeig)]);
             V=[V(:,poseig) V(:,zeroeig) V(:,negeig)];
-            %Vi=inv(V);
+            Vi=[Vi(poseig,:); Vi(zeroeig,:); Vi(negeig,:)];  
             signVec=[sum(poseig),sum(zeroeig),sum(negeig)];
         end
     end
