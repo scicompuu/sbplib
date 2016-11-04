@@ -16,7 +16,7 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
     %%% DI=D4*B*H*D4                            %%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    BP = 8;
+    BP = 9;
     if(m<2*BP)
         error(['Operator requires at least ' num2str(2*BP) ' grid points']);
     end

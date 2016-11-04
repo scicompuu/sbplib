@@ -9,7 +9,7 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
     %%% Datum: 2013-11-11                       %%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    BP = 4;
+    BP = 2;
     if(m < 2*BP)
         error('Operator requires at least %d grid points', 2*BP);
     end
