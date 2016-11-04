@@ -20,6 +20,7 @@ function A = toMatrix(bm)
             if isempty(bm{i,j})
                 continue
             end
+            % TODO: If this ever fails for large matrices. Try cell2mat instead.
             A(n_ind(i)+1:n_ind(i+1),m_ind(j)+1:m_ind(j+1)) = bm{i,j};
         end
     end
