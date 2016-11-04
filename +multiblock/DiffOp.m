@@ -37,6 +37,9 @@ classdef DiffOp < scheme.Scheme
             for i = 1:nBlocks
                 h = getHand(i);
                 p = getParam(i);
+                if ~iscell(p)
+                    p = {p};
+                end
                 obj.diffOps{i} = h(grid.grids{i}, order, p{:});
             end
 
