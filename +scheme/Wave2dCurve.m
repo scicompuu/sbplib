@@ -30,7 +30,7 @@ classdef Wave2dCurve < scheme.Scheme
 
     methods
         function obj = Wave2dCurve(m,ti,order,c,opSet)
-            default_arg('opSet',@sbp.Variable);
+            default_arg('opSet',@sbp.D2Variable);
             default_arg('c', 1);
 
             if length(m) == 1
@@ -46,32 +46,31 @@ classdef Wave2dCurve < scheme.Scheme
 
 
             % Operators
-            ops_u = opSet(m_u,h_u,order);
-            ops_v = opSet(m_v,h_v,order);
+            ops_u = opSet(m_u, {0, 1}, order);
+            ops_v = opSet(m_v, {0, 1}, order);
 
             I_u = speye(m_u);
             I_v = speye(m_v);
 
-            D1_u = sparse(ops_u.derivatives.D1);
-            D2_u = ops_u.derivatives.D2;
-            H_u =  sparse(ops_u.norms.H);
-            Hi_u = sparse(ops_u.norms.HI);
-            % M_u =  sparse(ops_u.norms.M);
-            e_l_u = sparse(ops_u.boundary.e_1);
-            e_r_u = sparse(ops_u.boundary.e_m);
-            d1_l_u = sparse(ops_u.boundary.S_1);
-            d1_r_u = sparse(ops_u.boundary.S_m);
+            D1_u = sparse(ops_u.D1);
+            D2_u = ops_u.D2;
+            H_u =  sparse(ops_u.H);
+            Hi_u = sparse(ops_u.HI);
+            % M_u =  sparse(ops_u.M);
+            e_l_u = sparse(ops_u.e_l);
+            e_r_u = sparse(ops_u.e_r);
+            d1_l_u = sparse(ops_u.d1_l);
+            d1_r_u = sparse(ops_u.d1_r);
 
-            D1_v = sparse(ops_v.derivatives.D1);
-            D2_v = ops_v.derivatives.D2;
-            H_v =  sparse(ops_v.norms.H);
-            Hi_v = sparse(ops_v.norms.HI);
-            % M_v =  sparse(ops_v.norms.M);
-            e_l_v = sparse(ops_v.boundary.e_1);
-            e_r_v = sparse(ops_v.boundary.e_m);
-            d1_l_v = sparse(ops_v.boundary.S_1);
-            d1_r_v = sparse(ops_v.boundary.S_m);
-
+            D1_v = sparse(ops_v.D1);
+            D2_v = ops_v.D2;
+            H_v =  sparse(ops_v.H);
+            Hi_v = sparse(ops_v.HI);
+            % M_v =  sparse(ops_v.M);
+            e_l_v = sparse(ops_v.e_l);
+            e_r_v = sparse(ops_v.e_r);
+            d1_l_v = sparse(ops_v.d1_l);
+            d1_r_v = sparse(ops_v.d1_r);
 
             % Metric derivatives
             [X,Y] = ti.map(u,v);
