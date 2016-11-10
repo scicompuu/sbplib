@@ -147,13 +147,14 @@ classdef Hypsyst2dCurve < scheme.Scheme
                 side=max(length(X),length(Y));
                 cols=cols/side;
             end
-            ret=kron(ones(rows,cols),speye(side));
+            ret=cell(rows,cols);
 
             for ii=1:rows
                 for jj=1:cols
-                    ret((ii-1)*side+1:ii*side,(jj-1)*side+1:jj*side)=diag(matVec(ii,(jj-1)*side+1:jj*side));
+                    ret{ii,jj}=diag(matVec(ii,(jj-1)*side+1:jj*side));
                 end
             end
+            ret=cell2mat(ret);
         end
 
 
@@ -259,7 +260,7 @@ classdef Hypsyst2dCurve < scheme.Scheme
                     L=obj.evaluateCoefficientMatrix(L,eta_x,eta_y,[],[]);
                     side=max(length(xi));
                 case {'n','N','north'}
-                   e_=obj.e_n;            for ii=1:rows
+                   e_=obj.e_n;            
 
                     mat=obj.Bhat;
                     boundPos='r';
@@ -304,7 +305,6 @@ classdef Hypsyst2dCurve < scheme.Scheme
             end
         end
 
-
         function [V,Vi, D,signVec]=matrixDiag(obj,mat,x,y,x_,y_)
             params=obj.params;
             syms xs ys 
@@ -321,6 +321,7 @@ classdef Hypsyst2dCurve < scheme.Scheme
             end
             
             [V, D]=eig(mat(params,xs,ys,xs_,ys_));
+            Vi=inv(V);
             syms xs ys xs_ ys_
             
             xs=x; 
@@ -331,17 +332,21 @@ classdef Hypsyst2dCurve < scheme.Scheme
             side=max(length(x),length(y));
             Dret=zeros(obj.n,side*obj.n);
             Vret=zeros(obj.n,side*obj.n);
+            Viret=zeros(obj.n,side*obj.n);
             for ii=1:obj.n
                 for jj=1:obj.n
                     Dret(jj,(ii-1)*side+1:side*ii)=eval(D(jj,ii));
                     Vret(jj,(ii-1)*side+1:side*ii)=eval(V(jj,ii));
+                    Viret(jj,(ii-1)*side+1:side*ii)=eval(Vi(jj,ii));
                 end
             end
 
             D=sparse(Dret);
-            V=sparse(Vret);        
+            V=sparse(Vret);
+            Vi=sparse(Viret);
             V=obj.evaluateCoefficientMatrix(V,x,y,x_,y_);
-            D=obj.evaluateCoefficientMatrix(D,x,y,x_,y_);                       
+            D=obj.evaluateCoefficientMatrix(D,x,y,x_,y_);    
+            Vi=obj.evaluateCoefficientMatrix(Vi,x,y,x_,y_);
             DD=diag(D);
             
             poseig=(DD>0);
@@ -350,9 +355,8 @@ classdef Hypsyst2dCurve < scheme.Scheme
             
             D=diag([DD(poseig); DD(zeroeig); DD(negeig)]);
             V=[V(:,poseig) V(:,zeroeig) V(:,negeig)];            
-            Vi=inv(V);
+            Vi=[Vi(poseig,:); Vi(zeroeig,:); Vi(negeig,:)];
             signVec=[sum(poseig),sum(zeroeig),sum(negeig)];
         end
-
     end
 end

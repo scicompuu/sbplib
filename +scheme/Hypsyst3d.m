@@ -139,13 +139,14 @@ classdef Hypsyst3d < scheme.Scheme
                 side=max(length(X),length(Y));
                 cols=cols/side;
             end
-            ret=kron(ones(rows,cols),speye(side));
+            ret=cell(rows,cols);
             
             for ii=1:rows
                 for jj=1:cols
-                    ret((ii-1)*side+1:ii*side,(jj-1)*side+1:jj*side)=diag(matVec(ii,(jj-1)*side+1:jj*side));
+                    ret{ii,jj}=diag(matVec(ii,(jj-1)*side+1:jj*side));
                 end
             end
+            ret=cell2mat(ret);
         end
         
         

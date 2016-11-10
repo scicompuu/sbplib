@@ -115,13 +115,14 @@ classdef Hypsyst2d < scheme.Scheme
                 side=max(length(X),length(Y));
                 cols=cols/side;
             end
-            ret=kron(ones(rows,cols),speye(side));
+            ret=cell(rows,cols);
 
             for ii=1:rows
                 for jj=1:cols
-                    ret((ii-1)*side+1:ii*side,(jj-1)*side+1:jj*side)=diag(matVec(ii,(jj-1)*side+1:jj*side));
+                    ret{ii,jj}=diag(matVec(ii,(jj-1)*side+1:jj*side));
                 end
             end
+            ret=cell2mat(ret);
         end
 
 
@@ -251,22 +252,27 @@ classdef Hypsyst2d < scheme.Scheme
             params=obj.params;
             syms xs ys
             [V, D]=eig(mat(params,xs,ys));
+            Vi=inv(V);
             xs=x; 
             ys=y;
            
             side=max(length(x),length(y));
             Dret=zeros(obj.n,side*obj.n);
             Vret=zeros(obj.n,side*obj.n);
+            Viret=zeros(obj.n,side*obj.n);
             for ii=1:obj.n
                 for jj=1:obj.n
                     Dret(jj,(ii-1)*side+1:side*ii)=eval(D(jj,ii));
                     Vret(jj,(ii-1)*side+1:side*ii)=eval(V(jj,ii));
+                    Viret(jj,(ii-1)*side+1:side*ii)=eval(Vi(jj,ii));
                 end
             end
 
             D=sparse(Dret);
-            V=sparse(Vret);        
+            V=sparse(Vret); 
+            Vi=sparse(Viret);
             V=obj.evaluateCoefficientMatrix(V,x,y);
+            Vi=obj.evaluateCoefficientMatrix(Vi,x,y);
             D=obj.evaluateCoefficientMatrix(D,x,y);                       
             DD=diag(D);
             
@@ -276,7 +282,7 @@ classdef Hypsyst2d < scheme.Scheme
             
             D=diag([DD(poseig); DD(zeroeig); DD(negeig)]);
             V=[V(:,poseig) V(:,zeroeig) V(:,negeig)];            
-            Vi=inv(V);
+            Vi=[Vi(poseig,:); Vi(zeroeig,:); Vi(negeig,:)];
             signVec=[sum(poseig),sum(zeroeig),sum(negeig)];
         end
 

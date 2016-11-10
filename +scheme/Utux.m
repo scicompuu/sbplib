@@ -24,9 +24,9 @@ classdef Utux < scheme.Scheme
            % [x, h] = util.get_grid(xlim{:},m);
            %ops = sbp.Ordinary(m,h,order);
            
-            ops = sbp.D1Nonequidistant(m,xlim,order);
-           % ops = sbp.D2Standard(m,xlim,order);
-           
+           % ops = sbp.D1Nonequidistant(m,xlim,order);
+          %  ops = sbp.D2Standard(m,xlim,order);
+            ops = sbp.D1Upwind(m,xlim,order);
             obj.x=ops.x;
 
             obj.D1 = ops.D1;
