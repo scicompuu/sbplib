@@ -108,6 +108,22 @@ classdef DiffOp < scheme.Scheme
             ops = sparse2cell(op, obj.NNN);
         end
 
+        function op = getBoundaryOperator(obj, op, boundary)
+            if iscell(boundary)
+                localOpName = [op '_' boundary{2}];
+                blockId = boundary{1};
+                localOp = obj.diffOps{blockId}.(localOpName);
+
+                div = {obj.blockmatrixDiv{1}, size(localOp,2)};
+                blockOp = blockmatrix.zero(div);
+                blockOp{blockId,1} = localOp;
+                op = blockmatrix.toMatrix(blockOp);
+                return
+            else
+                % Boundary är en sträng med en boundary group i.
+            end
+        end
+
         % Creates the closure and penalty matrix for a given boundary condition,
         %    boundary -- the name of the boundary on the form [id][name] where
         %                id is the number of a block and name is the name of a
