@@ -34,10 +34,10 @@ classdef Rungekutta4SecondOrder < time.Timestepper
                 if ~isa(D, 'function_handle')
                     D = @(t)D;
                 end
-                if ~isa(D, 'function_handle')
+                if ~isa(E, 'function_handle')
                     E = @(t)E;
                 end
-                if ~isa(D, 'function_handle')
+                if ~isa(S, 'function_handle')
                     S = @(t)S;
                 end
 
