@@ -155,8 +155,9 @@ classdef Wave2dCurve < scheme.Scheme
         %       data                is a function returning the data that should be applied at the boundary.
         %       neighbour_scheme    is an instance of Scheme that should be interfaced to.
         %       neighbour_boundary  is a string specifying which boundary to interface to.
-        function [closure, penalty] = boundary_condition(obj,boundary,type)
+        function [closure, penalty] = boundary_condition(obj, boundary, type, parameter)
             default_arg('type','neumann');
+            default_arg('parameter', []);
 
             [e, d_n, d_t, coeff_n, coeff_t, s, gamm, halfnorm_inv] = obj.get_boundary_ops(boundary);
 
@@ -201,8 +202,23 @@ classdef Wave2dCurve < scheme.Scheme
                     tau = c.^2 * obj.Ji*(tau1*e + tau2*d);
 
                     closure = halfnorm_inv*tau*d';
-                    penalty = halfnorm_inv*tau;
+                    penalty = -halfnorm_inv*tau;
 
+                % Characteristic boundary condition
+                case {'characteristic', 'char', 'c'}
+                    default_arg('parameter', 1);
+                    beta = parameter;
+                    c = obj.c;
+
+                    a_n = spdiags(coeff_n,0,length(coeff_n),length(coeff_n));
+                    a_t = spdiags(coeff_t,0,length(coeff_t),length(coeff_t));
+                    d = s*(a_n * d_n' + a_t*d_t')'; % outward facing normal derivative
+
+                    tau = -c.^2 * 1/beta * obj.Ji*e;
+
+                    closure{1} = halfnorm_inv*tau*e';
+                    closure{2} = halfnorm_inv*tau*beta*d';
+                    penalty = -halfnorm_inv*tau;
 
                 % Unknown, boundary condition
                 otherwise
