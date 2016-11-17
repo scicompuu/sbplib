@@ -125,9 +125,9 @@ classdef DiffOp < scheme.Scheme
         end
 
         % Creates the closure and penalty matrix for a given boundary condition,
-        %    boundary -- the name of the boundary on the form [id][name] where
+        %    boundary -- the name of the boundary on the form {id,name} where
         %                id is the number of a block and name is the name of a
-        %                boundary of that block example: 1s or 3w
+        %                boundary of that block example: {1,'s'} or {3,'w'}
         function [closure, penalty] = boundary_condition(obj, boundary, type)
             I = boundary{1};
             name = boundary{2};
@@ -137,9 +137,17 @@ classdef DiffOp < scheme.Scheme
 
             % Expand to matrix for full domain.
             div = obj.blockmatrixDiv;
-            closure = blockmatrix.zero(div);
-            closure{I,I} = blockClosure;
-            closure = blockmatrix.toMatrix(closure);
+            if ~iscell(blockClosure)
+                temp = blockmatrix.zero(div);
+                temp{I,I} = blockClosure;
+                closure = blockmatrix.toMatrix(temp);
+            else
+                for i = 1:length(blockClosure)
+                    temp = blockmatrix.zero(div);
+                    temp{I,I} = blockClosure{i};
+                    closure{i} = blockmatrix.toMatrix(temp);
+                end
+            end
 
             div{2} = size(blockPenalty, 2); % Penalty is a column vector
             if ~iscell(blockPenalty)
