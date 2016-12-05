@@ -66,11 +66,11 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
     r = (1+scheme_radius):(m-scheme_radius);
 
     function D2 = D2_fun(c)
-        Mm2 =  c(r-2)/0.8e1 - c(r-1)/0.6e1 + c(r)  /0.8e1                                  ;
-        Mm1 = -c(r-2)/0.6e1 - c(r-1)/0.2e1 - c(r)  /0.2e1 - c(r+1)/0.6e1                 ;
-        M0  =  c(r-2)/2.4e1 + c(r-1)/1.2e0 + c(r) * 0.3/0.4 + c(r+1)/1.2e0 + c(r+2)/2.4e1;
-        Mp1 =                  -c(r-1)/0.6e1 - c(r)  /0.2e1 - c(r+1)/0.2e1 - c(r+2)/0.6e1;
-        Mp2 =                                    c(r)  /0.8e1 - c(r+1)/0.6e1 + c(r+2)/0.8e1;
+        Mm2 =  c(r-2)/0.8e1 - c(r-1)/0.6e1 + c(r)    /0.8e1                                  ;
+        Mm1 = -c(r-2)/0.6e1 - c(r-1)/0.2e1 - c(r)    /0.2e1 - c(r+1)/0.6e1                 ;
+        M0  =  c(r-2)/2.4e1 + c(r-1)/1.2e0 + c(r)*0.3/0.4   + c(r+1)/1.2e0 + c(r+2)/2.4e1;
+        Mp1 =                -c(r-1)/0.6e1 - c(r)    /0.2e1 - c(r+1)/0.2e1 - c(r+2)/0.6e1;
+        Mp2 =                                c(r)    /0.8e1 - c(r+1)/0.6e1 + c(r+2)/0.8e1;
 
         M(r,:) = spdiags([Mm2 Mm1 M0 Mp1 Mp2],0:2*scheme_radius,length(r),m);
 
