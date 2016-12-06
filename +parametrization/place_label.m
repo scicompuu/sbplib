@@ -1,3 +1,5 @@
+% 'left' | 'center' | 'right'
+% 'baseline' | 'top' | 'cap' | 'middle' | 'bottom'
 function place_label(pt,str,horzAl,vertAl)
     default_arg('horzAl','center');
     default_arg('vertAl', 'middle');
