@@ -181,7 +181,7 @@ classdef Wave2dCurve < scheme.Scheme
 
                     tau  = -1./b1 - 1./b2;
                     tau = tuning * spdiag(tau);
-                    sig1 = 1/2;
+                    sig1 = 1;
 
                     penalty_parameter_1 = halfnorm_inv_n*(tau + sig1*halfnorm_inv_t*F*e'*halfnorm_t)*e;
 
