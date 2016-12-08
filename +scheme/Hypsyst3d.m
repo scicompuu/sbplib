@@ -138,7 +138,7 @@ classdef Hypsyst3d < scheme.Scheme
                     
                     temp=Cm*Dpz;
                     obj.D=obj.D-temp;
-                    temp=-Cp*Dmz;
+                    temp=Cp*Dmz;
                     obj.D=obj.D-temp;
                     clear Cp Cm Dpz Dmz
                     
