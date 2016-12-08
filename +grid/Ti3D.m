@@ -5,8 +5,9 @@ classdef Ti3D
     end
     
     methods
-        % TODO function to label boundary names.
-        %  function to find largest and smallest delta h in the grid. Maybe shouldnt live here
+        % TODO write all fancy features for flipping around with the surfaces
+        % Each surface is defined with an outward facing outward and choosing
+        % the "corner" where XI=0 if not possible the corner where ETA=0 is choosen
         function obj = Ti3D(CW,CE,CS,CN,CB,CT)
             obj.gs = {CE,CW,CS,CN,CB,CT};
             

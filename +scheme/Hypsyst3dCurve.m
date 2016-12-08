@@ -53,7 +53,6 @@ classdef Hypsyst3dCurve < scheme.Scheme
             obj.n = length(A(obj,0,0,0));
             
             obj.m = m;
-            
             obj.order = order;
             obj.onesN = ones(obj.n);
             
@@ -185,20 +184,43 @@ classdef Hypsyst3dCurve < scheme.Scheme
                     alphaC = max(eig(obj.Chat(obj,obj.X(end), obj.Y(end),obj.Z(end), obj.X_xi(end),obj.X_eta(end),obj.Y_xi(end),obj.Y_eta(end),obj.Z_xi(end),obj.Z_eta(end))));
                     
                     Ap = (obj.Aevaluated+alphaA*I_N)/2;
-                    Am = (obj.Aevaluated-alphaA*I_N)/2;
-                    Bp = (obj.Bevaluated+alphaB*I_N)/2;
-                    Bm = (obj.Bevaluated-alphaB*I_N)/2;
-                    Cp = (obj.Cevaluated+alphaC*I_N)/2;
-                    Cm = (obj.Cevaluated-alphaC*I_N)/2;
-                    
-                    Dpxi = kr(I_n, ops_xi.Dp, I_eta,I_zeta);
                     Dmxi = kr(I_n, ops_xi.Dm, I_eta,I_zeta);
-                    Dpeta = kr(I_n, I_xi, ops_eta.Dp,I_zeta);
+                    diffSum=-Ap*Dmxi;
+                    clear Ap Dmxi
+
+                    Am = (obj.Aevaluated-alphaA*I_N)/2;
+                    clear obj.Aevaluated
+                    Dpxi = kr(I_n, ops_xi.Dp, I_eta,I_zeta);
+                    temp=Am*Dpxi;
+                    diffSum=diffSum-temp;
+                    clear Am Dpxi
+
+                    Bp = (obj.Bevaluated+alphaB*I_N)/2;
                     Dmeta = kr(I_n, I_xi, ops_eta.Dm,I_zeta);
-                    Dpzeta = kr(I_n, I_xi, I_eta,ops_zeta.Dp);
+                    temp=Bp*Dmeta;
+                    diffSum=diffSum-temp;
+                    clear Bp Dmeta
+
+                    Bm = (obj.Bevaluated-alphaB*I_N)/2;
+                    clear obj.Bevaluated
+                    Dpeta = kr(I_n, I_xi, ops_eta.Dp,I_zeta);
+                    temp=Bm*Dpeta;
+                    diffSum=diffSum-temp;
+
+
+                    Cp = (obj.Cevaluated+alphaC*I_N)/2;
                     Dmzeta = kr(I_n, I_xi, I_eta,ops_zeta.Dm);
-                    
-                    obj.D = obj.Ji*(-Am*Dpxi-Ap*Dmxi-Bm*Dpeta-Bp*Dmeta-Cm*Dpzeta-Cp*Dmzeta)-obj.Eevaluated;
+                    temp=Cp*Dmzeta;
+                    diffSum=diffSum-temp;
+                    clear Cp Dmzeta
+
+                    Cm = (obj.Cevaluated-alphaC*I_N)/2;      
+                    clear obj.Cevaluated     
+                    Dpzeta = kr(I_n, I_xi, I_eta,ops_zeta.Dp);
+                    temp=Cm*Dpzeta;
+                    diffSum=diffSum-temp;
+                  
+                    obj.D = obj.Ji*diffSum-obj.Eevaluated;
                 otherwise
                     obj.D = obj.Ji*(-obj.Aevaluated*D1_xi-obj.Bevaluated*D1_eta -obj.Cevaluated*D1_zeta)-obj.Eevaluated;
             end

@@ -26,7 +26,7 @@ classdef Hypsyst3d < scheme.Scheme
         function obj = Hypsyst3d(m, lim, order, A, B,C, E, params,operator)
             default_arg('E', [])
             default_arg('operatpr',[])
-            xlim = lim{1};
+            xlim =  lim{1};
             ylim = lim{2};
             zlim = lim{3};
             
@@ -78,7 +78,7 @@ classdef Hypsyst3d < scheme.Scheme
             
             obj.n = length(A(obj.params,0,0,0));
             
-            I_n = eye(obj.n);
+            I_n = speye(obj.n);
             I_x = speye(m_x);
             obj.I_x = I_x;
             I_y = speye(m_y);
@@ -90,7 +90,7 @@ classdef Hypsyst3d < scheme.Scheme
             obj.Hxi = kr(I_n, ops_x.HI, I_y,I_z);
             obj.Hx = ops_x.H;
             obj.Hyi = kr(I_n, I_x, ops_y.HI,I_z);
-            obj.Hy = ops_y.H
+            obj.Hy = ops_y.H;
             obj.Hzi = kr(I_n, I_x,I_y, ops_z.HI);
             obj.Hz = ops_z.H;
             
@@ -113,19 +113,37 @@ classdef Hypsyst3d < scheme.Scheme
                     
                     Ap = (obj.Aevaluated+alphaA*I_N)/2;
                     Am = (obj.Aevaluated-alphaA*I_N)/2;
-                    Bp = (obj.Bevaluated+alphaB*I_N)/2;
-                    Bm = (obj.Bevaluated-alphaB*I_N)/2;
-                    Cp = (obj.Cevaluated+alphaC*I_N)/2;
-                    Cm = (obj.Cevaluated-alphaC*I_N)/2;
-                    
                     Dpx = kr(I_n, ops_x.Dp, I_y,I_z);
                     Dmx = kr(I_n, ops_x.Dm, I_y,I_z);
+                    obj.D=-Am*Dpx;
+                    temp=Ap*Dmx;
+                    obj.D=obj.D-temp;
+                    clear Ap Am Dpx Dmx
+                    
+                    Bp = (obj.Bevaluated+alphaB*I_N)/2;
+                    Bm = (obj.Bevaluated-alphaB*I_N)/2;
                     Dpy = kr(I_n, I_x, ops_y.Dp,I_z);
                     Dmy = kr(I_n, I_x, ops_y.Dm,I_z);
+                    temp=Bm*Dpy;
+                    obj.D=obj.D-temp;
+                    temp=Bp*Dmy;
+                    obj.D=obj.D-temp;
+                    clear Bp Bm Dpy Dmy
+                    
+                    
+                    Cp = (obj.Cevaluated+alphaC*I_N)/2;
+                    Cm = (obj.Cevaluated-alphaC*I_N)/2;                  
                     Dpz = kr(I_n, I_x, I_y,ops_z.Dp);
                     Dmz = kr(I_n, I_x, I_y,ops_z.Dm);
                     
-                    obj.D=-Am*Dpx-Ap*Dmx-Bm*Dpy-Bp*Dmy-Cm*Dpz-Cp*Dmz-obj.Eevaluated;
+                    temp=Cm*Dpz;
+                    obj.D=obj.D-temp;
+                    temp=-Cp*Dmz;
+                    obj.D=obj.D-temp;
+                    clear Cp Cm Dpz Dmz
+                    
+                    obj.D=obj.D-obj.Eevaluated;
+                    
                 otherwise
                     D1_x = kr(I_n, ops_x.D1, I_y,I_z);
                     D1_y = kr(I_n, I_x, ops_y.D1,I_z);
