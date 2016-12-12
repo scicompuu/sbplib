@@ -36,7 +36,7 @@ classdef CdiffImplicit < time.Timestepper
             end
 
             if isempty(G)
-                G = @(t) sparse(m,m);
+                G = @(t) sparse(m,1);
             end
 
             if isempty(f1)
@@ -96,18 +96,17 @@ classdef CdiffImplicit < time.Timestepper
 
         function obj = step(obj)
             b = obj.G(obj.t) - obj.BB*obj.v - obj.CC*obj.v_prev;
-
-            % Backslash
             obj.v_prev = obj.v;
-            obj.v = obj.AA\b;
 
-            % % LU with column pivot
-            % y = obj.L\b(obj.p);
-            % Qx = U\y;
-            % v = Qx(q);
+            % % Backslash
+            % obj.v = obj.AA\b;
 
+            % LU with column pivot
+            y = obj.L\b(obj.p);
+            Qx = obj.U\y;
+            obj.v = Qx(obj.q);
 
-
+            % Update time
             obj.t = obj.t + obj.k;
             obj.n = obj.n + 1;
         end
