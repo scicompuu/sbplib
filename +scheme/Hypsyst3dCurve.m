@@ -64,7 +64,7 @@ classdef Hypsyst3dCurve < scheme.Scheme
                 case 'standard'
                     ops_xi = sbp.D2Standard(m_xi,xilim,order);
                     ops_eta = sbp.D2Standard(m_eta,etalim,order);
-                    ops_zeta = sbp.D2Standard(m_zeta,zetalim,order); 
+                    ops_zeta = sbp.D2Standard(m_zeta,zetalim,order);
                 otherwise
                     error('Operator not available')
             end
@@ -77,14 +77,6 @@ classdef Hypsyst3dCurve < scheme.Scheme
             obj.Eta = kr(ones(m_xi,1),obj.eta,ones(m_zeta,1));
             obj.Zeta = kr(ones(m_xi,1),ones(m_eta,1),obj.zeta);
             
-            obj.Eta_xi = kr(obj.eta,ones(m_xi,1));
-            obj.Zeta_xi = kr(ones(m_eta,1),obj.zeta);
-            
-            obj.Xi_eta = kr(obj.xi,ones(m_zeta,1));
-            obj.Zeta_eta = kr(ones(m_xi,1),obj.zeta);
-            
-            obj.Xi_zeta = kr(obj.xi,ones(m_eta,1));
-            obj.Eta_zeta = kr(ones(m_zeta,1),obj.eta);
             
             [X,Y,Z] = ti.map(obj.Xi,obj.Eta,obj.Zeta);
             obj.X = X;
@@ -97,7 +89,7 @@ classdef Hypsyst3dCurve < scheme.Scheme
             I_eta = speye(m_eta);
             obj.I_eta = I_eta;
             I_zeta = speye(m_zeta);
-            obj.I_zeta = I_zeta;     
+            obj.I_zeta = I_zeta;
             
             I_N=kr(I_n,I_xi,I_eta,I_zeta);
             
@@ -105,31 +97,22 @@ classdef Hypsyst3dCurve < scheme.Scheme
             O_eta = ones(m_eta,1);
             O_zeta = ones(m_zeta,1);
             
-            obj.Hxii = kr(I_n, ops_xi.HI, I_eta,I_zeta);
-            obj.Hetai = kr(I_n, I_xi, ops_eta.HI,I_zeta);           
-            obj.Hzetai = kr(I_n, I_xi,I_eta, ops_zeta.HI);
+            
             obj.Hxi = ops_xi.H;
-            obj.Heta = ops_eta.H;           
+            obj.Heta = ops_eta.H;
             obj.Hzeta = ops_zeta.H;
             obj.h = [ops_xi.h ops_eta.h ops_zeta.h];
             
             switch operator
                 case 'upwind'
-                D1_xi = kr((ops_xi.Dp+ops_xi.Dm)/2, I_eta,I_zeta);
-                D1_eta = kr(I_xi, (ops_eta.Dp+ops_eta.Dm)/2,I_zeta);
-                D1_zeta = kr(I_xi, I_eta,(ops_zeta.Dp+ops_zeta.Dm)/2);
+                    D1_xi = kr((ops_xi.Dp+ops_xi.Dm)/2, I_eta,I_zeta);
+                    D1_eta = kr(I_xi, (ops_eta.Dp+ops_eta.Dm)/2,I_zeta);
+                    D1_zeta = kr(I_xi, I_eta,(ops_zeta.Dp+ops_zeta.Dm)/2);
                 otherwise
-                D1_xi = kr(ops_xi.D1, I_eta,I_zeta);
-                D1_eta = kr(I_xi, ops_eta.D1,I_zeta);
-                D1_zeta = kr(I_xi, I_eta,ops_zeta.D1);                   
+                    D1_xi = kr(ops_xi.D1, I_eta,I_zeta);
+                    D1_eta = kr(I_xi, ops_eta.D1,I_zeta);
+                    D1_zeta = kr(I_xi, I_eta,ops_zeta.D1);
             end
-            
-            obj.e_w = kr(I_n, ops_xi.e_l, I_eta,I_zeta);
-            obj.e_e = kr(I_n, ops_xi.e_r, I_eta,I_zeta);
-            obj.e_s = kr(I_n, I_xi, ops_eta.e_l,I_zeta);
-            obj.e_n = kr(I_n, I_xi, ops_eta.e_r,I_zeta);
-            obj.e_b = kr(I_n, I_xi, I_eta, ops_zeta.e_l);
-            obj.e_t = kr(I_n, I_xi, I_eta, ops_zeta.e_r);
             
             obj.A = A;
             obj.B = B;
@@ -144,19 +127,7 @@ classdef Hypsyst3dCurve < scheme.Scheme
             obj.Z_xi = D1_xi*Z;
             obj.Z_eta = D1_eta*Z;
             obj.Z_zeta = D1_zeta*Z;
-            
-            D1_xi = kr(I_n,D1_xi);
-            D1_eta = kr(I_n,D1_eta);
-            D1_zeta = kr(I_n,D1_zeta);
-            
-            obj.index_w = (kr(ops_xi.e_l, O_eta,O_zeta)==1);
-            obj.index_e = (kr(ops_xi.e_r, O_eta,O_zeta)==1);
-            obj.index_s = (kr(O_xi, ops_eta.e_l,O_zeta)==1);
-            obj.index_n = (kr(O_xi, ops_eta.e_r,O_zeta)==1);
-            obj.index_b = (kr(O_xi, O_eta, ops_zeta.e_l)==1);
-            obj.index_t = (kr(O_xi, O_eta, ops_zeta.e_r)==1);
-            
-            
+              
             obj.Ahat = @transform_coefficient_matrix;
             obj.Bhat = @transform_coefficient_matrix;
             obj.Chat = @transform_coefficient_matrix;
@@ -165,20 +136,10 @@ classdef Hypsyst3dCurve < scheme.Scheme
             obj.Aevaluated = obj.evaluateCoefficientMatrix(obj.Ahat,obj.X, obj.Y,obj.Z, obj.X_eta,obj.X_zeta,obj.Y_eta,obj.Y_zeta,obj.Z_eta,obj.Z_zeta);
             obj.Bevaluated = obj.evaluateCoefficientMatrix(obj.Bhat,obj.X, obj.Y,obj.Z, obj.X_zeta,obj.X_xi,obj.Y_zeta,obj.Y_xi,obj.Z_zeta,obj.Z_xi);
             obj.Cevaluated = obj.evaluateCoefficientMatrix(obj.Chat,obj.X,obj.Y,obj.Z, obj.X_xi,obj.X_eta,obj.Y_xi,obj.Y_eta,obj.Z_xi,obj.Z_eta);
-            obj.Eevaluated = obj.evaluateCoefficientMatrix(obj.E, obj.X, obj.Y,obj.Z,[],[],[],[],[],[]);
-            
-            obj.J = obj.X_xi.*obj.Y_eta.*obj.Z_zeta...
-                 +obj.X_zeta.*obj.Y_xi.*obj.Z_eta...
-                 +obj.X_eta.*obj.Y_zeta.*obj.Z_xi...
-                 -obj.X_xi.*obj.Y_zeta.*obj.Z_eta...
-                 -obj.X_eta.*obj.Y_xi.*obj.Z_zeta...
-                 -obj.X_zeta.*obj.Y_eta.*obj.Z_xi;
-            
-            obj.Ji = kr(I_n,spdiags(1./obj.J,0,m_tot,m_tot));
-            
             
             switch operator
                 case 'upwind'
+                    clear  D1_xi D1_eta D1_zeta
                     alphaA = max(eig(obj.Ahat(obj,obj.X(end), obj.Y(end),obj.Z(end), obj.X_eta(end),obj.X_zeta(end),obj.Y_eta(end),obj.Y_zeta(end),obj.Z_eta(end),obj.Z_zeta(end))));
                     alphaB = max(eig(obj.Bhat(obj,obj.X(end), obj.Y(end),obj.Z(end), obj.X_zeta(end),obj.X_xi(end),obj.Y_zeta(end),obj.Y_xi(end),obj.Z_zeta(end),obj.Z_xi(end))));
                     alphaC = max(eig(obj.Chat(obj,obj.X(end), obj.Y(end),obj.Z(end), obj.X_xi(end),obj.X_eta(end),obj.Y_xi(end),obj.Y_eta(end),obj.Z_xi(end),obj.Z_eta(end))));
@@ -187,44 +148,97 @@ classdef Hypsyst3dCurve < scheme.Scheme
                     Dmxi = kr(I_n, ops_xi.Dm, I_eta,I_zeta);
                     diffSum=-Ap*Dmxi;
                     clear Ap Dmxi
-
+                    
                     Am = (obj.Aevaluated-alphaA*I_N)/2;
-                    clear obj.Aevaluated
+                    obj.Aevaluated=[];
                     Dpxi = kr(I_n, ops_xi.Dp, I_eta,I_zeta);
                     temp=Am*Dpxi;
                     diffSum=diffSum-temp;
                     clear Am Dpxi
-
+                    
                     Bp = (obj.Bevaluated+alphaB*I_N)/2;
                     Dmeta = kr(I_n, I_xi, ops_eta.Dm,I_zeta);
                     temp=Bp*Dmeta;
                     diffSum=diffSum-temp;
                     clear Bp Dmeta
-
+                    
                     Bm = (obj.Bevaluated-alphaB*I_N)/2;
-                    clear obj.Bevaluated
+                    obj.Bevaluated=[];
                     Dpeta = kr(I_n, I_xi, ops_eta.Dp,I_zeta);
                     temp=Bm*Dpeta;
                     diffSum=diffSum-temp;
-
-
+                    clear Bm Dpeta
+                    
+                    
                     Cp = (obj.Cevaluated+alphaC*I_N)/2;
                     Dmzeta = kr(I_n, I_xi, I_eta,ops_zeta.Dm);
                     temp=Cp*Dmzeta;
                     diffSum=diffSum-temp;
                     clear Cp Dmzeta
-
-                    Cm = (obj.Cevaluated-alphaC*I_N)/2;      
-                    clear obj.Cevaluated     
+                    
+                    Cm = (obj.Cevaluated-alphaC*I_N)/2;
+                    clear I_N
+                    obj.Cevaluated=[];
                     Dpzeta = kr(I_n, I_xi, I_eta,ops_zeta.Dp);
                     temp=Cm*Dpzeta;
                     diffSum=diffSum-temp;
-                  
+                    clear Cm Dpzeta temp
+                    
+                    
+                    obj.J = obj.X_xi.*obj.Y_eta.*obj.Z_zeta...
+                        +obj.X_zeta.*obj.Y_xi.*obj.Z_eta...
+                        +obj.X_eta.*obj.Y_zeta.*obj.Z_xi...
+                        -obj.X_xi.*obj.Y_zeta.*obj.Z_eta...
+                        -obj.X_eta.*obj.Y_xi.*obj.Z_zeta...
+                        -obj.X_zeta.*obj.Y_eta.*obj.Z_xi;
+                    
+                    obj.Ji = kr(I_n,spdiags(1./obj.J,0,m_tot,m_tot));
+                    obj.Eevaluated = obj.evaluateCoefficientMatrix(obj.E, obj.X, obj.Y,obj.Z,[],[],[],[],[],[]);
+                    
                     obj.D = obj.Ji*diffSum-obj.Eevaluated;
                 otherwise
+                     D1_xi=kr(I_n,D1_xi);
+            D1_eta=kr(I_n,D1_eta);
+            D1_zeta=kr(I_n,D1_zeta);
+                    
+                    obj.J = obj.X_xi.*obj.Y_eta.*obj.Z_zeta...
+                        +obj.X_zeta.*obj.Y_xi.*obj.Z_eta...
+                        +obj.X_eta.*obj.Y_zeta.*obj.Z_xi...
+                        -obj.X_xi.*obj.Y_zeta.*obj.Z_eta...
+                        -obj.X_eta.*obj.Y_xi.*obj.Z_zeta...
+                        -obj.X_zeta.*obj.Y_eta.*obj.Z_xi;
+                    
+                    obj.Ji = kr(I_n,spdiags(1./obj.J,0,m_tot,m_tot));
+                    obj.Eevaluated = obj.evaluateCoefficientMatrix(obj.E, obj.X, obj.Y,obj.Z,[],[],[],[],[],[]);
+                    
                     obj.D = obj.Ji*(-obj.Aevaluated*D1_xi-obj.Bevaluated*D1_eta -obj.Cevaluated*D1_zeta)-obj.Eevaluated;
             end
+            obj.Hxii = kr(I_n, ops_xi.HI, I_eta,I_zeta);
+            obj.Hetai = kr(I_n, I_xi, ops_eta.HI,I_zeta);
+            obj.Hzetai = kr(I_n, I_xi,I_eta, ops_zeta.HI);
             
+            obj.index_w = (kr(ops_xi.e_l, O_eta,O_zeta)==1);
+            obj.index_e = (kr(ops_xi.e_r, O_eta,O_zeta)==1);
+            obj.index_s = (kr(O_xi, ops_eta.e_l,O_zeta)==1);
+            obj.index_n = (kr(O_xi, ops_eta.e_r,O_zeta)==1);
+            obj.index_b = (kr(O_xi, O_eta, ops_zeta.e_l)==1);
+            obj.index_t = (kr(O_xi, O_eta, ops_zeta.e_r)==1);
+            
+            obj.e_w = kr(I_n, ops_xi.e_l, I_eta,I_zeta);
+            obj.e_e = kr(I_n, ops_xi.e_r, I_eta,I_zeta);
+            obj.e_s = kr(I_n, I_xi, ops_eta.e_l,I_zeta);
+            obj.e_n = kr(I_n, I_xi, ops_eta.e_r,I_zeta);
+            obj.e_b = kr(I_n, I_xi, I_eta, ops_zeta.e_l);
+            obj.e_t = kr(I_n, I_xi, I_eta, ops_zeta.e_r);
+            
+            
+            
+            obj.Eta_xi = kr(obj.eta,ones(m_xi,1));
+            obj.Zeta_xi = kr(ones(m_eta,1),obj.zeta);
+            obj.Xi_eta = kr(obj.xi,ones(m_zeta,1));
+            obj.Zeta_eta = kr(ones(m_xi,1),obj.zeta);
+            obj.Xi_zeta = kr(obj.xi,ones(m_eta,1));
+            obj.Eta_zeta = kr(ones(m_zeta,1),obj.eta);
             
         end
         
@@ -281,6 +295,7 @@ classdef Hypsyst3dCurve < scheme.Scheme
                 side = max(length(X),length(Y));
                 cols = cols/side;
             end
+            matVec(abs(matVec)<10^(-10))=0;
             ret = cell(rows,cols);
             
             
@@ -291,6 +306,7 @@ classdef Hypsyst3dCurve < scheme.Scheme
             end
             
             ret = cell2mat(ret);
+            
         end
         
         
