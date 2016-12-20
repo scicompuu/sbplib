@@ -31,6 +31,13 @@ classdef D2Variable < sbp.OpSet
                         obj.e_r, obj.d1_l, obj.d1_r] = ...
                         sbp.implementations.d2_variable_4(m,obj.h);
                     obj.borrowing.M.S = 0.2505765857;
+                case 2
+                    [obj.H, obj.HI, obj.D1, obj.D2, obj.e_l,...
+                        obj.e_r, obj.d1_l, obj.d1_r] = ...
+                        sbp.implementations.d2_variable_2(m,obj.h);
+                    obj.borrowing.M.S = 0.3636363636; 
+                    % Borrowing const taken from Virta 2014
+                    
                 otherwise
                     error('Invalid operator order %d.',order);
             end
