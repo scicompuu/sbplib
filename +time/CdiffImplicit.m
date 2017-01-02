@@ -103,8 +103,8 @@ classdef CdiffImplicit < time.Timestepper
 
             % LU with column pivot
             y = obj.L\b(obj.p);
-            Qx = obj.U\y;
-            obj.v = Qx(obj.q);
+            z = obj.U\y;
+            obj.v(obj.q) = z;
 
             % Update time
             obj.t = obj.t + obj.k;
