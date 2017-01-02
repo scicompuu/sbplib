@@ -32,7 +32,7 @@ classdef Curvilinear < grid.Structured & grid.Mapped
             elseif isnumeric(mapping)
                 obj.coords = matrixMappingToCoords(mapping, N, D);
             else
-                error('grid:Curvilinear:Curvilinear','mapping must be a matrix or a cell array.');
+                error('grid:Curvilinear:Curvilinear','mapping must be a function handle, a matrix or a cell array.');
             end
         end
 
