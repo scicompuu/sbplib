@@ -79,7 +79,7 @@ classdef CdiffImplicit < time.Timestepper
 
             obj.k = k;
             obj.t = t0+k;
-            obj.n = 0;
+            obj.n = 1;
             obj.v = v;
             obj.v_prev = v_prev;
         end
