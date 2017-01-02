@@ -26,6 +26,11 @@ classdef Wave2dCurve < scheme.Scheme
         du_n, dv_n
         gamm_u, gamm_v
         lambda
+
+        x_u
+        x_v
+        y_u
+        y_v
     end
 
     methods
@@ -129,6 +134,11 @@ classdef Wave2dCurve < scheme.Scheme
             obj.du_n = (obj.e_n'*Du)';
             obj.dv_n = kr(I_u,d1_r_v);
 
+            obj.x_u = x_u;
+            obj.x_v = x_v;
+            obj.y_u = y_u;
+            obj.y_v = y_v;
+
             obj.m = m;
             obj.h = [h_u h_v];
             obj.order = order;
@@ -159,8 +169,7 @@ classdef Wave2dCurve < scheme.Scheme
             default_arg('type','neumann');
             default_arg('parameter', []);
 
-            [e, d_n, d_t, coeff_n, coeff_t, s, gamm, halfnorm_inv] = obj.get_boundary_ops(boundary);
-
+            [e, d_n, d_t, coeff_n, coeff_t, s, gamm, halfnorm_inv  ,              ~,          ~, ~, scale_factor] = obj.get_boundary_ops(boundary);
             switch type
                 % Dirichlet boundary condition
                 case {'D','d','dirichlet'}
@@ -214,9 +223,9 @@ classdef Wave2dCurve < scheme.Scheme
                     a_t = spdiags(coeff_t,0,length(coeff_t),length(coeff_t));
                     d = s*(a_n * d_n' + a_t*d_t')'; % outward facing normal derivative
 
-                    tau = -c.^2 * 1/beta * obj.Ji*e;
+                    tau = -c.^2 * 1/beta*obj.Ji*e;
 
-                    closure{1} = halfnorm_inv*tau*e';
+                    closure{1} = halfnorm_inv*tau/c*spdiag(scale_factor)*e';
                     closure{2} = halfnorm_inv*tau*beta*d';
                     penalty = -halfnorm_inv*tau;
 
@@ -267,7 +276,7 @@ classdef Wave2dCurve < scheme.Scheme
         % The right boundary is considered the positive boundary
         %
         %  I -- the indecies of the boundary points in the grid matrix
-        function [e, d_n, d_t, coeff_n, coeff_t, s, gamm, halfnorm_inv_n, halfnorm_inv_t, halfnorm_t, I] = get_boundary_ops(obj, boundary)
+        function [e, d_n, d_t, coeff_n, coeff_t, s, gamm, halfnorm_inv_n, halfnorm_inv_t, halfnorm_t, I, scale_factor] = get_boundary_ops(obj, boundary)
 
             % gridMatrix = zeros(obj.m(2),obj.m(1));
             % gridMatrix(:) = 1:numel(gridMatrix);
@@ -284,6 +293,7 @@ classdef Wave2dCurve < scheme.Scheme
                     I = ind(1,:);
                     coeff_n = obj.a11(I);
                     coeff_t = obj.a12(I);
+                    scale_factor = sqrt(obj.x_v(I).^2 + obj.y_v(I).^2);
                 case 'e'
                     e = obj.e_e;
                     d_n = obj.du_e;
@@ -293,6 +303,7 @@ classdef Wave2dCurve < scheme.Scheme
                     I = ind(end,:);
                     coeff_n = obj.a11(I);
                     coeff_t = obj.a12(I);
+                    scale_factor = sqrt(obj.x_v(I).^2 + obj.y_v(I).^2);
                 case 's'
                     e = obj.e_s;
                     d_n = obj.dv_s;
@@ -302,6 +313,7 @@ classdef Wave2dCurve < scheme.Scheme
                     I = ind(:,1)';
                     coeff_n = obj.a22(I);
                     coeff_t = obj.a12(I);
+                    scale_factor = sqrt(obj.x_u(I).^2 + obj.y_u(I).^2);
                 case 'n'
                     e = obj.e_n;
                     d_n = obj.dv_n;
@@ -311,6 +323,7 @@ classdef Wave2dCurve < scheme.Scheme
                     I = ind(:,end)';
                     coeff_n = obj.a22(I);
                     coeff_t = obj.a12(I);
+                    scale_factor = sqrt(obj.x_u(I).^2 + obj.y_u(I).^2);
                 otherwise
                     error('No such boundary: boundary = %s',boundary);
             end
