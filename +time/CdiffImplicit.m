@@ -90,7 +90,16 @@ classdef CdiffImplicit < time.Timestepper
         end
 
         function [vt,t] = getVt(obj)
-            vt = (obj.v-obj.v_prev)/obj.k;
+            % Calculate next time step to be able to do centered diff.
+            v_next = zeros(size(obj.v));
+            b = obj.G(obj.t) - obj.BB*obj.v - obj.CC*obj.v_prev;
+
+            y = obj.L\b(obj.p);
+            z = obj.U\y;
+            v_next(obj.q) = z;
+
+
+            vt = (v_next-obj.v_prev)/(2*obj.k);
             t = obj.t;
         end
 
