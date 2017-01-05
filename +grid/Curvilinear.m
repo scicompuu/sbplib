@@ -67,12 +67,12 @@ classdef Curvilinear < grid.Structured & grid.Mapped
 
         % Restricts the grid function gf on obj to the subgrid g.
         function gf = restrictFunc(obj, gf, g)
-            gf = obj.logic.restrictFunc(gf, g.baseGrid());
+            gf = obj.logic.restrictFunc(gf, g.logic);
         end
 
         % Projects the grid function gf on obj to the grid g.
         function gf = projectFunc(obj, gf, g)
-            gf = obj.logic.projectFunc(gf,g.baseGrid());
+            gf = obj.logic.projectFunc(gf,g.logic);
         end
 
         function h = scaling(obj)
