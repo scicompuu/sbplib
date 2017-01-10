@@ -30,16 +30,19 @@ classdef D4Variable < sbp.OpSet
             if order == 2
                 [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] = ...
                     sbp.implementations.d4_variable_2(m, obj.h);
+                obj.borrowing.M.d1 = 0.4000;
                 obj.borrowing.N.S2 = 1.2500;
                 obj.borrowing.N.S3 = 0.4000;
             elseif order == 4
                 [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] = ...
                     sbp.implementations.d4_variable_4(m, obj.h);
+                obj.borrowing.M.d1 = 0.2508;
                 obj.borrowing.N.S2 = 0.5055;
                 obj.borrowing.N.S3 = 0.9290;
             elseif order == 6
                 [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] = ...
                     sbp.implementations.d4_variable_6(m, obj.h);
+                obj.borrowing.M.d1 = 0.1878;
                 obj.borrowing.N.S2 = 0.3259;
                 obj.borrowing.N.S3 = 0.1580;
             else

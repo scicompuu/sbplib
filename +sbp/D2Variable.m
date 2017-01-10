@@ -30,7 +30,7 @@ classdef D2Variable < sbp.OpSet
                     [obj.H, obj.HI, obj.D1, obj.D2, obj.e_l,...
                         obj.e_r, obj.d1_l, obj.d1_r] = ...
                         sbp.implementations.d2_variable_4(m,obj.h);
-                    obj.borrowing.M.S = 0.2505765857;
+                    obj.borrowing.M.d1 = 0.2505765857;
                 otherwise
                     error('Invalid operator order %d.',order);
             end

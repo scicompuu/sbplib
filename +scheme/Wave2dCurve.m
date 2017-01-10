@@ -153,8 +153,8 @@ classdef Wave2dCurve < scheme.Scheme
             obj.D = obj.Ji*c^2*(Duu + Duv + Dvu + Dvv);
             obj.lambda = lambda;
 
-            obj.gamm_u = h_u*ops_u.borrowing.M.S;
-            obj.gamm_v = h_v*ops_v.borrowing.M.S;
+            obj.gamm_u = h_u*ops_u.borrowing.M.d1;
+            obj.gamm_v = h_v*ops_v.borrowing.M.d1;
         end
 
 
