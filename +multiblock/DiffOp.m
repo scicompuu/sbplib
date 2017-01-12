@@ -94,11 +94,23 @@ classdef DiffOp < scheme.Scheme
 
                 if isempty(doParam)
                     getParam = @(i){};
-                elseif iscell(doParam) && length(doParam) == grid.nBlocks()
-                    getParam = @(i)doParam{i};
-                else
-                    getParam = @(i)doParam;
+                    return
                 end
+
+                if ~iscell(doParam)
+                    getParam = @(i)doParam;
+                    return
+                end
+
+                % doParam is a non-empty cell-array
+
+                if length(doParam) == grid.nBlocks() && all(cellfun(@iscell, doParam))
+                    % doParam is a cell-array of cell-arrays
+                    getParam = @(i)doParam{i};
+                    return
+                end
+
+                getParam = @(i)doParam;
             end
         end
 
