@@ -42,7 +42,7 @@ function [H, HI, D1, D2, D4, e_l, e_r, M4, d2_l, d2_r, d3_l, d3_r, d1_l, d1_r] =
 
     % First derivative SBP operator,
     stencil = [1/12 -2/3 0 2/3 -1/12];
-    diags = [-1 0 1];
+    diags = -2:2;
 
     Q_U = [
         0 0.59e2/0.96e2 -0.1e1/0.12e2 -0.1e1/0.32e2;
