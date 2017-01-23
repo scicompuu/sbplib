@@ -40,11 +40,11 @@ classdef CdiffImplicit < time.Timestepper
             end
 
             if isempty(f1)
-                f1 = sparse(m,m);
+                f1 = sparse(m,1);
             end
 
             if isempty(f2)
-                f2 = sparse(m,m);
+                f2 = sparse(m,1);
             end
 
             obj.A = A;
