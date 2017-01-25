@@ -12,7 +12,7 @@ classdef Hypsyst3dCurve < scheme.Scheme
         Eta_xi, Zeta_xi, Xi_eta, Zeta_eta, Xi_zeta, Eta_zeta
         
         X_xi, X_eta, X_zeta,Y_xi,Y_eta,Y_zeta,Z_xi,Z_eta,Z_zeta
-        Aev
+        
         
         metric_terms
         
@@ -140,9 +140,9 @@ classdef Hypsyst3dCurve < scheme.Scheme
             switch operator
                 case 'upwind'
                     clear  D1_xi D1_eta D1_zeta
-                    alphaA = max(eig(obj.Ahat(obj,obj.X(end), obj.Y(end),obj.Z(end), obj.X_eta(end),obj.X_zeta(end),obj.Y_eta(end),obj.Y_zeta(end),obj.Z_eta(end),obj.Z_zeta(end))));
-                    alphaB = max(eig(obj.Bhat(obj,obj.X(end), obj.Y(end),obj.Z(end), obj.X_zeta(end),obj.X_xi(end),obj.Y_zeta(end),obj.Y_xi(end),obj.Z_zeta(end),obj.Z_xi(end))));
-                    alphaC = max(eig(obj.Chat(obj,obj.X(end), obj.Y(end),obj.Z(end), obj.X_xi(end),obj.X_eta(end),obj.Y_xi(end),obj.Y_eta(end),obj.Z_xi(end),obj.Z_eta(end))));
+                    alphaA = max(abs(eig(obj.Ahat(obj,obj.X(end), obj.Y(end),obj.Z(end), obj.X_eta(end),obj.X_zeta(end),obj.Y_eta(end),obj.Y_zeta(end),obj.Z_eta(end),obj.Z_zeta(end)))));
+                    alphaB = max(abs(eig(obj.Bhat(obj,obj.X(end), obj.Y(end),obj.Z(end), obj.X_zeta(end),obj.X_xi(end),obj.Y_zeta(end),obj.Y_xi(end),obj.Z_zeta(end),obj.Z_xi(end)))));
+                    alphaC = max(abs(eig(obj.Chat(obj,obj.X(end), obj.Y(end),obj.Z(end), obj.X_xi(end),obj.X_eta(end),obj.Y_xi(end),obj.Y_eta(end),obj.Z_xi(end),obj.Z_eta(end)))));
                     
                     Ap = (obj.Aevaluated+alphaA*I_N)/2;
                     Dmxi = kr(I_n, ops_xi.Dm, I_eta,I_zeta);
@@ -404,6 +404,7 @@ classdef Hypsyst3dCurve < scheme.Scheme
             Hi = BM.Hi;
             D = BM.D;
             e_ = BM.e_;
+            
             
             switch BM.boundpos
                 case {'l'}

@@ -107,9 +107,9 @@ classdef Hypsyst3d < scheme.Scheme
             
             switch operator
                 case 'upwind'
-                    alphaA = max(eig(A(params,obj.x(end),obj.y(end),obj.z(end))));
-                    alphaB = max(eig(B(params,obj.x(end),obj.y(end),obj.z(end))));
-                    alphaC = max(eig(C(params,obj.x(end),obj.y(end),obj.z(end))));
+                    alphaA = max(abs(eig(A(params,obj.x(end),obj.y(end),obj.z(end)))));
+                    alphaB = max(abs(eig(B(params,obj.x(end),obj.y(end),obj.z(end)))));
+                    alphaC = max(abs(eig(C(params,obj.x(end),obj.y(end),obj.z(end)))));
                     
                     Ap = (obj.Aevaluated+alphaA*I_N)/2;
                     Am = (obj.Aevaluated-alphaA*I_N)/2;
