@@ -6,7 +6,6 @@ classdef Utux < scheme.Scheme
         order % Order accuracy for the approximation
 
         H % Discrete norm
-        M % Derivative norm
         D
 
         D1
@@ -18,23 +17,41 @@ classdef Utux < scheme.Scheme
 
 
     methods 
-         function obj = Utux(m,xlim,order)
+         function obj = Utux(m,xlim,order,operator)
              default_arg('a',1);
-            [x, h] = util.get_grid(xlim{:},m);
-            ops = sbp.Ordinary(m,h,order);
+           
+           %Old operators  
+           % [x, h] = util.get_grid(xlim{:},m);
+           %ops = sbp.Ordinary(m,h,order);
+           
+           
+           switch operator
+               case 'NonEquidistant'
+              ops = sbp.D1Nonequidistant(m,xlim,order);
+              obj.D1 = ops.D1;
+               case 'Standard'
+              ops = sbp.D2Standard(m,xlim,order);
+              obj.D1 = ops.D1;
+               case 'Upwind'
+              ops = sbp.D1Upwind(m,xlim,order);
+              obj.D1 = ops.Dm;
+               otherwise
+                   error('Unvalid operator')
+           end
+              obj.x=ops.x;
 
-            obj.D1 = sparse(ops.derivatives.D1);
-            obj.H =  sparse(ops.norms.H);
-            obj.Hi = sparse(ops.norms.HI);
-            obj.M =  sparse(ops.norms.M);
-            obj.e_l = sparse(ops.boundary.e_1);
-            obj.e_r = sparse(ops.boundary.e_m);
+            
+            obj.H =  ops.H;
+            obj.Hi = ops.HI;
+        
+            obj.e_l = ops.e_l;
+            obj.e_r = ops.e_r;
             obj.D=obj.D1;
 
             obj.m = m;
-            obj.h = h;
+            obj.h = ops.h;
             obj.order = order;
-            obj.x = x;
+            obj.x = ops.x;
 
         end
         % Closure functions return the opertors applied to the own doamin to close the boundary
@@ -47,7 +64,7 @@ classdef Utux < scheme.Scheme
         function [closure, penalty] = boundary_condition(obj,boundary,type,data)
             default_arg('type','neumann');
             default_arg('data',0);
-            tau = -1*obj.e_l;  
+            tau =-1*obj.e_l;  
             closure = obj.Hi*tau*obj.e_l';       
             penalty = 0*obj.e_l;
                 
