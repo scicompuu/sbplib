@@ -9,21 +9,17 @@ classdef Hypsyst3dCurve < scheme.Scheme
         xi,eta,zeta
         Xi, Eta, Zeta
         
-        Eta_xi, Zeta_xi, Xi_eta, Zeta_eta, Xi_zeta, Eta_zeta
-        
-        X_xi, X_eta, X_zeta,Y_xi,Y_eta,Y_zeta,Z_xi,Z_eta,Z_zeta
-        
-        
-        metric_terms
+        Eta_xi, Zeta_xi, Xi_eta, Zeta_eta, Xi_zeta, Eta_zeta    % Metric terms
+        X_xi, X_eta, X_zeta,Y_xi,Y_eta,Y_zeta,Z_xi,Z_eta,Z_zeta % Metric terms
         
         order % Order accuracy for the approximation
         
         D % non-stabalized scheme operator
-        Aevaluated, Bevaluated, Cevaluated, Eevaluated
-        Ahat, Bhat, Chat, E
-        A,B,C
+        Aevaluated, Bevaluated, Cevaluated, Eevaluated % Numeric Coeffiecient matrices
+        Ahat, Bhat, Chat  % Symbolic Transformed Coefficient matrices
+        A, B, C, E % Symbolic coeffiecient matrices
         
-        J, Ji
+        J, Ji % JAcobian and inverse Jacobian
         
         H % Discrete norm
         % Norms in the x, y and z directions
@@ -73,7 +69,7 @@ classdef Hypsyst3dCurve < scheme.Scheme
             obj.eta = ops_eta.x;
             obj.zeta = ops_zeta.x;
             
-            obj.Xi = kr(obj.xi,ones(m_eta,1),ones(m_zeta,1));%% Que pasa?
+            obj.Xi = kr(obj.xi,ones(m_eta,1),ones(m_zeta,1));
             obj.Eta = kr(ones(m_xi,1),obj.eta,ones(m_zeta,1));
             obj.Zeta = kr(ones(m_xi,1),ones(m_eta,1),obj.zeta);
             
@@ -127,7 +123,7 @@ classdef Hypsyst3dCurve < scheme.Scheme
             obj.Z_xi = D1_xi*Z;
             obj.Z_eta = D1_eta*Z;
             obj.Z_zeta = D1_zeta*Z;
-              
+            
             obj.Ahat = @transform_coefficient_matrix;
             obj.Bhat = @transform_coefficient_matrix;
             obj.Chat = @transform_coefficient_matrix;
@@ -146,44 +142,43 @@ classdef Hypsyst3dCurve < scheme.Scheme
                     
                     Ap = (obj.Aevaluated+alphaA*I_N)/2;
                     Dmxi = kr(I_n, ops_xi.Dm, I_eta,I_zeta);
-                    diffSum=-Ap*Dmxi;
+                    diffSum = -Ap*Dmxi;
                     clear Ap Dmxi
                     
                     Am = (obj.Aevaluated-alphaA*I_N)/2;
-                    obj.Aevaluated=[];
+                    
+                    obj.Aevaluated = [];
                     Dpxi = kr(I_n, ops_xi.Dp, I_eta,I_zeta);
-                    temp=Am*Dpxi;
-                    diffSum=diffSum-temp;
+                    temp = Am*Dpxi;
+                    diffSum = diffSum-temp;
                     clear Am Dpxi
                     
                     Bp = (obj.Bevaluated+alphaB*I_N)/2;
                     Dmeta = kr(I_n, I_xi, ops_eta.Dm,I_zeta);
-                    temp=Bp*Dmeta;
-                    diffSum=diffSum-temp;
+                    temp = Bp*Dmeta;
+                    diffSum = diffSum-temp;
                     clear Bp Dmeta
                     
                     Bm = (obj.Bevaluated-alphaB*I_N)/2;
-                    obj.Bevaluated=[];
+                    obj.Bevaluated = [];
                     Dpeta = kr(I_n, I_xi, ops_eta.Dp,I_zeta);
-                    temp=Bm*Dpeta;
-                    diffSum=diffSum-temp;
+                    temp = Bm*Dpeta;
+                    diffSum = diffSum-temp;
                     clear Bm Dpeta
-                    
                     
                     Cp = (obj.Cevaluated+alphaC*I_N)/2;
                     Dmzeta = kr(I_n, I_xi, I_eta,ops_zeta.Dm);
-                    temp=Cp*Dmzeta;
-                    diffSum=diffSum-temp;
+                    temp = Cp*Dmzeta;
+                    diffSum = diffSum-temp;
                     clear Cp Dmzeta
                     
                     Cm = (obj.Cevaluated-alphaC*I_N)/2;
                     clear I_N
-                    obj.Cevaluated=[];
+                    obj.Cevaluated = [];
                     Dpzeta = kr(I_n, I_xi, I_eta,ops_zeta.Dp);
-                    temp=Cm*Dpzeta;
-                    diffSum=diffSum-temp;
+                    temp = Cm*Dpzeta;
+                    diffSum = diffSum-temp;
                     clear Cm Dpzeta temp
-                    
                     
                     obj.J = obj.X_xi.*obj.Y_eta.*obj.Z_zeta...
                         +obj.X_zeta.*obj.Y_xi.*obj.Z_eta...
@@ -196,10 +191,11 @@ classdef Hypsyst3dCurve < scheme.Scheme
                     obj.Eevaluated = obj.evaluateCoefficientMatrix(obj.E, obj.X, obj.Y,obj.Z,[],[],[],[],[],[]);
                     
                     obj.D = obj.Ji*diffSum-obj.Eevaluated;
-                otherwise
-                     D1_xi=kr(I_n,D1_xi);
-            D1_eta=kr(I_n,D1_eta);
-            D1_zeta=kr(I_n,D1_zeta);
+                    
+                case 'standard'
+                    D1_xi = kr(I_n,D1_xi);
+                    D1_eta = kr(I_n,D1_eta);
+                    D1_zeta = kr(I_n,D1_zeta);
                     
                     obj.J = obj.X_xi.*obj.Y_eta.*obj.Z_zeta...
                         +obj.X_zeta.*obj.Y_xi.*obj.Z_eta...
@@ -212,7 +208,10 @@ classdef Hypsyst3dCurve < scheme.Scheme
                     obj.Eevaluated = obj.evaluateCoefficientMatrix(obj.E, obj.X, obj.Y,obj.Z,[],[],[],[],[],[]);
                     
                     obj.D = obj.Ji*(-obj.Aevaluated*D1_xi-obj.Bevaluated*D1_eta -obj.Cevaluated*D1_zeta)-obj.Eevaluated;
+                otherwise
+                    error('Operator not supported')
             end
+            
             obj.Hxii = kr(I_n, ops_xi.HI, I_eta,I_zeta);
             obj.Hetai = kr(I_n, I_xi, ops_eta.HI,I_zeta);
             obj.Hzetai = kr(I_n, I_xi,I_eta, ops_zeta.HI);
@@ -231,15 +230,12 @@ classdef Hypsyst3dCurve < scheme.Scheme
             obj.e_b = kr(I_n, I_xi, I_eta, ops_zeta.e_l);
             obj.e_t = kr(I_n, I_xi, I_eta, ops_zeta.e_r);
             
-            
-            
             obj.Eta_xi = kr(obj.eta,ones(m_xi,1));
             obj.Zeta_xi = kr(ones(m_eta,1),obj.zeta);
             obj.Xi_eta = kr(obj.xi,ones(m_zeta,1));
             obj.Zeta_eta = kr(ones(m_xi,1),obj.zeta);
             obj.Xi_zeta = kr(obj.xi,ones(m_eta,1));
-            obj.Eta_zeta = kr(ones(m_zeta,1),obj.eta);
-            
+            obj.Eta_zeta = kr(ones(m_zeta,1),obj.eta);           
         end
         
         function [ret] = transform_coefficient_matrix(obj,x,y,z,x_1,x_2,y_1,y_2,z_1,z_2)
@@ -276,6 +272,7 @@ classdef Hypsyst3dCurve < scheme.Scheme
             N = obj.m;
         end
         
+        % Evaluates the symbolic Coeffiecient matrix mat
         function [ret] = evaluateCoefficientMatrix(obj,mat, X, Y, Z , x_1 , x_2 , y_1 , y_2 , z_1 , z_2)
             params = obj.params;
             side = max(length(X),length(Y));
@@ -295,20 +292,16 @@ classdef Hypsyst3dCurve < scheme.Scheme
                 side = max(length(X),length(Y));
                 cols = cols/side;
             end
-            matVec(abs(matVec)<10^(-10))=0;
+            matVec(abs(matVec)<10^(-10)) = 0;
             ret = cell(rows,cols);
             
-            
-            for ii=1:rows
-                for jj=1:cols
+            for ii = 1:rows
+                for jj = 1:cols
                     ret{ii,jj} = diag(matVec(ii,(jj-1)*side+1:jj*side));
                 end
             end
-            
             ret = cell2mat(ret);
-            
         end
-        
         
         function [BM] = boundary_matrices(obj,boundary)
             params = obj.params;
@@ -393,8 +386,8 @@ classdef Hypsyst3dCurve < scheme.Scheme
             BM.pos = signVec(1); BM.zeroval=signVec(2); BM.neg=signVec(3);
         end
         
-        
-        function [closure, penalty]=boundary_condition_char(obj,BM)
+        % Characteristic boundary condition
+        function [closure, penalty] = boundary_condition_char(obj,BM)
             side = BM.side;
             pos = BM.pos;
             neg = BM.neg;
@@ -404,7 +397,6 @@ classdef Hypsyst3dCurve < scheme.Scheme
             Hi = BM.Hi;
             D = BM.D;
             e_ = BM.e_;
-            
             
             switch BM.boundpos
                 case {'l'}
@@ -422,8 +414,8 @@ classdef Hypsyst3dCurve < scheme.Scheme
             end
         end
         
-        
-        function [closure,penalty]=boundary_condition_general(obj,BM,boundary,L)
+        % General boundary condition in the form Lu=g(x)
+        function [closure,penalty] = boundary_condition_general(obj,BM,boundary,L)
             side = BM.side;
             pos = BM.pos;
             neg = BM.neg;
@@ -472,7 +464,12 @@ classdef Hypsyst3dCurve < scheme.Scheme
             end
         end
         
-        
+        % Function that diagonalizes a symbolic matrix A as A=V*D*Vi
+        % D         is a diagonal matrix with the eigenvalues on A on the diagonal sorted by their sign
+        %                                    [d+       ]
+        %                               D =  [   d0    ]
+        %                                    [       d-]
+        % signVec   is a vector specifying the number of possitive, zero and negative eigenvalues of D
         function [V,Vi, D,signVec] = matrixDiag(obj,mat,x,y,z,x_1,x_2,y_1,y_2,z_1,z_2)
             params = obj.params;
             eps = 10^(-10);
@@ -516,7 +513,6 @@ classdef Hypsyst3dCurve < scheme.Scheme
             syms xs ys zs
             [V, D] = eig(mat(obj,xs,ys,zs,x_1s,x_2s,y_1s,y_2s,z_1s,z_2s));
             Vi = inv(V);
-            %    syms x_1s x_2s y_1s y_2s z_1s z_2s
             xs = x;
             ys = y;
             zs = z;

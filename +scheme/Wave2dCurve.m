@@ -131,7 +131,7 @@ classdef Wave2dCurve < scheme.Scheme
             obj.du_s = (obj.e_s'*Du)';
             obj.dv_s = kr(I_u,d1_l_v);
             obj.du_n = (obj.e_n'*Du)';
-            obj.dv_n = kr(I_u,d1_r_v);
+            obj.dv_n = kr(I_u,d1_r_v);General boundary conditions
 
             obj.m = m;
             obj.h = [h_u h_v];
