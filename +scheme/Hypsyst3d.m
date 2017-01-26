@@ -25,7 +25,6 @@ classdef Hypsyst3d < scheme.Scheme
         % Solving Hyperbolic systems on the form u_t=-Au_x-Bu_y-Cu_z-Eu
         function obj = Hypsyst3d(m, lim, order, A, B,C, E, params,operator)
             default_arg('E', [])
-            default_arg('operatpr',[])
             xlim =  lim{1};
             ylim = lim{2};
             zlim = lim{3};
