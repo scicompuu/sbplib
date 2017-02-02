@@ -54,5 +54,33 @@ classdef Map < handle
         function c = values(obj)
             c = obj.map.values;
         end
+
+        function v = subsref(obj, S)
+            switch S.type
+                case '()'
+                    k = S.subs;
+                    try
+                        v = obj.get(k);
+                    catch ME
+                        if strcmp(ME.identifier,'MATLAB:Containers:Map:NoKey')
+                            error('Reference to non-existent entry %s',toString(S.subs));
+                        else
+                            throw(ME);
+                        end
+                    end
+                otherwise
+                    v = builtin('subsref', obj, S);
+            end
+        end
+
+        function obj = subsasgn(obj, S, v);
+            switch S.type
+                case '()'
+                    k = S.subs;
+                    obj.set(k, v);
+                otherwise
+                    error('Unsupported indexing operator: %s',S.type);
+            end
+        end
     end
 end
