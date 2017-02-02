@@ -4,6 +4,7 @@ classdef Map < handle
     end
 
     % can we support multi map using varargin?
+    % probably a bad idea. For example it complicates keys();
 
     methods
         function obj = Map()
