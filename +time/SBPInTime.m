@@ -1,42 +1,38 @@
 classdef SBPInTime < time.Timestepper
     % The SBP in time method.
     % Implemented for v_t = A*v + f(t)
-    % k_local -- time-step
-    % Nblock -- number of points in each block
-    % nodes -- points such that t_n + nodes are the points in block n.
+    %
     % Each "step" takes one block step and thus advances
-    % k = k_local*(Nblock-1) in time.
-    % M -- matrix used in every solve.
-    % [L,U,P,Q] = lu(M);
+    % k = k_local*(blockSize-1) in time.
     properties
         M     % System matrix
-        L,U,P % LU factorization of M
-        Q
+        L,U,P,Q % LU factorization of M
         A
         Et_r
         penalty
         f
-        k_local
-        k
+        k_local % step size within a block
+        k % Time size of a block  k/(blockSize-1) = k_local
         t
         v
         m
         n
-        Nblock
+        blockSize % number of points in each block
         order
         nodes
     end
 
     methods
-        function obj = SBPInTime(A, f, k, order, Nblock, t0, v0, TYPE)
-            default_arg('TYPE','equidistant');
-            default_arg('Nblock',time.SBPInTime.smallestBlockSize(order,TYPE));
+        function obj = SBPInTime(A, f, k, t0, v0, TYPE, order, blockSize)
+            default_arg('TYPE','minimal');
+            default_arg('order', 8);
+            default_arg('blockSize',time.SBPInTime.smallestBlockSize(order,TYPE));
 
             obj.A = A;
             obj.f = f;
-            obj.k_local = k;
-            obj.k = k*(Nblock-1);
-            obj.Nblock = Nblock;
+            obj.k_local = k/(blockSize-1);
+            obj.k = k;
+            obj.blockSize = blockSize;
             obj.t = t0;
             obj.m = length(v0);
             obj.n = 0;
@@ -44,11 +40,11 @@ classdef SBPInTime < time.Timestepper
             %==== Build the time discretization matrix =====%
             switch TYPE
                 case 'equidistant'
-                    ops = sbp.D2Standard(Nblock,{0,obj.k},order);
+                    ops = sbp.D2Standard(blockSize,{0,obj.k},order);
                 case 'optimal'
-                    ops = sbp.D1Nonequidistant(Nblock,{0,obj.k},order);
+                    ops = sbp.D1Nonequidistant(blockSize,{0,obj.k},order);
                 case 'minimal'
-                    ops = sbp.D1Nonequidistant(Nblock,{0,obj.k},order,'minimal');
+                    ops = sbp.D1Nonequidistant(blockSize,{0,obj.k},order,'minimal');
             end
 
             D1 = ops.D1;
@@ -58,7 +54,7 @@ classdef SBPInTime < time.Timestepper
             obj.nodes = ops.x;
 
             Ix = speye(size(A));
-            It = speye(Nblock,Nblock);
+            It = speye(blockSize,blockSize);
 
             obj.Et_r = kron(e_r,Ix);
 
@@ -91,34 +87,16 @@ classdef SBPInTime < time.Timestepper
 
         function obj = step(obj)
             obj.v = time.sbp.sbpintime(obj.v, obj.t, obj.nodes,...
-                              obj.penalty, obj.f, obj.Nblock,...
+                              obj.penalty, obj.f, obj.blockSize,...
                               obj.Et_r,...
                               obj.L, obj.U, obj.P, obj.Q);
             obj.t = obj.t + obj.k;
-            obj.n = obj.n + obj.Nblock-1;
+            obj.n = obj.n + 1;
         end
     end
 
 
     methods(Static)
-
-        %
-        function [k,numberOfBlocks] = alignedTimeStep(k,Tend,Nblock)
-
-            % input k is the desired time-step
-            % Nblock is the number of points per block.
-
-            % Make sure that we reach the final time by advancing
-            % an integer number of blocks
-            kblock = (Nblock-1)*k;
-            numberOfBlocks = ceil(Tend/kblock);
-            kblock = Tend/(numberOfBlocks);
-
-            % Corrected time step
-            k = kblock/(Nblock-1);
-
-        end
-
         function N = smallestBlockSize(order,TYPE)
             default_arg('TYPE','equidistant')
 
@@ -175,13 +153,7 @@ classdef SBPInTime < time.Timestepper
                         otherwise
                             error('Operator does not exist');
                     end
-
             end
-
         end
-
     end
-
-
-
 end

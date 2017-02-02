@@ -11,23 +11,23 @@ classdef D1Nonequidistant < sbp.OpSet
         x % grid
         borrowing % Struct with borrowing limits for different norm matrices
     end
-    
+
     methods
         function obj = D1Nonequidistant(m,lim,order,option)
-            
+
             default_arg('option','Accurate');
             % 'Accurate' operators are optimized for accuracy
             % 'Minimal' operators have the smallest possible boundary
             %  closure
-            
+
             x_l = lim{1};
             x_r = lim{2};
             L = x_r-x_l;
-            
+
             switch option
-                
+
                 case {'Accurate','accurate','A'}
-                    
+
                     if order == 4
                         [obj.D1,obj.H,obj.x,obj.h] = ...
                             sbp.implementations.d1_noneq_4(m,L);
@@ -46,9 +46,9 @@ classdef D1Nonequidistant < sbp.OpSet
                     else
                         error('Invalid operator order %d.',order);
                     end
-                    
+
                 case {'Minimal','minimal','M'}
-                    
+
                     if order == 4
                         [obj.D1,obj.H,obj.x,obj.h] = ...
                             sbp.implementations.d1_noneq_minimal_4(m,L);
@@ -67,28 +67,20 @@ classdef D1Nonequidistant < sbp.OpSet
                     else
                         error('Invalid operator order %d.',order);
                     end
-                    
+
             end
-            
+
             obj.x = obj.x + x_l;
-            
+
             obj.e_l = sparse(m,1);
             obj.e_r = sparse(m,1);
             obj.e_l(1) = 1;
             obj.e_r(m) = 1;
-            
+
             obj.HI = inv(obj.H);
             obj.Q = obj.H*obj.D1 - obj.e_r*obj.e_r' + obj.e_l*obj.e_l';
-            
+
             obj.borrowing = [];
-            
         end
     end
-    
-
 end
-
-
-
-
-
