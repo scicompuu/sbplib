@@ -81,14 +81,6 @@ classdef D1Nonequidistant < sbp.OpSet
             obj.Q = obj.H*obj.D1 - obj.e_r*obj.e_r' + obj.e_l*obj.e_l';
 
             obj.borrowing = [];
-
         end
     end
-
-
 end
-
-
-
-
-

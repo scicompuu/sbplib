@@ -63,11 +63,8 @@ classdef D2Standard < sbp.OpSet
             end
 
             obj.m = m;
-
         end
     end
-
-
 end
 
 
