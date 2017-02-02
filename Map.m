@@ -8,7 +8,7 @@ classdef Map < handle
 
     methods
         function obj = Map()
-            obj.map = containers.Map()
+            obj.map = containers.Map();
         end
 
         function set(obj, k, v)
@@ -25,7 +25,7 @@ classdef Map < handle
 
         function b = isKey(obj, k)
             keyByteStream = getByteStreamFromArray(k);
-            b = obj.map.isKey(keyByteStream);
+            b = obj.map.isKey(char(keyByteStream));
         end
 
         function c = keys(obj)
@@ -57,11 +57,11 @@ classdef Map < handle
         end
 
         function v = subsref(obj, S)
-            switch S.type
+            switch S(1).type
                 case '()'
-                    k = S.subs;
+                    k = S.subs{1};
                     try
-                        v = obj.get(k);
+                        v = get(obj, k);
                     catch ME
                         if strcmp(ME.identifier,'MATLAB:Containers:Map:NoKey')
                             error('Reference to non-existent entry %s',toString(S.subs));
@@ -70,17 +70,21 @@ classdef Map < handle
                         end
                     end
                 otherwise
-                    v = builtin('subsref', obj, S);
+                    try
+                        v = builtin('subsref', obj, S);
+                    catch e
+                        error('You can''t use dot notation for this because Matlab(TM). What is this piece of shit software anyway?')
+                    end
             end
         end
 
         function obj = subsasgn(obj, S, v);
-            switch S.type
+            switch S(1).type
                 case '()'
-                    k = S.subs;
-                    obj.set(k, v);
+                    k = S.subs{1};
+                    set(obj, k, v);
                 otherwise
-                    error('Unsupported indexing operator: %s',S.type);
+                    error('You can''t use dot notation because Matlab(TM). What is this piece of shit software anyway?')
             end
         end
     end
