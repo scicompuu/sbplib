@@ -85,7 +85,7 @@ classdef SBPInTime < time.Timestepper
 
             % Pretend that the initial condition is the last level
             % of a previous step.
-            obj.v = obj.Et_r * v0;
+            obj.v =  1/(e_r'*e_r) * obj.Et_r * v0;
 
         end
 
@@ -106,7 +106,7 @@ classdef SBPInTime < time.Timestepper
 
     methods(Static)
         function N = smallestBlockSize(order,TYPE)
-            default_arg('TYPE','equidistant')
+            default_arg('TYPE','gauss')
 
             switch TYPE
 
