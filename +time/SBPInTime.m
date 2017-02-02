@@ -24,9 +24,16 @@ classdef SBPInTime < time.Timestepper
 
     methods
         function obj = SBPInTime(A, f, k, t0, v0, TYPE, order, blockSize)
-            default_arg('TYPE','minimal');
-            default_arg('order', 8);
-            default_arg('blockSize',time.SBPInTime.smallestBlockSize(order,TYPE));
+
+            default_arg('TYPE','gauss');
+
+            if(strcmp(TYPE,'gauss'))
+                default_arg('order',4)
+                default_arg('blockSize',4)
+            else
+                default_arg('order', 8);
+                default_arg('blockSize',time.SBPInTime.smallestBlockSize(order,TYPE));
+            end
 
             obj.A = A;
             obj.f = f;
@@ -45,6 +52,8 @@ classdef SBPInTime < time.Timestepper
                     ops = sbp.D1Nonequidistant(blockSize,{0,obj.k},order);
                 case 'minimal'
                     ops = sbp.D1Nonequidistant(blockSize,{0,obj.k},order,'minimal');
+                case 'gauss'
+                    ops = sbp.D1Gauss(blockSize,{0,obj.k});
             end
 
             D1 = ops.D1;
@@ -152,6 +161,8 @@ classdef SBPInTime < time.Timestepper
                         otherwise
                             error('Operator does not exist');
                     end
+                case 'gauss'
+                    N = 4;
             end
         end
     end
