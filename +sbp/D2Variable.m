@@ -18,7 +18,7 @@ classdef D2Variable < sbp.OpSet
 
     methods
         function obj = D2Variable(m,lim,order)
-            
+
             x_l = lim{1};
             x_r = lim{2};
             L = x_r-x_l;
@@ -30,12 +30,12 @@ classdef D2Variable < sbp.OpSet
                     [obj.H, obj.HI, obj.D1, obj.D2, obj.e_l,...
                         obj.e_r, obj.d1_l, obj.d1_r] = ...
                         sbp.implementations.d2_variable_4(m,obj.h);
-                    obj.borrowing.M.S = 0.2505765857;
+                    obj.borrowing.M.d1 = 0.2505765857;
                 case 2
                     [obj.H, obj.HI, obj.D1, obj.D2, obj.e_l,...
                         obj.e_r, obj.d1_l, obj.d1_r] = ...
                         sbp.implementations.d2_variable_2(m,obj.h);
-                    obj.borrowing.M.S = 0.3636363636; 
+                    obj.borrowing.M.d1 = 0.3636363636; 
                     % Borrowing const taken from Virta 2014
                     
                 otherwise
@@ -44,9 +44,12 @@ classdef D2Variable < sbp.OpSet
 
             obj.m = m;
             obj.M = [];
-
+        end
+        function str = string(obj)
+            str = [class(obj) '_' num2str(obj.order)];
         end
     end
+
 
 end
 

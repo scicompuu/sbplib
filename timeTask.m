@@ -1,5 +1,5 @@
-function done = timeTask(taskName)
-    fprintf('%s', taskName);
+function done = timeTask(fmt, varargin)
+    fprintf(fmt, varargin{:});
     tStart = tic;
 
     function done_fun()

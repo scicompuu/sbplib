@@ -15,6 +15,9 @@ classdef Rungekutta4SecondOrder < time.Timestepper
 
 
     methods
+        % Solves u_tt = Du + Eu_t + S
+        % D, E, S can either all be constants or all be function handles,
+        % They can also be omitted by setting them equal to the empty matrix.
         function obj = Rungekutta4SecondOrder(D, E, S, k, t0, v0, v0t)
             obj.D = D;
             obj.E = E;
@@ -22,21 +25,63 @@ classdef Rungekutta4SecondOrder < time.Timestepper
             obj.m = length(v0);
             obj.n = 0;
 
-            I = speye(obj.m);
-            O = sparse(obj.m,obj.m);
-            obj.M = [O, I; D, E*I]; % Multiply with I to allow 0 as input.
 
-            if S == 0
-                obj.C = zeros(2*obj.m,1);
+            if isa(D, 'function_handle') || isa(E, 'function_handle') || isa(S, 'function_handle')
+                default_arg('D', @(t)sparse(obj.m, obj.m));
+                default_arg('E', @(t)sparse(obj.m, obj.m));
+                default_arg('S', @(t)sparse(obj.m, 1)    );
+
+                if ~isa(D, 'function_handle')
+                    D = @(t)D;
+                end
+                if ~isa(E, 'function_handle')
+                    E = @(t)E;
+                end
+                if ~isa(S, 'function_handle')
+                    S = @(t)S;
+                end
+
+                I = speye(obj.m);
+                O = sparse(obj.m,obj.m);
+
+                obj.M = @(t)[
+                       O,    I;
+                    D(t), E(t);
+                ];
+                obj.C = @(t)[
+                    zeros(obj.m,1);
+                              S(t);
+                ];
+
+                obj.k = k;
+                obj.t = t0;
+                obj.w = [v0; v0t];
+
+                obj.F = @(w,t)(obj.M(t)*w + obj.C(t));
             else
-                obj.C = [zeros(obj.m,1), S];
+
+                default_arg('D', sparse(obj.m, obj.m));
+                default_arg('E', sparse(obj.m, obj.m));
+                default_arg('S', sparse(obj.m, 1)    );
+
+                I = speye(obj.m);
+                O = sparse(obj.m,obj.m);
+
+                obj.M = [
+                    O, I;
+                    D, E;
+                ];
+                obj.C = [
+                    zeros(obj.m,1);
+                                 S;
+                ];
+
+                obj.k = k;
+                obj.t = t0;
+                obj.w = [v0; v0t];
+
+                obj.F = @(w,t)(obj.M*w + obj.C);
             end
-
-            obj.k = k;
-            obj.t = t0;
-            obj.w = [v0; v0t];
-
-            obj.F = @(w,t)(obj.M*w + obj.C);
         end
 
         function [v,t] = getV(obj)

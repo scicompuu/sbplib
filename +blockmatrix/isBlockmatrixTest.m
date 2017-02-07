@@ -52,6 +52,10 @@ function testIsBlockmatrix(testCase)
             },
             true % Empty blocks allowed.
         },
+        {
+            blockmatrix.zero({[1 2 3],[2 3]}),
+            true % A zero block matrix is a block matrix
+        },
     };
 
     for i = 1:length(cases)

@@ -1,4 +1,5 @@
-function [minor, sub] = minors(A)
+function [minor, sub] = minors(A, verbose)
+    default_arg('verbose', true);
     [n, m] = size(A);
 
     if n ~= m
@@ -18,8 +19,10 @@ function [minor, sub] = minors(A)
     end
 
     for i = 1:length(sub)
-        fprintf('%d:\n', ks{i});
-        disp(sub{i})
+        if verbose
+            fprintf('%d:\n', ks{i});
+            disp(sub{i})
+        end
 
         minor(i) = det(sub{i});
     end

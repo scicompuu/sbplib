@@ -24,7 +24,7 @@ classdef Curve
             if ~isempty(transformation)
                 transformation.base_g = g;
                 transformation.base_gp = gp;
-                [g,gp] = grid.Curve.transform_g(g,gp,transformation);
+                [g,gp] = parametrization.Curve.transform_g(g,gp,transformation);
             end
 
             obj.g = g;
@@ -68,17 +68,21 @@ classdef Curve
         end
 
         function h= show(obj,name)
+            default_arg('name', '')
             p = obj.g(1/2);
             n = obj.normal(1/2);
             p = p + n*0.1;
 
             % Add arrow
 
-            h = text(p(1),p(2),name);
-            h.HorizontalAlignment = 'center';
-            h.VerticalAlignment = 'middle';
 
-            obj.plot();
+            if ~isempty(name)
+                h = text(p(1),p(2),name);
+                h.HorizontalAlignment = 'center';
+                h.VerticalAlignment = 'middle';
+            end
+
+            h = obj.plot();
         end
             % Shows curve with name and arrow for direction.
 
@@ -106,7 +110,7 @@ classdef Curve
             % New function and derivative
             g_new = @(t)obj.g(arcPar(t));
             gp_new = @(t) normalize(obj.gp(arcPar(t)));
-            curve = grid.Curve(g_new,gp_new);
+            curve = parametrization.Curve(g_new,gp_new);
 
         end
 
@@ -131,7 +135,7 @@ classdef Curve
         function D = reverse(C)
             % g = C.g;
             % gp = C.gp;
-            % D = grid.Curve(@(t)g(1-t),@(t)-gp(1-t));
+            % D = parametrization.Curve(@(t)g(1-t),@(t)-gp(1-t));
             D = C.transform([],[],-1);
         end
 
@@ -157,7 +161,7 @@ classdef Curve
                 transformation.flip = flip*flip_old;
             end
 
-            D = grid.Curve(g,gp,transformation);
+            D = parametrization.Curve(g,gp,transformation);
 
         end
 
@@ -171,7 +175,7 @@ classdef Curve
             %     v(2,:) = x(2,:)+a(2);
             % end
 
-            % D = grid.Curve(@g_fun,gp);
+            % D = parametrization.Curve(@g_fun,gp);
 
             D = C.transform([],a);
         end
@@ -206,7 +210,7 @@ classdef Curve
             %     v = A*gp(t);
             % end
 
-            % D = grid.Curve(@g_fun,@gp_fun);
+            % D = parametrization.Curve(@g_fun,@gp_fun);
 
             % g = A(g-a)+a = Ag - Aa + a;
             b = - A*a + a;
@@ -237,7 +241,7 @@ classdef Curve
             %     v = A*gp(t);
             % end
 
-            % D = grid.Curve(@g_fun,@gp_fun);
+            % D = parametrization.Curve(@g_fun,@gp_fun);
 
 
              % g = A(g-a)+a = Ag - Aa + a;
@@ -266,9 +270,13 @@ classdef Curve
                 v(1,:) = p1(1) + t.*(p2(1)-p1(1));
                 v(2,:) = p1(2) + t.*(p2(2)-p1(2));
             end
-            g = @g_fun;
 
-            obj = grid.Curve(g);
+            function v = g_fun_deriv(t)
+                v(1,:) = t.*0 + (p2(1)-p1(1));
+                v(2,:) = t.*0 + (p2(2)-p1(2));
+            end
+
+            obj = parametrization.Curve(@g_fun, @g_fun_deriv);
         end
 
         function obj = circle(c,r,phi)
@@ -288,7 +296,7 @@ classdef Curve
                 v(2,:) =  (phi(2)-phi(1))*r*cos(w);
             end
 
-            obj = grid.Curve(@g_fun,@g_fun_deriv);
+            obj = parametrization.Curve(@g_fun,@g_fun_deriv);
         end
 
         function obj = bezier(p0, p1, p2, p3)
@@ -302,7 +310,7 @@ classdef Curve
                 v(2,:) = 3*(1-t).^2*(p1(2)-p0(2)) + 6*(1-t).*t*(p2(2)-p1(2)) + 3*t.^2*(p3(2)-p2(2));
             end
 
-            obj = grid.Curve(@g_fun,@g_fun_deriv);
+            obj = parametrization.Curve(@g_fun,@g_fun_deriv);
         end
 
 

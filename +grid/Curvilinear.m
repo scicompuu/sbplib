@@ -7,7 +7,8 @@ classdef Curvilinear < grid.Structured & grid.Mapped
     methods
         % Creates a curvilinear grid.
         % Ex: grid.Curvilinear(mapping, xi, eta, ...)
-        %    mapping     -- either a matrix or a cell array with physical coordinates.
+        %    mapping     -- either a function handle, a matrix or a cell array with physical coordinates.
+        %                   A function handle should be a vector valued function of the coordinate mapping.
         %                   A matrix should be a grid function (N*D x 1 vector) or a N x D
         %                   A cell array should be a 1 x D cell array with either N x 1 vectors
         %                   or matrices of the same dimesions as the logical grid.
@@ -31,7 +32,7 @@ classdef Curvilinear < grid.Structured & grid.Mapped
             elseif isnumeric(mapping)
                 obj.coords = matrixMappingToCoords(mapping, N, D);
             else
-                error('grid:Curvilinear:Curvilinear','mapping must be a matrix or a cell array.');
+                error('grid:Curvilinear:Curvilinear','mapping must be a function handle, a matrix or a cell array.');
             end
         end
 
@@ -66,12 +67,12 @@ classdef Curvilinear < grid.Structured & grid.Mapped
 
         % Restricts the grid function gf on obj to the subgrid g.
         function gf = restrictFunc(obj, gf, g)
-            gf = obj.logic.restrictFunc(gf, g.baseGrid());
+            gf = obj.logic.restrictFunc(gf, g.logic);
         end
 
         % Projects the grid function gf on obj to the grid g.
         function gf = projectFunc(obj, gf, g)
-            gf = obj.logic.projectFunc(gf,g.baseGrid());
+            gf = obj.logic.projectFunc(gf,g.logic);
         end
 
         function h = scaling(obj)

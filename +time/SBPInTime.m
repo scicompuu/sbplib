@@ -104,6 +104,7 @@ classdef SBPInTime < time.Timestepper
         end
     end
 
+
     methods(Static)
         function N = smallestBlockSize(order,TYPE)
             default_arg('TYPE','gauss')

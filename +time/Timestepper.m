@@ -60,6 +60,13 @@ classdef Timestepper < handle
             s = util.replace_string(s,'');
         end
 
+
+        function [v, t] = stepTo(obj, n, progress_bar)
+            default_arg('progress_bar',false);
+
+            [v, t] = obj.stepN(n-obj.n, progress_bar);
+        end
+
         function [v,t] = evolve(obj, tend, progress_bar)
             default_arg('progress_bar',false)
             if ~progress_bar

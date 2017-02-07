@@ -25,6 +25,21 @@ function testInputConstant(testCase)
     end
 end
 
+% evalOn should give and error if the number of inputs to func is not the same as
+% the number of dimensions of the grid.
+function testNumberOfInputs(testCase)
+    cases = {
+        {getTestGrid('1d'), @(x,y)x-y},
+        {getTestGrid('2d'), @(x)x    },
+    }
+
+    for i = 1:length(cases)
+        g = cases{i}{1};
+        f = cases{i}{2};
+        testCase.verifyError(@()grid.evalOn(g, f),'grid:evalOn:WrongNumberOfInputs',sprintf('in(%d) = %s',i,toString(f)));
+    end
+end
+
 function testInputScalarFunction1d(testCase)
     in  = {
         @(x)1+x*0,

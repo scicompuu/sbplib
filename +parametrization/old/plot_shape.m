@@ -6,7 +6,7 @@ function hs = plot_shape(s,n)
     hs = {};
     hold on
     for i = 1:length(s)
-        hs{end+1} = grid.plot_curve(s{i},n);
+        hs{end+1} = parametrization.plot_curve(s{i},n);
     end
     hold off
 end

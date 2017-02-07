@@ -34,9 +34,18 @@ classdef Grid < grid.Grid
             n = length(obj.grids);
         end
 
-        % n returns the number of points in the grid
+        % N returns the number of points in the grid
         function o = N(obj)
             o = obj.nPoints;
+        end
+
+        % Ns returns the number of points in each sub grid as a vector
+        function o = Ns(obj)
+            ns = zeros(1,obj.nBlocks);
+            for i = 1:obj.nBlocks;
+                ns(i) = obj.grids{i}.N();
+            end
+            o = ns;
         end
 
         function n = nBlocks(obj)
@@ -62,9 +71,9 @@ classdef Grid < grid.Grid
             nBlocks = length(obj.grids);
 
             % Collect number of points in each block
-            N = cell(1,nBlocks);
+            N = zeros(1,nBlocks);
             for i = 1:nBlocks
-                N{i} = obj.grids{i}.N();
+                N(i) = obj.grids{i}.N();
             end
 
             gfs = mat2cell(gf, N, 1);

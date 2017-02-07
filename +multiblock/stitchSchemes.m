@@ -11,24 +11,24 @@
 % Output parameters are cell arrays and cell matrices.
 %
 % Ex: [schms, D, H] = stitchSchemes(schmHand, order, schmParam, blocks, ms, conn, bound)
-function [schms, D, H] = stitchSchemes(schmHand, order, schmParam, blocks, ms, conn, bound)
+function [schms, D, H] = stitchSchemes(schmHand, order, schmParam, grids, conn, bound)
     default_arg('schmParam',[]);
 
-    n_blocks = numel(blocks);
+    n_blocks = numel(grids);
 
     % Creating Schemes
     for i = 1:n_blocks
         if isempty(schmParam);
-            schms{i} = schmHand(ms{i},blocks{i},order,[]);
+            schms{i} = schmHand(grids{i},order,[]);
         elseif ~iscell(schmParam)
             param = schmParam(i);
-            schms{i} = schmHand(ms{i},blocks{i},order,param);
+            schms{i} = schmHand(grids{i},order,param);
         else
             param = schmParam{i};
             if iscell(param)
-                schms{i} = schmHand(ms{i},blocks{i},order,param{:});
+                schms{i} = schmHand(grids{i},order,param{:});
             else
-                schms{i} = schmHand(ms{i},blocks{i},order,param);
+                schms{i} = schmHand(grids{i},order,param);
             end
         end
 

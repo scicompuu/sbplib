@@ -33,7 +33,7 @@ function [t,p,d] = curve_discretise(g,h,do_plot)
 
     if do_plot
         fprintf('n:%d  max: %f min: %f\n', n, max(d),min(d));
-        p = grid.map_curve(g,t);
+        p = parametrization.map_curve(g,t);
         figure
         show(g,t,h);
     end
@@ -44,11 +44,11 @@ function [t,p,d] = curve_discretise_n(g,n)
     t = linspace(0,1,n);
     t = equalize_d(g,t);
     d = D(g,t);
-    p = grid.map_curve(g,t);
+    p = parametrization.map_curve(g,t);
 end
 
 function d = D(g,t)
-    p = grid.map_curve(g,t);
+    p = parametrization.map_curve(g,t);
 
     d = zeros(1,length(t)-1);
     for i = 1:length(d)
@@ -71,11 +71,11 @@ end
 
 
 function show(g,t,hh)
-    p = grid.map_curve(g,t);
+    p = parametrization.map_curve(g,t);
 
 
 
-    h = grid.plot_curve(g);
+    h = parametrization.plot_curve(g);
     h.LineWidth = 2;
     axis equal
     hold on
@@ -84,7 +84,7 @@ function show(g,t,hh)
     h.MarkerSize = 24;
     hold off
 
-    n = grid.curve_normals(g,t);
+    n = parametrization.curve_normals(g,t);
     hold on
     for  i = 1:length(t)
         p0 = p(:,i);

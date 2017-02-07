@@ -6,4 +6,9 @@ classdef (Abstract) OpSet
         x % Grid
     end
 
+    methods (Abstract)
+        % Returns a string representation of the type of operator.
+        str = string(obj)
+    end
+
 end
