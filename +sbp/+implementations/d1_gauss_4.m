@@ -1,4 +1,4 @@
-function [D1,H,x,h,e_l,e_r] = d1_gauss_4(N,L)
+function [D1,H,x,h,e_l,e_r] = d1_gauss_4(L)
 
 % L: Domain length
 % N: Number of grid points
@@ -6,9 +6,7 @@ if(nargin < 2)
     L = 1;
 end
 
-if(N~=4)
-    error('This operator requires exactly 4 grid points');
-end
+N = 4;
 
 % Quadrature nodes on interval [-1, 1]
 x = [ -0.8611363115940526; -0.3399810435848563; 0.3399810435848563; 0.8611363115940526];

@@ -25,9 +25,9 @@ classdef D1Gauss < sbp.OpSet
             switch m
                 case 4
                     [obj.D1,obj.H,obj.x,obj.h,obj.e_l,obj.e_r] = ...
-                        sbp.implementations.d1_gauss_4(m,L);
+                        sbp.implementations.d1_gauss_4(L);
                 otherwise
-                    error('Invalid operator order %d.',order);
+                    error('Invalid number of points: %d.', m);
             end
 
 
