@@ -1,10 +1,7 @@
 function [D1,H,x,h,e_l,e_r] = d1_gauss_4(L)
 
 % L: Domain length
-% N: Number of grid points
-if(nargin < 2)
-    L = 1;
-end
+default_arg('L',1);
 
 N = 4;
 
