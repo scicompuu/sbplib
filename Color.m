@@ -9,6 +9,7 @@ classdef Color
         darkred   = [0.635 0.078 0.184];
         black     = [0.000 0.000 0.000];
         white     = [1.000 1.000 1.000];
+        colors = { Color.blue, Color.red, Color.yellow, Color.green, Color.purple, Color.lightblue, Color.darkred, Color.black, Color.white};
     end
 
     methods(Static)
@@ -16,7 +17,6 @@ classdef Color
             markers ={'+', 'o', '*', '.', 'x', 'square', 'diamond', 'v', '^', '>', '<', 'pentagram', 'hexagram'};
             % Filled and non-filled markers?
             lineStyles = {'-', '--', ':', '-.'};
-            colors = { Color.blue, Color.red, Color.yellow, Color.purple, Color.green, Color.lightblue, Color.darkred, Color.black, Color.white};
 
 
             function showMarkers(x0, y0, lx, ly, color, filled)
@@ -41,7 +41,7 @@ classdef Color
             end
 
             function showColors(x0, y0, lx, ly)
-                n = length(colors);
+                n = length(Color.colors);
                 s = ceil(sqrt(n));
 
                 x = linspace(x0, x0 + lx, s);
@@ -52,8 +52,8 @@ classdef Color
                 for i = 1:n
                     lh = line(X(i),Y(i));
                     lh.Marker = 'o';
-                    lh.MarkerFaceColor = colors{i};
-                    lh.Color = colors{i};
+                    lh.MarkerFaceColor = Color.colors{i};
+                    lh.Color = Color.colors{i};
                     lh.MarkerSize = 12;
                 end
             end
