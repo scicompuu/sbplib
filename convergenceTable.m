@@ -1,15 +1,15 @@
-function convergenceTable(methodName, T, orders, m, e, q, tableType)
+function convergenceTable(caption, orders, m, e, q, tableType)
     default_arg('tableType','plaintext')
 
     switch tableType
         case {'plaintext','text','plain'}
-            plainTextTable(methodName, T, orders, m, e, q);
+            plainTextTable(caption, orders, m, e, q);
         case {'tex', 'latex'}
-            latexTable(methodName, T, orders, m, e, q);
+            latexTable(caption, orders, m, e, q);
     end
 end
 
-function plainTextTable(methodName, T, orders, m, e, q)
+function plainTextTable(caption, orders, m, e, q)
 
 
     eW = 0;
@@ -23,7 +23,7 @@ function plainTextTable(methodName, T, orders, m, e, q)
     mW = findFieldWidth('%d',m);
     orderHeaderWidth = eW + qW + 1;
 
-    fprintf('method: %s\nT: %d\n',methodName, T);
+    fprintf('%s\n',caption);
 
     % Print order headers
     fprintf(' %*s |',mW,'')
@@ -69,7 +69,7 @@ function plainTextTable(methodName, T, orders, m, e, q)
 
 end
 
-function latexTable(methodName, T, orders, m, e, q)
+function latexTable(caption, orders, m, e, q)
 
     nOrders = length(orders);
 
@@ -85,7 +85,7 @@ function latexTable(methodName, T, orders, m, e, q)
 
     footer = {
         '\end{tabular}'
-        '\caption{Error $l_2$, and convergence rate, $q$, for SBP operators of orders 4 and 6 at different grid densities $N$. PROBLEM DESCRIPTION.}'
+        ['\caption{' caption '}']
         '\label{table:LABEL}'
         '\end{table}'
     };
