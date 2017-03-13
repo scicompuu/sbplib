@@ -53,6 +53,10 @@ classdef D1Upwind < sbp.OpSet
         	obj.borrowing = [];
 
         end
+
+        function str = string(obj)
+            str = [class(obj) '_' num2str(obj.order)];
+        end
     end
 
 

@@ -50,6 +50,10 @@ classdef D2BlockNorm < sbp.OpSet
             obj.m = m;
 
         end
+
+        function str = string(obj)
+            str = [class(obj) '_' num2str(obj.order)];
+        end
     end
 
 
