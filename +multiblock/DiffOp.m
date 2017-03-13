@@ -161,13 +161,14 @@ classdef DiffOp < scheme.Scheme
                 end
             end
 
-            div{2} = size(blockPenalty, 2); % Penalty is a column vector
             if ~iscell(blockPenalty)
+                div{2} = size(blockPenalty, 2); % Penalty is a column vector
                 p = blockmatrix.zero(div);
                 p{I} = blockPenalty;
                 penalty = blockmatrix.toMatrix(p);
             else
                 for i = 1:length(blockPenalty)
+                    div{2} = size(blockPenalty{i}, 2); % Penalty is a column vector
                     p = blockmatrix.zero(div);
                     p{I} = blockPenalty{i};
                     penalty{i} = blockmatrix.toMatrix(p);
