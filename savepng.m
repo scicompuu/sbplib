@@ -11,11 +11,7 @@ function savepng(h, filename, dpi)
     h.PaperUnits = 'centimeters';
     h.PaperPosition(3:4) = h.Position(3:4);
 
-    % Save as a bugged eps file.
     print(h,filename,'-dpng',sprintf('-r%d',dpi));
 
     h.Units = handle_units; % Restore the old units
-
-
-
 end
