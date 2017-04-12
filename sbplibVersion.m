@@ -3,7 +3,7 @@ function sbplibVersion()
     scriptname  = mfilename('fullpath');
     [folder,~,~] = fileparts(scriptname);
 
-    name = 'sbplib';
+    name = 'sbplib (feature/grids)';
     ver = '0.0.x';
 
     fprintf('%s %s\n', name, ver);
