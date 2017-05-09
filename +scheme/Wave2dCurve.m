@@ -27,6 +27,8 @@ classdef Wave2dCurve < scheme.Scheme
         gamm_u, gamm_v
         lambda
 
+        Dx, Dy % Physical derivatives
+
         x_u
         x_v
         y_u
@@ -152,6 +154,9 @@ classdef Wave2dCurve < scheme.Scheme
             obj.a22 = a22;
             obj.D = obj.Ji*c^2*(Duu + Duv + Dvu + Dvv);
             obj.lambda = lambda;
+
+            obj.Dx = spdiag( y_v./J)*Du + spdiag(-y_u./J)*Dv;
+            obj.Dy = spdiag(-x_v./J)*Du + spdiag( x_u./J)*Dv;
 
             obj.gamm_u = h_u*ops_u.borrowing.M.d1;
             obj.gamm_v = h_v*ops_v.borrowing.M.d1;
