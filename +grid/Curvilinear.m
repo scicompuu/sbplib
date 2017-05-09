@@ -19,6 +19,9 @@ classdef Curvilinear < grid.Structured & grid.Mapped
 
             % If mapping is a function evaluate it
             if isa(mapping, 'function_handle')
+                if nargin(mapping) ~= length(varargin)
+                    error('The dimension of the mapping does not match the dimension of the logical coordinates')
+                end
                 mapping = grid.evalOn(obj.logic, mapping);
             end
 
