@@ -1,4 +1,4 @@
-classdef Wave2dCurve < scheme.Scheme
+classdef LaplaceCurvilinear < scheme.Scheme
     properties
         m % Number of points in each direction, possibly a vector
         h % Grid spacing
@@ -36,11 +36,9 @@ classdef Wave2dCurve < scheme.Scheme
     end
 
     methods
-        function obj = Wave2dCurve(g ,order, c, opSet)
+        function obj = LaplaceCurvilinear(g ,order, c, opSet)
             default_arg('opSet',@sbp.D2Variable);
             default_arg('c', 1);
-
-            warning('Use LaplaceCruveilinear instead')
 
             assert(isa(g, 'grid.Curvilinear'))
 
