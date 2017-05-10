@@ -232,6 +232,7 @@ classdef Wave2dCurve < scheme.Scheme
 
                     tau = -c.^2 * 1/beta*obj.Ji*e;
 
+                    warning('is this right?! /c?')
                     closure{1} = halfnorm_inv*tau/c*spdiag(scale_factor)*e';
                     closure{2} = halfnorm_inv*tau*beta*d';
                     penalty = -halfnorm_inv*tau;
