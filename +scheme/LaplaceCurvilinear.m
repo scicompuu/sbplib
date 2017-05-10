@@ -9,7 +9,7 @@ classdef LaplaceCurvilinear < scheme.Scheme
 
         D % non-stabalized scheme operator
         M % Derivative norm
-        c
+        a,b
         J, Ji
         a11, a12, a22
 
@@ -36,9 +36,16 @@ classdef LaplaceCurvilinear < scheme.Scheme
     end
 
     methods
-        function obj = LaplaceCurvilinear(g ,order, c, opSet)
+        % Implements  a*div(b*grad(u)) as a SBP scheme
+        function obj = LaplaceCurvilinear(g ,order, a, b, opSet)
             default_arg('opSet',@sbp.D2Variable);
-            default_arg('c', 1);
+            default_arg('a', 1);
+            default_arg('b', 1);
+
+
+            if b ~=1
+                error('Not implemented yet')
+            end
 
             assert(isa(g, 'grid.Curvilinear'))
 
@@ -146,13 +153,14 @@ classdef LaplaceCurvilinear < scheme.Scheme
             obj.order = order;
             obj.grid = g;
 
-            obj.c = c;
+            obj.a = a;
+            obj.b = b;
             obj.J = spdiags(J, 0, m_tot, m_tot);
             obj.Ji = spdiags(1./J, 0, m_tot, m_tot);
             obj.a11 = a11;
             obj.a12 = a12;
             obj.a22 = a22;
-            obj.D = obj.Ji*c^2*(Duu + Duv + Dvu + Dvv);
+            obj.D = obj.Ji*a*(Duu + Duv + Dvu + Dvv);
             obj.lambda = lambda;
 
             obj.Dx = spdiag( y_v./J)*Du + spdiag(-y_u./J)*Dv;
@@ -199,21 +207,19 @@ classdef LaplaceCurvilinear < scheme.Scheme
 
                     penalty_parameter_1 = halfnorm_inv_n*(tau + sig1*halfnorm_inv_t*F*e'*halfnorm_t)*e;
 
-                    closure = obj.Ji*obj.c^2 * penalty_parameter_1*e';
-                    penalty = -obj.Ji*obj.c^2 * penalty_parameter_1;
+                    closure = obj.Ji*obj.a * penalty_parameter_1*e';
+                    penalty = -obj.Ji*obj.a * penalty_parameter_1;
 
 
                 % Neumann boundary condition
                 case {'N','n','neumann'}
-                    c = obj.c;
-
                     a_n = spdiags(coeff_n,0,length(coeff_n),length(coeff_n));
                     a_t = spdiags(coeff_t,0,length(coeff_t),length(coeff_t));
                     d = (a_n * d_n' + a_t*d_t')';
 
                     tau1 = -s;
                     tau2 = 0;
-                    tau = c.^2 * obj.Ji*(tau1*e + tau2*d);
+                    tau = obj.a * obj.Ji*(tau1*e + tau2*d);
 
                     closure = halfnorm_inv*tau*d';
                     penalty = -halfnorm_inv*tau;
@@ -222,15 +228,14 @@ classdef LaplaceCurvilinear < scheme.Scheme
                 case {'characteristic', 'char', 'c'}
                     default_arg('parameter', 1);
                     beta = parameter;
-                    c = obj.c;
 
                     a_n = spdiags(coeff_n,0,length(coeff_n),length(coeff_n));
                     a_t = spdiags(coeff_t,0,length(coeff_t),length(coeff_t));
                     d = s*(a_n * d_n' + a_t*d_t')'; % outward facing normal derivative
 
-                    tau = -c.^2 * 1/beta*obj.Ji*e;
+                    tau = -obj.a * 1/beta*obj.Ji*e;
 
-                    closure{1} = halfnorm_inv*tau/c*spdiag(scale_factor)*e';
+                    closure{1} = halfnorm_inv*tau*spdiag(scale_factor)*e';
                     closure{2} = halfnorm_inv*tau*beta*d';
                     penalty = -halfnorm_inv*tau;
 
@@ -273,8 +278,8 @@ classdef LaplaceCurvilinear < scheme.Scheme
             penalty_parameter_2 = halfnorm_inv_u_n * sig2 * e_u;
 
 
-            closure = obj.Ji*obj.c^2 * ( penalty_parameter_1*e_u' + penalty_parameter_2*F_u');
-            penalty = obj.Ji*obj.c^2 * (-penalty_parameter_1*e_v' + penalty_parameter_2*F_v');
+            closure = obj.Ji*obj.a * ( penalty_parameter_1*e_u' + penalty_parameter_2*F_u');
+            penalty = obj.Ji*obj.a * (-penalty_parameter_1*e_v' + penalty_parameter_2*F_v');
         end
 
         % Ruturns the boundary ops and sign for the boundary specified by the string boundary.
