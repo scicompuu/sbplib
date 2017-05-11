@@ -79,6 +79,19 @@ classdef Grid < grid.Grid
             gfs = mat2cell(gf, N, 1);
         end
 
+        % Converts a gridfunction to a set of plot matrices
+        % Takes a grid function and and a structured grid.
+        function F = funcToPlotMatrices(obj, gf)
+            gfs = obj.splitFunc(gf);
+
+            F = cell(1, obj.nBlocks());
+
+            for i = 1:obj.nBlocks()
+                F{i} = grid.funcToPlotMatrix(obj.grids{i}, gfs{i});
+            end
+        end
+
+
         % Restricts the grid function gf on obj to the subgrid g.
         function gf = restrictFunc(obj, gf, g)
             gfs = obj.splitFunc(gf);
