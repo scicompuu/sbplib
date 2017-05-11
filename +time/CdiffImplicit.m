@@ -63,7 +63,9 @@ classdef CdiffImplicit < time.Timestepper
 
             v_prev = f1;
             I = speye(m);
-            v = (1/k^2*A)\((1/k^2*A - 1/2*B)*f1 + (1/k*I - 1/2*C)*f2 + 1/2*G(0));
+            % v = (1/k^2*A)\((1/k^2*A - 1/2*B)*f1 + (1/k*I - 1/2*C)*f2 + 1/2*G(0));
+            v = f1 + k*f2;
+
 
             if ~issparse(A) || ~issparse(B) || ~issparse(C)
                 error('LU factorization with full pivoting only works for sparse matrices.')
