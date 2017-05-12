@@ -1,6 +1,8 @@
 function res = runtestsAll()
     l = dir();
 
+    warning('Simplify using the ''what'' command')
+
     dirNames = {l([l.isdir]).name};
 
     packages = {};
