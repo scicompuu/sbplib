@@ -10,6 +10,26 @@ classdef Color
         black     = [0.000 0.000 0.000];
         white     = [1.000 1.000 1.000];
         colors = { Color.blue, Color.red, Color.yellow, Color.green, Color.purple, Color.lightblue, Color.darkred, Color.black, Color.white};
+
+        notabilityYellow     = [100.0   99.0    22.0    ]/100;
+        notabilityOrange     = [97.0    61.0    15.0    ]/100;
+        notabilityRed        = [92.0    22.0    18.0    ]/100;
+
+        notabilityLightGreen = [67.0    99.0    22.0    ]/100;
+        notabilityGreen      = [39.0    72.0    30.0    ]/100;
+        notabilityDarkGreen  = [5.0     45.0    24.0    ]/100;
+
+        notabilityLightBlue  = [8.0     45.0    98.0    ]/100;
+        notabilityBlue       = [11.0    30.0    69.0    ]/100;
+        notabilityDarkBlue   = [7.0     5.0     46.0    ]/100;
+
+        notabilityPink       = [99.0    13.0    82.0    ]/100;
+        notabilityPurple     = [64.0    11.0    77.0    ]/100;
+        notabilityDarkPurple = [38.0    19.0    56.0    ]/100;
+
+        notabilityBrown      = [58.0    40.0    22.0    ]/100;
+        notabilityGrey       = [59.0    59.0    59.0    ]/100;
+        notabilityBlack      = [0.0     0.0     0.0     ]/100;
     end
 
     methods(Static)
