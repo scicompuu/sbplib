@@ -17,7 +17,7 @@ classdef Grid < grid.Grid
         %                -cell-vector with strings naming the boundaries to be
         %                connected. (inverted coupling?)
         %% Should we have boundary groups at all? maybe it can be handled in a
-        %% cleaner way outside of the class.
+        %% cleaner way outside of the class. Maybe the grid class doesn't need to care at all. All boundaryGroup interaction is in DiffOp?
         function obj = Grid(grids, connections, boundaryGroups)
             obj.grids = grids;
             obj.connections = connections;
