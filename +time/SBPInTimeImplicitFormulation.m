@@ -100,7 +100,7 @@ classdef SBPInTimeImplicitFormulation < time.Timestepper
             RHS = zeros(obj.blockSize*obj.N,1);
 
             for i = 1:length(obj.blockSize)
-                RHS((1 + (i-1)*obj.N):(i*obj.N)) = obj.f(obj.nodes(i));
+                RHS((1 + (i-1)*obj.N):(i*obj.N)) = obj.f(obj.t + obj.nodes(i));
             end
 
             RHS = RHS + obj.K*obj.v;
