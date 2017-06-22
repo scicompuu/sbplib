@@ -11,7 +11,7 @@ classdef SBPInTimeSecondOrderFormImplicit < time.Timestepper
     end
 
     methods
-        % Solves A*u_tt + B*u_t + C*u + f(t) = 0
+        % Solves A*u_tt + B*u_t + C*u = f(t)
         % A, B can either both be constants or both be function handles,
         % They can also be omitted by setting them equal to the empty matrix.
         function obj = SBPInTimeSecondOrderFormImplicit(A, B, C, f, k, t0, v0, v0t, TYPE, order, blockSize)
@@ -44,7 +44,7 @@ classdef SBPInTimeSecondOrderFormImplicit < time.Timestepper
             if ~isempty(f)
                 obj.ff = @(t)[
                     sparse(m,1);
-                           -f(t);
+                           f(t);
                 ];
             else
                 obj.ff = @(t) sparse(2*m,1);
