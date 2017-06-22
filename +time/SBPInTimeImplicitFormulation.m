@@ -27,6 +27,7 @@ classdef SBPInTimeImplicitFormulation < time.Timestepper
         function obj = SBPInTimeImplicitFormulation(A, B, f, k, t0, v0, TYPE, order, blockSize)
 
             default_arg('TYPE','gauss');
+            default_arg('f',[]);
 
             if(strcmp(TYPE,'gauss'))
                 default_arg('order',4)
@@ -38,7 +39,13 @@ classdef SBPInTimeImplicitFormulation < time.Timestepper
 
             obj.A = A;
             obj.B = B;
-            obj.f = f;
+
+            if ~isempty(f)
+                obj.f = f;
+            else
+                obj.f = @(t)sparse(length(v0),1);
+            end
+
 
             obj.k = k;
             obj.blockSize = blockSize;
