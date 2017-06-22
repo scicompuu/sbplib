@@ -38,7 +38,7 @@ classdef SBPInTimeSecondOrderFormImplicit < time.Timestepper
             ];
             obj.BB = [
                  O,  I;
-                -B, -C;
+                -C, -B;
             ];
 
             if ~isempty(f)
