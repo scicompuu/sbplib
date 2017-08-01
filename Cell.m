@@ -30,7 +30,7 @@ classdef Cell
         function A = subsasgn(A, S, B)
             disp(S);
             a = subsasgn(A.data, S, B);
-            A = Cell(a);
+            A = callConstructor(A, a);
         end
 
         function B = subsref(A, S)
@@ -47,7 +47,7 @@ classdef Cell
             end
 
             c = horzcat(dataArray{:});
-            C = Cell(c);
+            C = callConstructor(varargin{1}, c);
         end
 
         function vertcat(varargin)
@@ -58,7 +58,7 @@ classdef Cell
             end
 
             c = vertcat(dataArray{:});
-            C = Cell(c);
+            C = callConstructor(varargin{1}, c);
         end
     end
 end
