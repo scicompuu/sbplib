@@ -51,6 +51,14 @@ function str = cell2string(c)
 end
 
 function str = struct2string(s)
+    if isscalar(s)
+        str = structScalar2string(s);
+    else
+        str = structArray2string(s);
+    end
+end
+
+function str = structScalar2string(s)
     fn = fieldnames(s);
 
     if length(fn) == 0
@@ -67,4 +75,33 @@ function str = struct2string(s)
     value = s.(fn{end});
     str = [str sprintf('%s: %s}',fn{end}, value2string(value))];
 end
+
+function str = structArray2string(s)
+    fn = fieldnames(s);
+
+    if length(fn) == 0
+        str = '{}';
+        return
+    end
+
+    stringArray = cell(length(s)+1, length(fn)+1);
+
+    stringArray(1,2:end) = fn;
+
+    for i = 1:length(s)
+        stringArray{i+1,1} = i;
+        for j = 1:length(fn)
+            valueStr = value2string(s(i).(fn{j}));
+            stringArray{i+1,j+1} = valueStr;
+        end
+    end
+
+    tt = TextTable(stringArray);
+    tt.fmtArray(2:end, 1) = {'%d'};
+    tt.vertDiv = [1];
+    tt.horzDiv = [1];
+    str = tt.toString();
+end
+
+
 
