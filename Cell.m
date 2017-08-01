@@ -28,15 +28,22 @@ classdef Cell
         end
 
         function A = subsasgn(A, S, B)
-            disp(S);
             a = subsasgn(A.data, S, B);
             A = callConstructor(A, a);
         end
 
         function B = subsref(A, S)
-            disp(S);
-            B = subsref(A.data, S);
-            % Wrong if type is '()', '.'
+            switch S(1).type
+                case '()'
+                    b = subsref(A.data, S);
+                    B = callConstructor(A, b);
+                case '{}'
+                    B = subsref(A.data, S);
+                case '.'
+                    B = builtin('subsref',A, S);
+                otherwise
+                    error('impossible')
+            end
         end
 
         function C = horzcat(varargin)
