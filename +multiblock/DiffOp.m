@@ -177,7 +177,7 @@ classdef DiffOp < scheme.Scheme
         end
 
         function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
-
+            error('not implemented')
         end
 
         % Size returns the number of degrees of freedom
