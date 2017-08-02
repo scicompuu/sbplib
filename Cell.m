@@ -16,17 +16,6 @@ classdef Cell
             str = sprintf('%s%s', class(obj), toString(obj.data));
         end
 
-        % function display(A)
-        %     n = size(A.data);
-
-        %     sizeStr = join(cellfun(@num2str, num2cell(n), 'UniformOutput',false),'x');
-        %     header = [sizeStr, 'Cell']
-
-        %     disp()
-        %     disp(A.data)
-        %     % display(A.data)
-        % end
-
         function s = size(A)
             s = size(A.data);
         end
@@ -47,10 +36,6 @@ classdef Cell
         function B = ctranspose(A)
             b = A.data';
             B = callConstructor(A, b);
-        end
-
-        function disp(A)
-            disp(A.data)
         end
 
         function A = subsasgn(A, S, B)
