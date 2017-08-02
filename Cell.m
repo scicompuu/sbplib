@@ -12,9 +12,9 @@ classdef Cell
             obj.data = data;
         end
 
-        % function str = toString(obj)
-
-        % end
+        function str = toString(obj)
+            str = sprintf('%s%s', class(obj), toString(obj.data));
+        end
 
         % function display(A)
         %     n = size(A.data);
