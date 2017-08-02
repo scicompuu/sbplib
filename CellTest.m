@@ -3,15 +3,42 @@ function tests = CellTest()
 end
 
 function testSize(testCase)
-    testCase.verifyFail();
+    cases = {
+        {{}, [0, 0]},
+        {{1}, [1, 1]},
+        {{1, 2}, [1, 2]},
+        {{1; 2}, [2, 1]},
+        {{1, 2; 3, 4}, [2,2]},
+    };
+
+    for i = 1:length(cases)
+        A = Cell(cases{i}{1});
+        expected = cases{i}{2};
+
+        testCase.verifyEqual(size(A),expected);
+    end
 end
 
 function testLength(testCase)
-    testCase.verifyFail();
+    cases = {
+        {{}, 0},
+        {{1}, 1},
+        {{1, 2}, 2},
+        {{1; 2}, 2},
+        {{1, 2; 3, 4}, 2},
+    };
+
+    for i = 1:length(cases)
+        A = Cell(cases{i}{1});
+        expected = cases{i}{2};
+
+        testCase.verifyEqual(length(A),expected);
+    end
 end
 
 function testTranspose(testCase)
-    testCase.verifyFail();
+    testCase.verifyEqual(Cell({1, 2})', Cell({1; 2}));
+    testCase.verifyEqual(Cell({1; 2})', Cell({1, 2}));
 end
 
 function testRoundIndexWithProperty(testCase)
