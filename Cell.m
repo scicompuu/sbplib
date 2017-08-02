@@ -61,7 +61,7 @@ classdef Cell
             C = callConstructor(varargin{1}, c);
         end
 
-        function vertcat(varargin)
+        function C = vertcat(varargin)
             dataArray = cell(1, length(varargin));
 
             for i = 1:length(varargin)
