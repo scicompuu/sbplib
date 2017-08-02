@@ -1,11 +1,14 @@
+% Cell is a reimplementation of matlabs cell array with the benefit that it is subclassable
+% It might be used for giving a typename to a cellarray to increase readability of the code.
 classdef Cell
     properties
         data
     end
+
     methods
         function obj = Cell(data)
+            default_arg('data', {});
             if ~iscell(data)
-                class(data)
                 error('Input argument to Cell must be a cell array');
             end
 
