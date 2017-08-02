@@ -53,8 +53,90 @@ function testRoundIndexWithProperty(testCase)
     testCase.verifyEqual(result, {3, 1});
 end
 
-function testSubAssignment(testCase)
-    testCase.verifyFail();
+function testSubAssignmentRound(testCase)
+    cases = {
+        % {
+        %     lArray,
+        %     index,
+        %     rhs,
+        %     expectedResult
+        % },
+        {
+            {},
+            1,
+            {'a'},
+            {'a'},
+        },
+        {
+            {1},
+            1,
+            {'a'},
+            {'a'},
+        },
+        {
+            {1,2,3},
+            2,
+            {'a'},
+            {1,'a',3},
+        },
+        {
+            {1,2,3},
+            2,
+            [],
+            {1,3},
+        },
+    };
+
+    for i = 1:length(cases)
+        lArray         = Cell(cases{i}{1});
+        index          = cases{i}{2};
+        rhs            = cases{i}{3};
+        expectedResult = cases{i}{4};
+
+        lArray(index) = rhs;
+
+        testCase.verifyEqual(lArray.data, expectedResult)
+    end
+end
+
+function testSubAssignmentCurly(testCase)
+    cases = {
+        % {
+        %     lArray,
+        %     index,
+        %     rhs,
+        %     expectedResult
+        % },
+        {
+            {},
+            1,
+            'a',
+            {'a'},
+        },
+        {
+            {1},
+            1,
+            'a',
+            {'a'},
+        },
+        {
+            {1,2,3},
+            2,
+            'a',
+            {1,'a',3},
+        },
+    };
+
+    for i = 1:length(cases)
+        lArray         = Cell(cases{i}{1});
+        index          = cases{i}{2};
+        rhs            = cases{i}{3};
+        expectedResult = cases{i}{4};
+
+        lArray{index} = rhs;
+
+        testCase.verifyEqual(lArray.data, expectedResult)
+    end
 end
 
 function testIndexreferenceRound(testCase)
