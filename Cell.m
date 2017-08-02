@@ -27,6 +27,24 @@ classdef Cell
         %     % display(A.data)
         % end
 
+        function s = size(A)
+            s = size(A.data);
+        end
+
+        function l = length(A)
+            l = length(A.data);
+        end
+
+        function B = transpose(A)
+            b = A.data.';
+            B = callConstructor(A, b);
+        end
+
+        function B = ctranspose(A)
+            b = A.data';
+            B = callConstructor(A, b);
+        end
+
         function disp(A)
             disp(A.data)
         end

@@ -37,8 +37,13 @@ function testLength(testCase)
 end
 
 function testTranspose(testCase)
-    testCase.verifyEqual(Cell({1, 2})', Cell({1; 2}));
-    testCase.verifyEqual(Cell({1; 2})', Cell({1, 2}));
+    testCase.verifyEqual(Cell({1i, 2}).', Cell({1i; 2}));
+    testCase.verifyEqual(Cell({1i; 2}).', Cell({1i, 2}));
+end
+
+function testCtranspose(testCase)
+    testCase.verifyEqual(Cell({1i, 2})', Cell({1i; 2}));
+    testCase.verifyEqual(Cell({1i; 2})', Cell({1i, 2}));
 end
 
 function testRoundIndexWithProperty(testCase)
