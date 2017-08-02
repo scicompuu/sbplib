@@ -6,7 +6,7 @@ classdef Cell
         function obj = Cell(data)
             if ~iscell(data)
                 class(data)
-                error('Input argument to Cell must be a cell array')
+                error('Input argument to Cell must be a cell array');
             end
 
             obj.data = data;
@@ -42,7 +42,7 @@ classdef Cell
                 case '.'
                     B = builtin('subsref',A, S);
                 otherwise
-                    error('impossible')
+                    error('unreachable');
             end
         end
 
