@@ -12,6 +12,10 @@ classdef Cell
             obj.data = data;
         end
 
+        % function str = toString(obj)
+
+        % end
+
         % function display(A)
         %     n = size(A.data);
 
