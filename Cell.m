@@ -61,8 +61,11 @@ classdef Cell
         function B = subsref(A, S)
             switch S(1).type
                 case '()'
-                    b = subsref(A.data, S);
+                    b = subsref(A.data, S(1));
                     B = callConstructor(A, b);
+                    if length(S) > 1
+                        B = subsref(B,S(2:end));
+                    end
                 case '{}'
                     B = subsref(A.data, S);
                 case '.'

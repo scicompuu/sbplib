@@ -49,7 +49,8 @@ end
 function testRoundIndexWithProperty(testCase)
     A = Cell({3,2,1});
 
-    testCase.verifyEqual(A([1,3]).data, {3, 1});
+    result = A([1,3]).data;
+    testCase.verifyEqual(result, {3, 1});
 end
 
 function testSubAssignment(testCase)
