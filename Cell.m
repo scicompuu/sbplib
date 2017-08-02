@@ -35,6 +35,10 @@ classdef Cell
             l = length(A.data);
         end
 
+        function ind = end(A,k,n)
+            ind = builtin('end',A.data, k, n);
+        end
+
         function B = transpose(A)
             b = A.data.';
             B = callConstructor(A, b);

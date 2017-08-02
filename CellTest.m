@@ -104,11 +104,8 @@ function testColonIndexing(testCase)
     C = Cell({1, 2, 3});
     D = Cell({1; 2; 3});
 
-    testCase.verifyEqual(C(:), Cell({3}));
-
-
-    testCase.verifyEqual(C(:), Cell({3}));
-    testCase.verifyEqual(C{end}, 3);
+    testCase.verifyEqual(C(:), D);
+    testCase.verifyEqual(D(:), D);
 end
 
 function testIndexreferenceCurly(testCase)
