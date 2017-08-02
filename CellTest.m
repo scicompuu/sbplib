@@ -2,6 +2,14 @@ function tests = CellTest()
     tests = functiontests(localfunctions);
 end
 
+function testSize(testCase)
+    testCase.verifyFail();
+end
+
+function testLength(testCase)
+    testCase.verifyFail();
+end
+
 function testSubAssignment(testCase)
     testCase.verifyFail();
 end
