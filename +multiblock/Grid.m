@@ -9,16 +9,19 @@ classdef Grid < grid.Grid
 
     % General multiblock grid
     methods
-
-        % grids -- cell array of N grids
-        % connections -- NxN upper triangular cell matrix. connections{i,j}
-        %                specifies the connection between block i and j. If
-        %                it's empty there is no connection otherwise it's a 2
-        %                -cell-vector with strings naming the boundaries to be
-        %                connected. (inverted coupling?)
-        %% Should we have boundary groups at all? maybe it can be handled in a
-        %% cleaner way outside of the class. Maybe the grid class doesn't need to care at all. All boundaryGroup interaction is in DiffOp?
+        % grids          -- cell array of N grids
+        % connections    -- NxN upper triangular cell matrix. connections{i,j}
+        %                   specifies the connection between block i and j. If
+        %                   it's empty there is no connection otherwise it's a 2
+        %                   -cell-vector with strings naming the boundaries to be
+        %                   connected. (inverted coupling?)
+        % boundaryGroups -- A struct of BoundaryGroups. The field names of the
+        %                   struct are the names of each boundary group.
+        %                   The boundary groups can be used to collect block
+        %                   boundaries into physical boundaries to simplify
+        %                   getting boundary operators and setting boundary conditions
         function obj = Grid(grids, connections, boundaryGroups)
+            default_arg('boundaryGroups', struct());
             obj.grids = grids;
             obj.connections = connections;
 
@@ -27,7 +30,7 @@ classdef Grid < grid.Grid
                 obj.nPoints = obj.nPoints + grids{i}.N();
             end
 
-            % if iscell(boundaryGroups)
+            obj.boundaryGroups = boundaryGroups;
         end
 
         function n = size(obj)
@@ -121,13 +124,15 @@ classdef Grid < grid.Grid
 
         end
 
+        % Find all non interface boundaries of all blocks.
+        % Return their grid.boundaryIdentifiers in a cell array.
         function bs = getBoundaryNames(obj)
-            bs = [];
+            error('not implemented');
         end
 
-        % Return coordinates for the given boundary
+        % Return coordinates for the given boundary/boundaryGroup
         function b = getBoundary(obj, name)
-            b = [];
+            error('not implemented');
         end
     end
 end

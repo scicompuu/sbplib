@@ -120,60 +120,73 @@ classdef DiffOp < scheme.Scheme
             ops = sparse2cell(op, obj.NNN);
         end
 
+        % Get a boundary operator specified by op for the given boundary/BoundaryGroup
         function op = getBoundaryOperator(obj, op, boundary)
-            if iscell(boundary)
-                localOpName = [op '_' boundary{2}];
-                blockId = boundary{1};
-                localOp = obj.diffOps{blockId}.(localOpName);
+            switch class(boundary)
+                case 'cell'
+                    localOpName = [op '_' boundary{2}];
+                    blockId = boundary{1};
+                    localOp = obj.diffOps{blockId}.(localOpName);
 
-                div = {obj.blockmatrixDiv{1}, size(localOp,2)};
-                blockOp = blockmatrix.zero(div);
-                blockOp{blockId,1} = localOp;
-                op = blockmatrix.toMatrix(blockOp);
-                return
-            else
-                % Boundary är en sträng med en boundary group i.
+                    div = {obj.blockmatrixDiv{1}, size(localOp,2)};
+                    blockOp = blockmatrix.zero(div);
+                    blockOp{blockId,1} = localOp;
+                    op = blockmatrix.toMatrix(blockOp);
+                    return
+                case 'multiblock.BoundaryGroup'
+                    error('not implemented')
+                otherwise
+                    error('Unknown boundary indentifier')
             end
         end
 
         % Creates the closure and penalty matrix for a given boundary condition,
         %    boundary -- the name of the boundary on the form {id,name} where
         %                id is the number of a block and name is the name of a
-        %                boundary of that block example: {1,'s'} or {3,'w'}
+        %                boundary of that block example: {1,'s'} or {3,'w'}. It
+        %                can also be a boundary group
         function [closure, penalty] = boundary_condition(obj, boundary, type)
-            I = boundary{1};
-            name = boundary{2};
+            switch class(boundary)
+                case 'cell'
+                    I = boundary{1};
+                    name = boundary{2};
 
-            % Get the closure and penaly matrices
-            [blockClosure, blockPenalty] = obj.diffOps{I}.boundary_condition(name, type);
+                    % Get the closure and penaly matrices
+                    [blockClosure, blockPenalty] = obj.diffOps{I}.boundary_condition(name, type);
 
-            % Expand to matrix for full domain.
-            div = obj.blockmatrixDiv;
-            if ~iscell(blockClosure)
-                temp = blockmatrix.zero(div);
-                temp{I,I} = blockClosure;
-                closure = blockmatrix.toMatrix(temp);
-            else
-                for i = 1:length(blockClosure)
-                    temp = blockmatrix.zero(div);
-                    temp{I,I} = blockClosure{i};
-                    closure{i} = blockmatrix.toMatrix(temp);
-                end
+                    % Expand to matrix for full domain.
+                    div = obj.blockmatrixDiv;
+                    if ~iscell(blockClosure)
+                        temp = blockmatrix.zero(div);
+                        temp{I,I} = blockClosure;
+                        closure = blockmatrix.toMatrix(temp);
+                    else
+                        for i = 1:length(blockClosure)
+                            temp = blockmatrix.zero(div);
+                            temp{I,I} = blockClosure{i};
+                            closure{i} = blockmatrix.toMatrix(temp);
+                        end
+                    end
+
+                    if ~iscell(blockPenalty)
+                        div{2} = size(blockPenalty, 2); % Penalty is a column vector
+                        p = blockmatrix.zero(div);
+                        p{I} = blockPenalty;
+                        penalty = blockmatrix.toMatrix(p);
+                    else
+                        for i = 1:length(blockPenalty)
+                            div{2} = size(blockPenalty{i}, 2); % Penalty is a column vector
+                            p = blockmatrix.zero(div);
+                            p{I} = blockPenalty{i};
+                            penalty{i} = blockmatrix.toMatrix(p);
+                        end
+                    end
+                case 'multiblock.BoundaryGroup'
+                    error('not implemented')
+                otherwise
+                    error('Unknown boundary indentifier')
             end
 
-            if ~iscell(blockPenalty)
-                div{2} = size(blockPenalty, 2); % Penalty is a column vector
-                p = blockmatrix.zero(div);
-                p{I} = blockPenalty;
-                penalty = blockmatrix.toMatrix(p);
-            else
-                for i = 1:length(blockPenalty)
-                    div{2} = size(blockPenalty{i}, 2); % Penalty is a column vector
-                    p = blockmatrix.zero(div);
-                    p{I} = blockPenalty{i};
-                    penalty{i} = blockmatrix.toMatrix(p);
-                end
-            end
         end
 
         function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
