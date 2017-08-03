@@ -151,9 +151,16 @@ classdef DiffOp < scheme.Scheme
         function [closure, penalty] = boundary_condition(obj, boundary, type)
             switch class(boundary)
                 case 'cell'
-                    [closure, penalty] = singleBoundaryCondition(obj, boundary, type);
+                    [closure, penalty] = obj.singleBoundaryCondition(boundary, type);
                 case 'multiblock.BoundaryGroup'
-                    error('not implemented')
+                    [n,m] = size(obj.D);
+                    closure = sparse(n,m);
+                    penalty = [];
+                    for i = 1:length(boundary)
+                        [closurePart, penaltyPart] = obj.boundary_condition(boundary{i}, type);
+                        closure = closure + closurePart;
+                        penalty = [penalty, penaltyPart];
+                    end
                 otherwise
                     error('Unknown boundary indentifier')
             end
