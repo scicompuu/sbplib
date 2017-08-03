@@ -131,8 +131,20 @@ classdef Grid < grid.Grid
         end
 
         % Return coordinates for the given boundary/boundaryGroup
-        function b = getBoundary(obj, name)
-            error('not implemented');
+        function b = getBoundary(obj, boundary)
+            switch class(boundary)
+                case 'cell'
+                    I = boundary{1};
+                    name = boundary{2};
+                    b = obj.grids{I}.getBoundary(name);
+                case 'multiblock.BoundaryGroup'
+                    b = [];
+                    for i = 1:length(boundary)
+                        b = [b; obj.getBoundary(boundary{i})];
+                    end
+                otherwise
+                    error('Unknown boundary indentifier')
+            end
         end
     end
 end
