@@ -127,7 +127,23 @@ classdef Grid < grid.Grid
         % Find all non interface boundaries of all blocks.
         % Return their grid.boundaryIdentifiers in a cell array.
         function bs = getBoundaryNames(obj)
-            error('not implemented');
+            bs = {};
+            for i = 1:obj.nBlocks()
+                candidates = obj.grids{i}.getBoundaryNames();
+                for j = 1:obj.nBlocks()
+                    if ~isempty(obj.connections{i,j})
+                        candidates = setdiff(candidates, obj.connections{i,j}{1});
+                    end
+
+                    if ~isempty(obj.connections{j,i})
+                        candidates = setdiff(candidates, obj.connections{j,i}{2});
+                    end
+                end
+
+                for k = 1:length(candidates)
+                    bs{end+1} = {i, candidates{k}};
+                end
+            end
         end
 
         % Return coordinates for the given boundary/boundaryGroup
