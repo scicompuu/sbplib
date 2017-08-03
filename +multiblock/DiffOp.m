@@ -120,11 +120,11 @@ classdef DiffOp < scheme.Scheme
             ops = sparse2cell(op, obj.NNN);
         end
 
-        % Get a boundary operator specified by op for the given boundary/BoundaryGroup
-        function op = getBoundaryOperator(obj, op, boundary)
+        % Get a boundary operator specified by opName for the given boundary/BoundaryGroup
+        function op = getBoundaryOperator(obj, opName, boundary)
             switch class(boundary)
                 case 'cell'
-                    localOpName = [op '_' boundary{2}];
+                    localOpName = [opName '_' boundary{2}];
                     blockId = boundary{1};
                     localOp = obj.diffOps{blockId}.(localOpName);
 
@@ -134,7 +134,10 @@ classdef DiffOp < scheme.Scheme
                     op = blockmatrix.toMatrix(blockOp);
                     return
                 case 'multiblock.BoundaryGroup'
-                    error('not implemented')
+                    op = [];
+                    for i = 1:length(boundary)
+                        op = [op, obj.getBoundaryOperator(opName, boundary{i})];
+                    end
                 otherwise
                     error('Unknown boundary indentifier')
             end
