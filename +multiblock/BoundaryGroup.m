@@ -1,29 +1,19 @@
 % BoundaryGroup defines a boundary grouping in a multiblock grid.
+% It workds like a cell array and collects boundary identifiers
+% Within the multiblock package a BoundaryGroup is a valid boundary identifier as well.
 classdef BoundaryGroup < Cell
     methods
         function obj = BoundaryGroup(data)
             obj = obj@Cell(data);
         end
 
-        % function display(obj, name)
+        function display(obj, name)
 
-        %     disp(' ')
-        %     disp([name, ' ='])
-        %     disp(' ')
+            disp(' ')
+            disp([name, ' ='])
+            disp(' ')
 
-        %     if length(obj.names) == 1
-        %         fprintf('    {}\n\n')
-        %         return
-        %     end
-
-        %     fprintf('    {')
-
-        %     fprintf('%d:%s', obj.blockIDs(1), obj.names{1})
-        %     for i = 2:length(obj.names)
-        %         fprintf(', %d:%s', obj.blockIDs(i), obj.names{i});
-        %     end
-
-        %     fprintf('}\n\n')
-        % end
+            fprintf('    BoundaryGroup%s\n\n', toString(obj.data));
+        end
     end
 end
