@@ -120,27 +120,54 @@ classdef DiffOp < scheme.Scheme
             ops = sparse2cell(op, obj.NNN);
         end
 
-        function op = getBoundaryOperator(obj, op, boundary)
-            if iscell(boundary)
-                localOpName = [op '_' boundary{2}];
-                blockId = boundary{1};
-                localOp = obj.diffOps{blockId}.(localOpName);
+        % Get a boundary operator specified by opName for the given boundary/BoundaryGroup
+        function op = getBoundaryOperator(obj, opName, boundary)
+            switch class(boundary)
+                case 'cell'
+                    localOpName = [opName '_' boundary{2}];
+                    blockId = boundary{1};
+                    localOp = obj.diffOps{blockId}.(localOpName);
 
-                div = {obj.blockmatrixDiv{1}, size(localOp,2)};
-                blockOp = blockmatrix.zero(div);
-                blockOp{blockId,1} = localOp;
-                op = blockmatrix.toMatrix(blockOp);
-                return
-            else
-                % Boundary är en sträng med en boundary group i.
+                    div = {obj.blockmatrixDiv{1}, size(localOp,2)};
+                    blockOp = blockmatrix.zero(div);
+                    blockOp{blockId,1} = localOp;
+                    op = blockmatrix.toMatrix(blockOp);
+                    return
+                case 'multiblock.BoundaryGroup'
+                    op = [];
+                    for i = 1:length(boundary)
+                        op = [op, obj.getBoundaryOperator(opName, boundary{i})];
+                    end
+                otherwise
+                    error('Unknown boundary indentifier')
             end
         end
 
         % Creates the closure and penalty matrix for a given boundary condition,
         %    boundary -- the name of the boundary on the form {id,name} where
         %                id is the number of a block and name is the name of a
-        %                boundary of that block example: {1,'s'} or {3,'w'}
+        %                boundary of that block example: {1,'s'} or {3,'w'}. It
+        %                can also be a boundary group
         function [closure, penalty] = boundary_condition(obj, boundary, type)
+            switch class(boundary)
+                case 'cell'
+                    [closure, penalty] = obj.singleBoundaryCondition(boundary, type);
+                case 'multiblock.BoundaryGroup'
+                    [n,m] = size(obj.D);
+                    closure = sparse(n,m);
+                    penalty = [];
+                    for i = 1:length(boundary)
+                        [closurePart, penaltyPart] = obj.boundary_condition(boundary{i}, type);
+                        closure = closure + closurePart;
+                        penalty = [penalty, penaltyPart];
+                    end
+                otherwise
+                    error('Unknown boundary indentifier')
+            end
+
+        end
+
+        function [closure, penalty] = singleBoundaryCondition(obj, boundary, type)
             I = boundary{1};
             name = boundary{2};
 
