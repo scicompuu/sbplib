@@ -28,6 +28,8 @@ classdef Scheme < handle
         [closure, penalty] = boundary_condition(obj,boundary,type)
         [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
 
+        % op = getBoundaryOperator()??
+
         % Returns the number of degrees of freedom.
         N = size(obj)
     end
