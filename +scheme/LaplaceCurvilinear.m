@@ -37,6 +37,8 @@ classdef LaplaceCurvilinear < scheme.Scheme
 
     methods
         % Implements  a*div(b*grad(u)) as a SBP scheme
+        % TODO: Implement proper H, it should be the real physical quadrature, the logic quadrature may be but in a separate variable (H_logic?)
+
         function obj = LaplaceCurvilinear(g ,order, a, b, opSet)
             default_arg('opSet',@sbp.D2Variable);
             default_arg('a', 1);

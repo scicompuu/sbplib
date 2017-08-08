@@ -82,6 +82,9 @@ classdef Grid < grid.Grid
             gfs = mat2cell(gf, N, 1);
         end
 
+        % TODO: Split op?
+        % Should the method to split an operator be moved here instead of being in multiblock.DiffOp?
+
         % Converts a gridfunction to a set of plot matrices
         % Takes a grid function and and a structured grid.
         function F = funcToPlotMatrices(obj, gf)
