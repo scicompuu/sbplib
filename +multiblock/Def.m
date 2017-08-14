@@ -42,7 +42,7 @@ classdef Def
 
             grids = cell(1, obj.nBlocks);
             for i = 1:obj.nBlocks
-                grids{i} = grid.equidistantCurvilienar(obj.blockMaps{i}.S, ms{i});
+                grids{i} = grid.equidistantCurvilinear(obj.blockMaps{i}.S, ms{i});
             end
 
             g = multiblock.Grid(grids, obj.connections, obj.boundaryGroups);
