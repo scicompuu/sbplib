@@ -49,10 +49,10 @@ classdef Def
         end
 
         function show(obj, label, gridLines, varargin)
-            default_arg('label', true)
+            default_arg('label', 'name')
             default_arg('gridLines', false);
 
-            if ~label && ~gridLines
+            if isempty('label') && ~gridLines
                 for i = 1:obj.nBlocks
                     obj.blockMaps{i}.show(2,2);
                 end
@@ -67,10 +67,22 @@ classdef Def
                 end
             end
 
-            if label
-                for i = 1:obj.nBlocks
-                    parametrization.Ti.label(obj.blockMaps{i}, obj.blockNames{i});
-                end
+
+            switch label
+                case 'name'
+                    labels = obj.blockNames;
+                case 'id'
+                    labels = {};
+                    for i = 1:obj.nBlocks
+                        labels{i} = num2str(i);
+                    end
+                otherwise
+                    axis equal
+                    return
+            end
+
+            for i = 1:obj.nBlocks
+                parametrization.Ti.label(obj.blockMaps{i}, labels{i});
             end
 
             axis equal
