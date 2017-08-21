@@ -182,6 +182,15 @@ classdef Ti
             obj = parametrization.Ti(g1,g2,g3,g4);
         end
 
+        function obj = rectangle(a, b)
+            p1 = a;
+            p2 = [b(1), a(2)];
+            p3 = b;
+            p4 = [a(1), b(2)];
+
+            obj = parametrization.Ti.points(p1,p2,p3,p4);
+        end
+
         % Like the constructor but allows inputing line curves as 2-cell arrays:
         %     example: parametrization.Ti.linesAndCurves(g1, g2, {a, b} g4)
         function obj = linesAndCurves(C1, C2, C3, C4)
