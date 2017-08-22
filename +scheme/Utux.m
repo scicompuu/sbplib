@@ -2,7 +2,7 @@ classdef Utux < scheme.Scheme
    properties
         m % Number of points in each direction, possibly a vector
         h % Grid spacing
-        x % Grid
+        grid % Grid
         order % Order accuracy for the approximation
 
         H % Discrete norm
@@ -18,7 +18,7 @@ classdef Utux < scheme.Scheme
 
     methods 
          function obj = Utux(m,xlim,order,operator)
-             default_arg('a',1);
+             default_arg('operator','Standard');
            
            %Old operators  
            % [x, h] = util.get_grid(xlim{:},m);
@@ -38,20 +38,19 @@ classdef Utux < scheme.Scheme
                otherwise
                    error('Unvalid operator')
            end
-              obj.x=ops.x;
+           
+            obj.grid=ops.x;
 
-            
             obj.H =  ops.H;
             obj.Hi = ops.HI;
         
             obj.e_l = ops.e_l;
             obj.e_r = ops.e_r;
-            obj.D=obj.D1;
+            obj.D = -obj.D1;
 
             obj.m = m;
             obj.h = ops.h;
             obj.order = order;
-            obj.x = ops.x;
 
         end
         % Closure functions return the opertors applied to the own doamin to close the boundary
