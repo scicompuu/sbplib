@@ -8,6 +8,7 @@ classdef Line < handle
 
     methods
         function obj = Line(g, gf)
+            assertType(g, 'multiblock.Grid')
             obj.grid = g;
 
             X = obj.grid.splitFunc(obj.grid.points());
