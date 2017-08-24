@@ -17,7 +17,7 @@ classdef Line < handle
             holdState = ishold();
             hold on
 
-            lines = {1, obj.grid.nBlocks};
+            lines = cell(1, obj.grid.nBlocks);
             for i = 1:obj.grid.nBlocks
                 lines{i} = plot(X{i}, Y{i});
             end

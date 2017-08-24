@@ -22,7 +22,7 @@ classdef Surface < handle
             holdState = ishold();
             hold on
 
-            surfs = {1, obj.grid.nBlocks};
+            surfs = cell(1, obj.grid.nBlocks);
             for i = 1:obj.grid.nBlocks
                 surfs{i} = surf(X{i}, Y{i}, V{i});
             end
