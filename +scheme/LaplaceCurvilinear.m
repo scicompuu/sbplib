@@ -105,7 +105,7 @@ classdef LaplaceCurvilinear < scheme.Scheme
             lambda = 1/2 * (a11 + a22 - sqrt((a11-a22).^2 + 4*a12.^2));
 
             % Assemble full operators
-            L_12 = spdiags(a12, 0, m_tot, m_tot);
+            L_12 = spdiag(a12);
             Duv = Du*L_12*Dv;
             Dvu = Dv*L_12*Du;
 
@@ -157,8 +157,8 @@ classdef LaplaceCurvilinear < scheme.Scheme
 
             obj.a = a;
             obj.b = b;
-            obj.J = spdiags(J, 0, m_tot, m_tot);
-            obj.Ji = spdiags(1./J, 0, m_tot, m_tot);
+            obj.J = spdiag(J);
+            obj.Ji = spdiag(1./J);
             obj.a11 = a11;
             obj.a12 = a12;
             obj.a22 = a22;
@@ -215,8 +215,8 @@ classdef LaplaceCurvilinear < scheme.Scheme
 
                 % Neumann boundary condition
                 case {'N','n','neumann'}
-                    a_n = spdiags(coeff_n,0,length(coeff_n),length(coeff_n));
-                    a_t = spdiags(coeff_t,0,length(coeff_t),length(coeff_t));
+                    a_n = spdiag(coeff_n);
+                    a_t = spdiag(coeff_t);
                     d = (a_n * d_n' + a_t*d_t')';
 
                     tau1 = -s;
@@ -231,8 +231,8 @@ classdef LaplaceCurvilinear < scheme.Scheme
                     default_arg('parameter', 1);
                     beta = parameter;
 
-                    a_n = spdiags(coeff_n,0,length(coeff_n),length(coeff_n));
-                    a_t = spdiags(coeff_t,0,length(coeff_t),length(coeff_t));
+                    a_n = spdiag(coeff_n);
+                    a_t = spdiag(coeff_t);
                     d = s*(a_n * d_n' + a_t*d_t')'; % outward facing normal derivative
 
                     tau = -obj.a * 1/beta*obj.Ji*e;
