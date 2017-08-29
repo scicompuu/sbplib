@@ -7,32 +7,37 @@ classdef LaplaceCurvilinear < scheme.Scheme
 
         order % Order accuracy for the approximation
 
-        D % non-stabalized scheme operator
-        M % Derivative norm
-        a,b
+        a,b % Parameters of the operator
+
+
+        % Inner products and operators for physical coordinates
+        D % Laplace operator
+        H, Hi % Inner product
+        e_w, e_e, e_s, e_n
+        d_w, d_e, d_s, d_n % Normal derivatives at the boundary
+        H_w, H_e, H_s, H_n % Boundary inner products
+        Dx, Dy % Physical derivatives
+        M % Gradient inner product
+
+        % Metric coefficients
         J, Ji
         a11, a12, a22
+        x_u
+        x_v
+        y_u
+        y_v
 
-        H % Discrete norm
-        Hi
+        % Inner product and operators for logical coordinates
         H_u, H_v % Norms in the x and y directions
-        Hu,Hv % Kroneckerd norms. 1'*Hx*v corresponds to integration in the x dir.
         Hi_u, Hi_v
+        Hu,Hv % Kroneckerd norms. 1'*Hx*v corresponds to integration in the x dir.
         Hiu, Hiv
-        e_w, e_e, e_s, e_n
         du_w, dv_w
         du_e, dv_e
         du_s, dv_s
         du_n, dv_n
         gamm_u, gamm_v
         lambda
-
-        Dx, Dy % Physical derivatives
-
-        x_u
-        x_v
-        y_u
-        y_v
     end
 
     methods
