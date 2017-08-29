@@ -170,6 +170,7 @@ classdef LaplaceCurvilinear < scheme.Scheme
             obj.e_s = e_s;
             obj.e_n = e_n;
 
+
             obj.Dx = spdiag( y_v./J)*Du + spdiag(-y_u./J)*Dv;
             obj.Dy = spdiag(-x_v./J)*Du + spdiag( x_u./J)*Dv;
 
@@ -203,19 +204,19 @@ classdef LaplaceCurvilinear < scheme.Scheme
             default_arg('type','neumann');
             default_arg('parameter', []);
 
-            [e, d_n, d_t, coeff_n, coeff_t, s, gamm, halfnorm_inv  ,              ~,          ~, ~, scale_factor] = obj.get_boundary_ops(boundary);
+            [e, d_n, d_t, a_n, a_t, s, gamm, halfnorm_inv  ,              ~,          ~, ~, scale_factor] = obj.get_boundary_ops(boundary);
             switch type
                 % Dirichlet boundary condition
                 case {'D','d','dirichlet'}
                     % v denotes the solution in the neighbour domain
                     tuning = 1.2;
                     % tuning = 20.2;
-                    [e, d_n, d_t, coeff_n, coeff_t, s, gamm, halfnorm_inv_n, halfnorm_inv_t, halfnorm_t] = obj.get_boundary_ops(boundary);
+                    [e, d_n, d_t, a_n, a_t, s, gamm, halfnorm_inv_n, halfnorm_inv_t, halfnorm_t] = obj.get_boundary_ops(boundary);
 
-                    a_n = spdiag(coeff_n);
-                    a_t = spdiag(coeff_t);
+                    A_n = spdiag(a_n);
+                    A_t = spdiag(a_t);
 
-                    F = (s * a_n * d_n' + s * a_t*d_t')';
+                    F = (s * A_n * d_n' + s * A_t*d_t')';
 
                     u = obj;
 
@@ -234,9 +235,9 @@ classdef LaplaceCurvilinear < scheme.Scheme
 
                 % Neumann boundary condition
                 case {'N','n','neumann'}
-                    a_n = spdiag(coeff_n);
-                    a_t = spdiag(coeff_t);
-                    d = (a_n * d_n' + a_t*d_t')';
+                    A_n = spdiag(a_n);
+                    A_t = spdiag(a_t);
+                    d = (A_n * d_n' + A_t*d_t')';
 
                     tau1 = -s;
                     tau2 = 0;
@@ -250,9 +251,9 @@ classdef LaplaceCurvilinear < scheme.Scheme
                     default_arg('parameter', 1);
                     beta = parameter;
 
-                    a_n = spdiag(coeff_n);
-                    a_t = spdiag(coeff_t);
-                    d = s*(a_n * d_n' + a_t*d_t')'; % outward facing normal derivative
+                    A_n = spdiag(a_n);
+                    A_t = spdiag(a_t);
+                    d = s*(A_n * d_n' + A_t*d_t')'; % outward facing normal derivative
 
                     tau = -obj.a * 1/beta*obj.Ji*e;
 
@@ -271,16 +272,16 @@ classdef LaplaceCurvilinear < scheme.Scheme
             % v denotes the solution in the neighbour domain
             tuning = 1.2;
             % tuning = 20.2;
-            [e_u, d_n_u, d_t_u, coeff_n_u, coeff_t_u, s_u, gamm_u, halfnorm_inv_u_n, halfnorm_inv_u_t, halfnorm_u_t, I_u] = obj.get_boundary_ops(boundary);
-            [e_v, d_n_v, d_t_v, coeff_n_v, coeff_t_v, s_v, gamm_v, halfnorm_inv_v_n, halfnorm_inv_v_t, halfnorm_v_t, I_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
+            [e_u, d_n_u, d_t_u, a_n_u, a_t_u, s_u, gamm_u, halfnorm_inv_u_n, halfnorm_inv_u_t, halfnorm_u_t, I_u] = obj.get_boundary_ops(boundary);
+            [e_v, d_n_v, d_t_v, a_n_v, a_t_v, s_v, gamm_v, halfnorm_inv_v_n, halfnorm_inv_v_t, halfnorm_v_t, I_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
 
-            a_n_u = spdiag(coeff_n_u);
-            a_t_u = spdiag(coeff_t_u);
-            a_n_v = spdiag(coeff_n_v);
-            a_t_v = spdiag(coeff_t_v);
+            A_n_u = spdiag(a_n_u);
+            A_t_u = spdiag(a_t_u);
+            A_n_v = spdiag(a_n_v);
+            A_t_v = spdiag(a_t_v);
 
-            F_u = (s_u * a_n_u * d_n_u' + s_u * a_t_u*d_t_u')';
-            F_v = (s_v * a_n_v * d_n_v' + s_v * a_t_v*d_t_v')';
+            F_u = (s_u * A_n_u * d_n_u' + s_u * A_t_u*d_t_u')';
+            F_v = (s_v * A_n_v * d_n_v' + s_v * A_t_v*d_t_v')';
 
             u = obj;
             v = neighbour_scheme;
@@ -307,7 +308,7 @@ classdef LaplaceCurvilinear < scheme.Scheme
         % The right boundary is considered the positive boundary
         %
         %  I -- the indecies of the boundary points in the grid matrix
-        function [e, d_n, d_t, coeff_n, coeff_t, s, gamm, halfnorm_inv_n, halfnorm_inv_t, halfnorm_t, I, scale_factor] = get_boundary_ops(obj, boundary)
+        function [e, d_n, d_t, a_n, a_t, s, gamm, halfnorm_inv_n, halfnorm_inv_t, halfnorm_t, I, scale_factor] = get_boundary_ops(obj, boundary)
 
             % gridMatrix = zeros(obj.m(2),obj.m(1));
             % gridMatrix(:) = 1:numel(gridMatrix);
@@ -322,8 +323,8 @@ classdef LaplaceCurvilinear < scheme.Scheme
                     s = -1;
 
                     I = ind(1,:);
-                    coeff_n = obj.a11(I);
-                    coeff_t = obj.a12(I);
+                    a_n = obj.a11(I);
+                    a_t = obj.a12(I);
                     scale_factor = sqrt(obj.x_v(I).^2 + obj.y_v(I).^2);
                 case 'e'
                     e = obj.e_e;
@@ -332,8 +333,8 @@ classdef LaplaceCurvilinear < scheme.Scheme
                     s = 1;
 
                     I = ind(end,:);
-                    coeff_n = obj.a11(I);
-                    coeff_t = obj.a12(I);
+                    a_n = obj.a11(I);
+                    a_t = obj.a12(I);
                     scale_factor = sqrt(obj.x_v(I).^2 + obj.y_v(I).^2);
                 case 's'
                     e = obj.e_s;
@@ -342,8 +343,8 @@ classdef LaplaceCurvilinear < scheme.Scheme
                     s = -1;
 
                     I = ind(:,1)';
-                    coeff_n = obj.a22(I);
-                    coeff_t = obj.a12(I);
+                    a_n = obj.a22(I);
+                    a_t = obj.a12(I);
                     scale_factor = sqrt(obj.x_u(I).^2 + obj.y_u(I).^2);
                 case 'n'
                     e = obj.e_n;
@@ -352,8 +353,8 @@ classdef LaplaceCurvilinear < scheme.Scheme
                     s = 1;
 
                     I = ind(:,end)';
-                    coeff_n = obj.a22(I);
-                    coeff_t = obj.a12(I);
+                    a_n = obj.a22(I);
+                    a_t = obj.a12(I);
                     scale_factor = sqrt(obj.x_u(I).^2 + obj.y_u(I).^2);
                 otherwise
                     error('No such boundary: boundary = %s',boundary);
