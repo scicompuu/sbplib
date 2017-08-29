@@ -235,7 +235,7 @@ classdef LaplaceCurvilinear < scheme.Scheme
                     A_n = spdiag(a_n);
                     A_t = spdiag(a_t);
 
-                    F = (s * A_n * d_n' + s * A_t*d_t')';
+                    F = s*(A_n*d_n' + A_t*d_t')';
 
                     u = obj;
 
@@ -256,11 +256,11 @@ classdef LaplaceCurvilinear < scheme.Scheme
                 case {'N','n','neumann'}
                     A_n = spdiag(a_n);
                     A_t = spdiag(a_t);
-                    d = (A_n * d_n' + A_t*d_t')';
+                    d = s*(A_n * d_n' + A_t*d_t')';
 
-                    tau1 = -s;
+                    tau1 = -1;
                     tau2 = 0;
-                    tau = obj.a * obj.Ji*(tau1*e + tau2*d);
+                    tau = s*obj.a*obj.Ji*(tau1*e + tau2*d);
 
                     closure = halfnorm_inv*tau*d';
                     penalty = -halfnorm_inv*tau;
@@ -299,8 +299,8 @@ classdef LaplaceCurvilinear < scheme.Scheme
             A_n_v = spdiag(a_n_v);
             A_t_v = spdiag(a_t_v);
 
-            F_u = (s_u * A_n_u * d_n_u' + s_u * A_t_u*d_t_u')';
-            F_v = (s_v * A_n_v * d_n_v' + s_v * A_t_v*d_t_v')';
+            F_u = s_u*(A_n_u * d_n_u' + A_t_u*d_t_u')';
+            F_v = s_v*(A_n_v * d_n_v' + A_t_v*d_t_v')';
 
             u = obj;
             v = neighbour_scheme;
