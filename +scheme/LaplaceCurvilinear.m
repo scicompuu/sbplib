@@ -49,7 +49,6 @@ classdef LaplaceCurvilinear < scheme.Scheme
             default_arg('a', 1);
             default_arg('b', 1);
 
-
             if b ~=1
                 error('Not implemented yet')
             end
@@ -65,7 +64,8 @@ classdef LaplaceCurvilinear < scheme.Scheme
             h_u = h(1);
             h_v = h(2);
 
-            % Operators
+
+            % 1D operators
             ops_u = opSet(m_u, {0, 1}, order);
             ops_v = opSet(m_v, {0, 1}, order);
 
@@ -90,10 +90,30 @@ classdef LaplaceCurvilinear < scheme.Scheme
             d1_l_v = ops_v.d1_l;
             d1_r_v = ops_v.d1_r;
 
+
+            % Logical operators
             Du = kr(D1_u,I_v);
             Dv = kr(I_u,D1_v);
+            obj.Hu  = kr(H_u,I_v);
+            obj.Hv  = kr(I_u,H_v);
+            obj.Hiu = kr(Hi_u,I_v);
+            obj.Hiv = kr(I_u,Hi_v);
 
-            % Metric derivatives
+            e_w  = kr(e_l_u,I_v);
+            e_e  = kr(e_r_u,I_v);
+            e_s  = kr(I_u,e_l_v);
+            e_n  = kr(I_u,e_r_v);
+            obj.du_w = kr(d1_l_u,I_v);
+            obj.dv_w = (e_w'*Dv)';
+            obj.du_e = kr(d1_r_u,I_v);
+            obj.dv_e = (e_e'*Dv)';
+            obj.du_s = (e_s'*Du)';
+            obj.dv_s = kr(I_u,d1_l_v);
+            obj.du_n = (e_n'*Du)';
+            obj.dv_n = kr(I_u,d1_r_v);
+
+
+            % Metric coefficients
             coords = g.points();
             x = coords(:,1);
             y = coords(:,2);
@@ -108,6 +128,12 @@ classdef LaplaceCurvilinear < scheme.Scheme
             a12 = -1./J .* (x_u.*x_v + y_u.*y_v);
             a22 =  1./J .* (x_u.^2  + y_u.^2);
             lambda = 1/2 * (a11 + a22 - sqrt((a11-a22).^2 + 4*a12.^2));
+
+            obj.x_u = x_u;
+            obj.x_v = x_v;
+            obj.y_u = y_u;
+            obj.y_v = y_v;
+
 
             % Assemble full operators
             L_12 = spdiag(a12);
@@ -130,31 +156,25 @@ classdef LaplaceCurvilinear < scheme.Scheme
                 Dvv(p,p) = D;
             end
 
-            obj.H = kr(H_u,H_v);
-            obj.Hi = kr(Hi_u,Hi_v);
-            obj.Hu  = kr(H_u,I_v);
-            obj.Hv  = kr(I_u,H_v);
-            obj.Hiu = kr(Hi_u,I_v);
-            obj.Hiv = kr(I_u,Hi_v);
 
-            obj.e_w  = kr(e_l_u,I_v);
-            obj.e_e  = kr(e_r_u,I_v);
-            obj.e_s  = kr(I_u,e_l_v);
-            obj.e_n  = kr(I_u,e_r_v);
-            obj.du_w = kr(d1_l_u,I_v);
-            obj.dv_w = (obj.e_w'*Dv)';
-            obj.du_e = kr(d1_r_u,I_v);
-            obj.dv_e = (obj.e_e'*Dv)';
-            obj.du_s = (obj.e_s'*Du)';
-            obj.dv_s = kr(I_u,d1_l_v);
-            obj.du_n = (obj.e_n'*Du)';
-            obj.dv_n = kr(I_u,d1_r_v);
+            % Physical operators
+            obj.J = spdiag(J);
+            obj.Ji = spdiag(1./J);
 
-            obj.x_u = x_u;
-            obj.x_v = x_v;
-            obj.y_u = y_u;
-            obj.y_v = y_v;
+            obj.D = obj.Ji*a*(Duu + Duv + Dvu + Dvv);
+            obj.H = obj.J*kr(H_u,H_v);
+            obj.Hi = obj.Ji*kr(Hi_u,Hi_v);
 
+            obj.e_w = e_w;
+            obj.e_e = e_e;
+            obj.e_s = e_s;
+            obj.e_n = e_n;
+
+            obj.Dx = spdiag( y_v./J)*Du + spdiag(-y_u./J)*Dv;
+            obj.Dy = spdiag(-x_v./J)*Du + spdiag( x_u./J)*Dv;
+
+
+            % Misc.
             obj.m = m;
             obj.h = [h_u h_v];
             obj.order = order;
@@ -162,16 +182,10 @@ classdef LaplaceCurvilinear < scheme.Scheme
 
             obj.a = a;
             obj.b = b;
-            obj.J = spdiag(J);
-            obj.Ji = spdiag(1./J);
             obj.a11 = a11;
             obj.a12 = a12;
             obj.a22 = a22;
-            obj.D = obj.Ji*a*(Duu + Duv + Dvu + Dvv);
             obj.lambda = lambda;
-
-            obj.Dx = spdiag( y_v./J)*Du + spdiag(-y_u./J)*Dv;
-            obj.Dy = spdiag(-x_v./J)*Du + spdiag( x_u./J)*Dv;
 
             obj.gamm_u = h_u*ops_u.borrowing.M.d1;
             obj.gamm_v = h_v*ops_v.borrowing.M.d1;
