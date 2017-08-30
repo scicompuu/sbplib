@@ -185,10 +185,10 @@ classdef LaplaceCurvilinear < scheme.Scheme
             a22_n = spdiag(a22(I_n));
             a12_n = spdiag(a12(I_n));
 
-            s_w = sqrt((e_w'*x_v).^2 + (e_w'*y_v)');
-            s_e = sqrt((e_e'*x_v).^2 + (e_e'*y_v)');
-            s_s = sqrt((e_s'*x_u).^2 + (e_s'*y_u)');
-            s_n = sqrt((e_n'*x_u).^2 + (e_n'*y_u)');
+            s_w = sqrt((e_w'*x_v).^2 + (e_w'*y_v).^2);
+            s_e = sqrt((e_e'*x_v).^2 + (e_e'*y_v).^2);
+            s_s = sqrt((e_s'*x_u).^2 + (e_s'*y_u).^2);
+            s_n = sqrt((e_n'*x_u).^2 + (e_n'*y_u).^2);
 
             obj.d_w = -1*(a11_w*obj.du_w' + a12_w*obj.dv_w')';
             obj.d_e = (a11_e*obj.du_e' + a12_e*obj.dv_e')';
