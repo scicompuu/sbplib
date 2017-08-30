@@ -199,10 +199,10 @@ classdef LaplaceCurvilinear < scheme.Scheme
             obj.Dy = spdiag(-x_v./J)*Du + spdiag( x_u./J)*Dv;
 
             %% Boundary inner products
-            H_w = H_v*s_w;
-            H_e = H_v*s_e;
-            H_s = H_u*s_s;
-            H_n = H_u*s_n;
+            obj.H_w = H_v*spdiag(s_w);
+            obj.H_e = H_v*spdiag(s_e);
+            obj.H_s = H_u*spdiag(s_s);
+            obj.H_n = H_u*spdiag(s_n);
 
             % Misc.
             obj.m = m;
