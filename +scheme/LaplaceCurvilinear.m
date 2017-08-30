@@ -260,7 +260,7 @@ classdef LaplaceCurvilinear < scheme.Scheme
                 case {'N','n','neumann'}
                     tau1 = -1;
                     tau2 = 0;
-                    tau = s*obj.a*obj.Ji*(tau1*e + tau2*d);
+                    tau = obj.a*obj.Ji*(tau1*e + tau2*d);
 
                     closure = halfnorm_inv*tau*d';
                     penalty = -halfnorm_inv*tau;
