@@ -17,29 +17,29 @@ classdef Utux < scheme.Scheme
 
 
     methods 
-         function obj = Utux(m,xlim,order,operator)
+         function obj = Utux(g ,order, operator)
              default_arg('operator','Standard');
-           
-           %Old operators  
-           % [x, h] = util.get_grid(xlim{:},m);
-           %ops = sbp.Ordinary(m,h,order);
-           
-           
+             
+             m = g.size();
+             xl = g.getBoundary('l');
+             xr = g.getBoundary('r');
+             xlim = {xl, xr};
+             
            switch operator
-               case 'NonEquidistant'
-              ops = sbp.D1Nonequidistant(m,xlim,order);
-              obj.D1 = ops.D1;
+%                case 'NonEquidistant'
+%               ops = sbp.D1Nonequidistant(m,xlim,order);
+%               obj.D1 = ops.D1;
                case 'Standard'
               ops = sbp.D2Standard(m,xlim,order);
               obj.D1 = ops.D1;
-               case 'Upwind'
-              ops = sbp.D1Upwind(m,xlim,order);
-              obj.D1 = ops.Dm;
+%                case 'Upwind'
+%               ops = sbp.D1Upwind(m,xlim,order);
+%               obj.D1 = ops.Dm;
                otherwise
                    error('Unvalid operator')
            end
            
-            obj.grid=ops.x;
+            obj.grid = g;
 
             obj.H =  ops.H;
             obj.Hi = ops.HI;
@@ -61,7 +61,7 @@ classdef Utux < scheme.Scheme
         %       neighbour_scheme    is an instance of Scheme that should be interfaced to.
         %       neighbour_boundary  is a string specifying which boundary to interface to.
         function [closure, penalty] = boundary_condition(obj,boundary,type,data)
-            default_arg('type','neumann');
+            default_arg('type','dirichlet');
             default_arg('data',0);
             tau =-1*obj.e_l;  
             closure = obj.Hi*tau*obj.e_l';       
@@ -70,7 +70,18 @@ classdef Utux < scheme.Scheme
          end
           
          function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
-          error('An interface function does not exist yet');
+             switch boundary
+                 % Upwind coupling
+                 case {'l','left'}
+                     tau = -1*obj.e_l;
+                     closure = obj.Hi*tau*obj.e_l';       
+                     penalty = -obj.Hi*tau*neighbour_scheme.e_r';
+                 case {'r','right'}
+                     tau = 0*obj.e_r;
+                     closure = obj.Hi*tau*obj.e_r';       
+                     penalty = -obj.Hi*tau*neighbour_scheme.e_l';
+             end
+                 
          end
       
         function N = size(obj)
@@ -82,7 +93,7 @@ classdef Utux < scheme.Scheme
     methods(Static)
         % Calculates the matrcis need for the inteface coupling between boundary bound_u of scheme schm_u
         % and bound_v of scheme schm_v.
-        %   [uu, uv, vv, vu] = inteface_couplong(A,'r',B,'l')
+        %   [uu, uv, vv, vu] = inteface_coupling(A,'r',B,'l')
         function [uu, uv, vv, vu] = interface_coupling(schm_u,bound_u,schm_v,bound_v)
             [uu,uv] = schm_u.interface(bound_u,schm_v,bound_v);
             [vv,vu] = schm_v.interface(bound_v,schm_u,bound_u);
