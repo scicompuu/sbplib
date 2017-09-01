@@ -190,10 +190,10 @@ classdef LaplaceCurvilinear < scheme.Scheme
             s_s = sqrt((e_s'*x_u).^2 + (e_s'*y_u).^2);
             s_n = sqrt((e_n'*x_u).^2 + (e_n'*y_u).^2);
 
-            obj.d_w = -1*(a11_w*obj.du_w' + a12_w*obj.dv_w')';
-            obj.d_e = (a11_e*obj.du_e' + a12_e*obj.dv_e')';
-            obj.d_s = -1*(a22_s*obj.dv_s' + a12_s*obj.du_s')';
-            obj.d_n = (a22_n*obj.dv_n' + a12_n*obj.du_n')';
+            obj.d_w = -1*(spdiag(1./s_w)*(a11_w*obj.du_w' + a12_w*obj.dv_w'))';
+            obj.d_e =    (spdiag(1./s_e)*(a11_e*obj.du_e' + a12_e*obj.dv_e'))';
+            obj.d_s = -1*(spdiag(1./s_s)*(a22_s*obj.dv_s' + a12_s*obj.du_s'))';
+            obj.d_n =    (spdiag(1./s_n)*(a22_n*obj.dv_n' + a12_n*obj.du_n'))';
 
             obj.Dx = spdiag( y_v./J)*Du + spdiag(-y_u./J)*Dv;
             obj.Dy = spdiag(-x_v./J)*Du + spdiag( x_u./J)*Dv;
@@ -233,48 +233,34 @@ classdef LaplaceCurvilinear < scheme.Scheme
             default_arg('type','neumann');
             default_arg('parameter', []);
 
-            [e, d, s, gamm, halfnorm_inv  ,              ~,          ~, ~, scale_factor] = obj.get_boundary_ops(boundary);
+            [e, d, s, gamm, H_b, ~] = obj.get_boundary_ops(boundary);
             switch type
                 % Dirichlet boundary condition
                 case {'D','d','dirichlet'}
                     tuning = 1.2;
                     % tuning = 20.2;
-                    [e, F, s, gamm, halfnorm_inv_n, halfnorm_inv_t, halfnorm_t] = obj.get_boundary_ops(boundary);
 
-                    u = obj;
+                    b1 = gamm*obj.lambda./obj.a11.^2;
+                    b2 = gamm*obj.lambda./obj.a22.^2;
 
-                    b1 = gamm*u.lambda./u.a11.^2;
-                    b2 = gamm*u.lambda./u.a22.^2;
+                    tau1 = tuning * spdiag(-1./b1 - 1./b2);
+                    tau2 = 1;
 
-                    tau  = -1./b1 - 1./b2;
-                    tau = tuning * spdiag(tau);
-                    sig1 = 1;
+                    tau = (tau1*e + tau2*d)*H_b;
 
-                    penalty_parameter_1 = halfnorm_inv_n*(tau + sig1*halfnorm_inv_t*F*e'*halfnorm_t)*e;
-
-                    closure = obj.Ji*obj.a * penalty_parameter_1*e';
-                    penalty = -obj.Ji*obj.a * penalty_parameter_1;
+                    closure =  obj.a*obj.Hi*tau*e';
+                    penalty = -obj.a*obj.Hi*tau;
 
 
                 % Neumann boundary condition
                 case {'N','n','neumann'}
                     tau1 = -1;
                     tau2 = 0;
-                    tau = obj.a*obj.Ji*(tau1*e + tau2*d);
+                    tau = (tau1*e + tau2*d)*H_b;
 
-                    closure = halfnorm_inv*tau*d';
-                    penalty = -halfnorm_inv*tau;
+                    closure =  obj.a*obj.Hi*tau*d';
+                    penalty = -obj.a*obj.Hi*tau;
 
-                % Characteristic boundary condition
-                case {'characteristic', 'char', 'c'}
-                    default_arg('parameter', 1);
-                    beta = parameter;
-
-                    tau = -obj.a * 1/beta*obj.Ji*e;
-
-                    closure{1} = halfnorm_inv*tau*spdiag(scale_factor)*e';
-                    closure{2} = halfnorm_inv*tau*beta*d';
-                    penalty = -halfnorm_inv*tau;
 
                 % Unknown, boundary condition
                 otherwise
@@ -287,8 +273,8 @@ classdef LaplaceCurvilinear < scheme.Scheme
             % v denotes the solution in the neighbour domain
             tuning = 1.2;
             % tuning = 20.2;
-            [e_u, F_u, s_u, gamm_u, halfnorm_inv_u_n, halfnorm_inv_u_t, halfnorm_u_t, I_u] = obj.get_boundary_ops(boundary);
-            [e_v, F_v, s_v, gamm_v, halfnorm_inv_v_n, halfnorm_inv_v_t, halfnorm_v_t, I_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
+            [e_u, d_u, s_u, gamm_u, H_b_u, I_u] = obj.get_boundary_ops(boundary);
+            [e_v, d_v, s_v, gamm_v, H_b_v, I_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
 
             u = obj;
             v = neighbour_scheme;
@@ -298,24 +284,25 @@ classdef LaplaceCurvilinear < scheme.Scheme
             b1_v = gamm_v*v.lambda(I_v)./v.a11(I_v).^2;
             b2_v = gamm_v*v.lambda(I_v)./v.a22(I_v).^2;
 
-            tau = -1./(4*b1_u) -1./(4*b1_v) -1./(4*b2_u) -1./(4*b2_v);
-            tau = tuning * spdiag(tau);
-            sig1 = 1/2;
-            sig2 = -1/2;
+            tau1 = -1./(4*b1_u) -1./(4*b1_v) -1./(4*b2_u) -1./(4*b2_v);
+            tau1 = tuning * spdiag(tau1);
+            tau2 = 1/2;
 
-            penalty_parameter_1 = halfnorm_inv_u_n*(e_u*tau + sig1*halfnorm_inv_u_t*F_u*e_u'*halfnorm_u_t*e_u);
-            penalty_parameter_2 = halfnorm_inv_u_n * sig2 * e_u;
+            sig1 = -1/2;
+            sig2 = 0;
 
+            tau = (e_u*tau1 + tau2*d_u)*H_b_u;
+            sig = (sig1*e_u + sig2*d_u)*H_b_u;
 
-            closure = obj.Ji*obj.a * ( penalty_parameter_1*e_u' + penalty_parameter_2*F_u');
-            penalty = obj.Ji*obj.a * (-penalty_parameter_1*e_v' + penalty_parameter_2*F_v');
+            closure = obj.a*obj.Hi*( tau*e_u' + sig*d_u');
+            penalty = obj.a*obj.Hi*(-tau*e_v' + sig*d_v');
         end
 
         % Ruturns the boundary ops and sign for the boundary specified by the string boundary.
         % The right boundary is considered the positive boundary
         %
         %  I -- the indecies of the boundary points in the grid matrix
-        function [e, d, s, gamm, halfnorm_inv_n, halfnorm_inv_t, halfnorm_t, I, scale_factor] = get_boundary_ops(obj, boundary)
+        function [e, d, s, gamm, H_b, I] = get_boundary_ops(obj, boundary)
 
             % gridMatrix = zeros(obj.m(2),obj.m(1));
             % gridMatrix(:) = 1:numel(gridMatrix);
@@ -326,45 +313,35 @@ classdef LaplaceCurvilinear < scheme.Scheme
                 case 'w'
                     e = obj.e_w;
                     d = obj.d_w;
+                    H_b = obj.H_w;
                     s = -1;
-
                     I = ind(1,:);
-                    scale_factor = sqrt(obj.x_v(I).^2 + obj.y_v(I).^2);
                 case 'e'
                     e = obj.e_e;
                     d = obj.d_e;
+                    H_b = obj.H_e;
                     s = 1;
-
                     I = ind(end,:);
-                    scale_factor = sqrt(obj.x_v(I).^2 + obj.y_v(I).^2);
                 case 's'
                     e = obj.e_s;
                     d = obj.d_s;
+                    H_b = obj.H_s;
                     s = -1;
-
                     I = ind(:,1)';
-                    scale_factor = sqrt(obj.x_u(I).^2 + obj.y_u(I).^2);
                 case 'n'
                     e = obj.e_n;
                     d = obj.d_n;
+                    H_b = obj.H_n;
                     s = 1;
-
                     I = ind(:,end)';
-                    scale_factor = sqrt(obj.x_u(I).^2 + obj.y_u(I).^2);
                 otherwise
                     error('No such boundary: boundary = %s',boundary);
             end
 
             switch boundary
                 case {'w','e'}
-                    halfnorm_inv_n = obj.Hiu;
-                    halfnorm_inv_t = obj.Hiv;
-                    halfnorm_t = obj.Hv;
                     gamm = obj.gamm_u;
                 case {'s','n'}
-                    halfnorm_inv_n = obj.Hiv;
-                    halfnorm_inv_t = obj.Hiu;
-                    halfnorm_t = obj.Hu;
                     gamm = obj.gamm_v;
             end
         end
@@ -372,7 +349,5 @@ classdef LaplaceCurvilinear < scheme.Scheme
         function N = size(obj)
             N = prod(obj.m);
         end
-
-
     end
 end
