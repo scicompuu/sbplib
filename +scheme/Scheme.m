@@ -25,7 +25,7 @@ classdef Scheme < handle
         %       neighbour_boundary  is a string specifying which boundary to
         %                           interface to.
         %       penalty  may be a cell array if there are several penalties with different weights
-        [closure, penalty] = boundary_condition(obj,boundary,type)
+        [closure, penalty] = boundary_condition(obj,boundary,type) % TODO: Change name to boundaryCondition
         [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
 
         % TODO: op = getBoundaryOperator()??
