@@ -233,7 +233,7 @@ classdef LaplaceCurvilinear < scheme.Scheme
             default_arg('type','neumann');
             default_arg('parameter', []);
 
-            [e, d, s, gamm, H_b, ~] = obj.get_boundary_ops(boundary);
+            [e, d, gamm, H_b, ~] = obj.get_boundary_ops(boundary);
             switch type
                 % Dirichlet boundary condition
                 case {'D','d','dirichlet'}
@@ -273,8 +273,8 @@ classdef LaplaceCurvilinear < scheme.Scheme
             % v denotes the solution in the neighbour domain
             tuning = 1.2;
             % tuning = 20.2;
-            [e_u, d_u, s_u, gamm_u, H_b_u, I_u] = obj.get_boundary_ops(boundary);
-            [e_v, d_v, s_v, gamm_v, H_b_v, I_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
+            [e_u, d_u, gamm_u, H_b_u, I_u] = obj.get_boundary_ops(boundary);
+            [e_v, d_v, gamm_v, H_b_v, I_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
 
             u = obj;
             v = neighbour_scheme;
@@ -302,7 +302,7 @@ classdef LaplaceCurvilinear < scheme.Scheme
         % The right boundary is considered the positive boundary
         %
         %  I -- the indecies of the boundary points in the grid matrix
-        function [e, d, s, gamm, H_b, I] = get_boundary_ops(obj, boundary)
+        function [e, d, gamm, H_b, I] = get_boundary_ops(obj, boundary)
 
             % gridMatrix = zeros(obj.m(2),obj.m(1));
             % gridMatrix(:) = 1:numel(gridMatrix);
@@ -314,25 +314,21 @@ classdef LaplaceCurvilinear < scheme.Scheme
                     e = obj.e_w;
                     d = obj.d_w;
                     H_b = obj.H_w;
-                    s = -1;
                     I = ind(1,:);
                 case 'e'
                     e = obj.e_e;
                     d = obj.d_e;
                     H_b = obj.H_e;
-                    s = 1;
                     I = ind(end,:);
                 case 's'
                     e = obj.e_s;
                     d = obj.d_s;
                     H_b = obj.H_s;
-                    s = -1;
                     I = ind(:,1)';
                 case 'n'
                     e = obj.e_n;
                     d = obj.d_n;
                     H_b = obj.H_n;
-                    s = 1;
                     I = ind(:,end)';
                 otherwise
                     error('No such boundary: boundary = %s',boundary);
