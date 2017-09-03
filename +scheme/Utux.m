@@ -60,12 +60,11 @@ classdef Utux < scheme.Scheme
         %       data                is a function returning the data that should be applied at the boundary.
         %       neighbour_scheme    is an instance of Scheme that should be interfaced to.
         %       neighbour_boundary  is a string specifying which boundary to interface to.
-        function [closure, penalty] = boundary_condition(obj,boundary,type,data)
+        function [closure, penalty] = boundary_condition(obj,boundary,type)
             default_arg('type','dirichlet');
-            default_arg('data',0);
             tau =-1*obj.e_l;  
             closure = obj.Hi*tau*obj.e_l';       
-            penalty = 0*obj.e_l;
+            penalty = -obj.Hi*tau;
                 
          end
           
@@ -91,7 +90,7 @@ classdef Utux < scheme.Scheme
     end
 
     methods(Static)
-        % Calculates the matrcis need for the inteface coupling between boundary bound_u of scheme schm_u
+        % Calculates the matrices needed for the inteface coupling between boundary bound_u of scheme schm_u
         % and bound_v of scheme schm_v.
         %   [uu, uv, vv, vu] = inteface_coupling(A,'r',B,'l')
         function [uu, uv, vv, vu] = interface_coupling(schm_u,bound_u,schm_v,bound_v)
