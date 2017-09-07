@@ -36,6 +36,21 @@ function testLength(testCase)
     end
 end
 
+function testIsEmpty(testCase)
+    cases = {
+        {cell(0,0), true},
+        {cell(1,0), true},
+        {cell(0,1), true},
+        {cell(1,1), false},
+    };
+
+    for i = 1:length(cases)
+        A = Cell(cases{i}{1});
+        expected = cases{i}{2};
+        testCase.verifyEqual(isempty(A),expected);
+    end
+end
+
 function testTranspose(testCase)
     testCase.verifyEqual(Cell({1i, 2}).', Cell({1i; 2}));
     testCase.verifyEqual(Cell({1i; 2}).', Cell({1i, 2}));
