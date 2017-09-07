@@ -27,7 +27,11 @@ function gf = evalOn(g, func)
     x = num2cell(g.points());
 
     % Find the number of components
-    x0 = x(1,:);
+    if size(x,1) ~= 0
+        x0 = x(1,:);
+    else
+        x0 = num2cell(ones(1,size(x,2)));
+    end
     f0 = func(x0{:});
     k = length(f0);
 

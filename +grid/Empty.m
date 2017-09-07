@@ -1,10 +1,10 @@
-classdef EmptyGrid < grid.Grid
+classdef Empty < grid.Grid & grid.Structured
     properties
         dim
     end
 
     methods
-        function obj = EmptyGrid(D)
+        function obj = Empty(D)
             obj.dim = D;
         end
         % n returns the number of points in the grid
@@ -40,6 +40,14 @@ classdef EmptyGrid < grid.Grid
         % Return coordinates for the given boundary
         function b = getBoundary(obj, name)
             b = sparse(0,obj.dim-1);
+        end
+
+        function h = scaling(obj)
+            h = 1;
+        end
+
+        function s = size(obj)
+            s = zeros(1, obj.dim);
         end
     end
 end
