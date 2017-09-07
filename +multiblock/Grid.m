@@ -22,6 +22,7 @@ classdef Grid < grid.Grid
         %                   getting boundary operators and setting boundary conditions
         function obj = Grid(grids, connections, boundaryGroups)
             default_arg('boundaryGroups', struct());
+            assertType(grids, 'cell')
             obj.grids = grids;
             obj.connections = connections;
 
@@ -88,6 +89,10 @@ classdef Grid < grid.Grid
         % Converts a gridfunction to a set of plot matrices
         % Takes a grid function and and a structured grid.
         function F = funcToPlotMatrices(obj, gf)
+            % TODO: This method should problably not be here.
+            % The funcToPlotMatrix uses .size poperty of the grids
+            % Which doesn't always exist for all types of grids.
+            % It's only valid for structured grids
             gfs = obj.splitFunc(gf);
 
             F = cell(1, obj.nBlocks());
