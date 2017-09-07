@@ -23,6 +23,10 @@ classdef Cell
             s = size(A.data);
         end
 
+        function b = isempty(A)
+            b = prod(size(A)) == 0;
+        end
+
         function l = length(A)
             l = length(A.data);
         end
