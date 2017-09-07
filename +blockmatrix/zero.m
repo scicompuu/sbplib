@@ -1,6 +1,6 @@
 % Creates a block matrix according to the division with zeros everywhere.
 function bm = zero(div)
-    if ~blockmatrix.isDivision(div);
+    if ~blockmatrix.isDivision(div)
         error('div is not a valid division');
     end
 

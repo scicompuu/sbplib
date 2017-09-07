@@ -51,6 +51,22 @@ function testToMatrix(testCase)
             [2 2 1;
              2 1 2],
         },
+        {
+            {zeros(0,0)},
+            [],
+        },
+        {
+            {zeros(3,0), zeros(3,0)},
+            zeros(3,0),
+        },
+        {
+            {zeros(3,0); zeros(2,0)},
+            zeros(5,0),
+        },
+        {
+            {zeros(0,3), zeros(0,2)},
+            zeros(0,5),
+        },
     };
 
     for i = 1:length(cases)

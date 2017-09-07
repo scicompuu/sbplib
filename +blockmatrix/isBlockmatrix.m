@@ -4,7 +4,7 @@ function b = isBlockmatrix(bm)
         return
     end
 
-    % Make sure all blocks are numerica matrices
+    % Make sure all blocks are numerical matrices
     for i = 1:length(bm)
         if ~isnumeric(bm{i})
             b = false;

@@ -46,6 +46,20 @@ function testFromMatrix(testCase)
                 [23 5; 4 6; 10 12; 11 18], [7 14 16; 13 20 22; 19 21 3; 25 2 9];
             };
         },
+        {
+            {
+                magic(3),
+                {[1 0 2],[1 2 0]}
+            },
+            mat2cell(magic(3),[1 0 2],[1 2 0])
+        },
+        {
+            {
+                zeros(0,1),
+                {0,1},
+            },
+            {zeros(0,1)}
+        },
     };
     for i = 1:length(cases)
         out = convertToFull(blockmatrix.fromMatrix(cases{i}{1}{:}));

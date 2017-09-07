@@ -56,6 +56,18 @@ function testGetDivision(testCase)
             },
             {[2 1], 2}
         },
+        {
+            {zeros(3,0)},
+            {3, 0},
+        },
+        {
+            {zeros(3,0), zeros(3,0)},
+            {3, [0, 0]},
+        },
+        {
+            {zeros(3,0); zeros(2,0)},
+            {[3 2],0},
+        },
     };
 
     for i = 1:length(cases)
