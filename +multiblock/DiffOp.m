@@ -134,7 +134,7 @@ classdef DiffOp < scheme.Scheme
                     op = blockmatrix.toMatrix(blockOp);
                     return
                 case 'multiblock.BoundaryGroup'
-                    op = [];
+                    op = sparse(size(obj.D,1),0);
                     for i = 1:length(boundary)
                         op = [op, obj.getBoundaryOperator(opName, boundary{i})];
                     end
@@ -155,7 +155,7 @@ classdef DiffOp < scheme.Scheme
                 case 'multiblock.BoundaryGroup'
                     [n,m] = size(obj.D);
                     closure = sparse(n,m);
-                    penalty = [];
+                    penalty = sparse(n,0);
                     for i = 1:length(boundary)
                         [closurePart, penaltyPart] = obj.boundary_condition(boundary{i}, type);
                         closure = closure + closurePart;

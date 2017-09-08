@@ -46,7 +46,7 @@ classdef Grid < grid.Grid
         % Ns returns the number of points in each sub grid as a vector
         function o = Ns(obj)
             ns = zeros(1,obj.nBlocks);
-            for i = 1:obj.nBlocks;
+            for i = 1:obj.nBlocks
                 ns(i) = obj.grids{i}.N();
             end
             o = ns;
@@ -63,7 +63,7 @@ classdef Grid < grid.Grid
 
         % points returns a n x d matrix containing the coordinates for all points.
         function X = points(obj)
-            X = [];
+            X = sparse(0,obj.D());
             for i = 1:length(obj.grids)
                 X = [X; obj.grids{i}.points];
             end
@@ -80,7 +80,7 @@ classdef Grid < grid.Grid
                 N(i) = obj.grids{i}.N();
             end
 
-            gfs = mat2cell(gf, N, 1);
+            gfs = blockmatrix.fromMatrix(gf, {N,1});
         end
 
         % TODO: Split op?
@@ -162,7 +162,7 @@ classdef Grid < grid.Grid
                     name = boundary{2};
                     b = obj.grids{I}.getBoundary(name);
                 case 'multiblock.BoundaryGroup'
-                    b = [];
+                    b = sparse(0,obj.D());
                     for i = 1:length(boundary)
                         b = [b; obj.getBoundary(boundary{i})];
                     end
