@@ -9,16 +9,20 @@ classdef Grid < grid.Grid
 
     % General multiblock grid
     methods
-
-        % grids -- cell array of N grids
-        % connections -- NxN upper triangular cell matrix. connections{i,j}
-        %                specifies the connection between block i and j. If
-        %                it's empty there is no connection otherwise it's a 2
-        %                -cell-vector with strings naming the boundaries to be
-        %                connected. (inverted coupling?)
-        %% Should we have boundary groups at all? maybe it can be handled in a
-        %% cleaner way outside of the class. Maybe the grid class doesn't need to care at all. All boundaryGroup interaction is in DiffOp?
+        % grids          -- cell array of N grids
+        % connections    -- NxN upper triangular cell matrix. connections{i,j}
+        %                   specifies the connection between block i and j. If
+        %                   it's empty there is no connection otherwise it's a 2
+        %                   -cell-vector with strings naming the boundaries to be
+        %                   connected. (inverted coupling?)
+        % boundaryGroups -- A struct of BoundaryGroups. The field names of the
+        %                   struct are the names of each boundary group.
+        %                   The boundary groups can be used to collect block
+        %                   boundaries into physical boundaries to simplify
+        %                   getting boundary operators and setting boundary conditions
         function obj = Grid(grids, connections, boundaryGroups)
+            default_arg('boundaryGroups', struct());
+            assertType(grids, 'cell')
             obj.grids = grids;
             obj.connections = connections;
 
@@ -27,7 +31,7 @@ classdef Grid < grid.Grid
                 obj.nPoints = obj.nPoints + grids{i}.N();
             end
 
-            % if iscell(boundaryGroups)
+            obj.boundaryGroups = boundaryGroups;
         end
 
         function n = size(obj)
@@ -42,7 +46,7 @@ classdef Grid < grid.Grid
         % Ns returns the number of points in each sub grid as a vector
         function o = Ns(obj)
             ns = zeros(1,obj.nBlocks);
-            for i = 1:obj.nBlocks;
+            for i = 1:obj.nBlocks
                 ns(i) = obj.grids{i}.N();
             end
             o = ns;
@@ -59,7 +63,7 @@ classdef Grid < grid.Grid
 
         % points returns a n x d matrix containing the coordinates for all points.
         function X = points(obj)
-            X = [];
+            X = sparse(0,obj.D());
             for i = 1:length(obj.grids)
                 X = [X; obj.grids{i}.points];
             end
@@ -76,12 +80,19 @@ classdef Grid < grid.Grid
                 N(i) = obj.grids{i}.N();
             end
 
-            gfs = mat2cell(gf, N, 1);
+            gfs = blockmatrix.fromMatrix(gf, {N,1});
         end
+
+        % TODO: Split op?
+        % Should the method to split an operator be moved here instead of being in multiblock.DiffOp?
 
         % Converts a gridfunction to a set of plot matrices
         % Takes a grid function and and a structured grid.
         function F = funcToPlotMatrices(obj, gf)
+            % TODO: This method should problably not be here.
+            % The funcToPlotMatrix uses .size poperty of the grids
+            % Which doesn't always exist for all types of grids.
+            % It's only valid for structured grids
             gfs = obj.splitFunc(gf);
 
             F = cell(1, obj.nBlocks());
@@ -121,13 +132,43 @@ classdef Grid < grid.Grid
 
         end
 
+        % Find all non interface boundaries of all blocks.
+        % Return their grid.boundaryIdentifiers in a cell array.
         function bs = getBoundaryNames(obj)
-            bs = [];
+            bs = {};
+            for i = 1:obj.nBlocks()
+                candidates = obj.grids{i}.getBoundaryNames();
+                for j = 1:obj.nBlocks()
+                    if ~isempty(obj.connections{i,j})
+                        candidates = setdiff(candidates, obj.connections{i,j}{1});
+                    end
+
+                    if ~isempty(obj.connections{j,i})
+                        candidates = setdiff(candidates, obj.connections{j,i}{2});
+                    end
+                end
+
+                for k = 1:length(candidates)
+                    bs{end+1} = {i, candidates{k}};
+                end
+            end
         end
 
-        % Return coordinates for the given boundary
-        function b = getBoundary(obj, name)
-            b = [];
+        % Return coordinates for the given boundary/boundaryGroup
+        function b = getBoundary(obj, boundary)
+            switch class(boundary)
+                case 'cell'
+                    I = boundary{1};
+                    name = boundary{2};
+                    b = obj.grids{I}.getBoundary(name);
+                case 'multiblock.BoundaryGroup'
+                    b = sparse(0,obj.D());
+                    for i = 1:length(boundary)
+                        b = [b; obj.getBoundary(boundary{i})];
+                    end
+                otherwise
+                    error('Unknown boundary indentifier')
+            end
         end
     end
 end

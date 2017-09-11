@@ -15,6 +15,8 @@ classdef Cartesian < grid.Structured
             obj.d = length(varargin);
 
             for i = 1:obj.d
+                assert(isvector(varargin{i}), 'Coordinate inputs must be a vectors.')
+
                 obj.x{i} = varargin{i};
                 obj.m(i) = length(varargin{i});
             end

@@ -1,0 +1,5 @@
+A grid.boundaryIdentifier identifies a boundary of a grid.
+For a Cartesian grid it is simply 's', 'n', 'w', 'e'.
+For a multiblock grid it might be something like {1, 's'}.
+For some other grid it will be up to the developer to chose
+a good way to identify boundaries.

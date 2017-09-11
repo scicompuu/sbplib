@@ -15,7 +15,19 @@ classdef Rungekutta4SecondOrder < time.Timestepper
 
 
     methods
-        % Solves u_tt = Du + Eu_t + S
+        % Solves u_tt = Du + Eu_t + S by
+        % Rewriting on first order form:
+        %   w_t = M*w + C(t)
+        % where
+        %   M = [
+        %      0, I;
+        %      D, E;
+        %   ]
+        % and
+        %   C(t) = [
+        %      0;
+        %      S(t)
+        %   ]
         % D, E, S can either all be constants or all be function handles,
         % They can also be omitted by setting them equal to the empty matrix.
         function obj = Rungekutta4SecondOrder(D, E, S, k, t0, v0, v0t)
@@ -41,23 +53,15 @@ classdef Rungekutta4SecondOrder < time.Timestepper
                     S = @(t)S;
                 end
 
-                I = speye(obj.m);
-                O = sparse(obj.m,obj.m);
-
-                obj.M = @(t)[
-                       O,    I;
-                    D(t), E(t);
-                ];
-                obj.C = @(t)[
-                    zeros(obj.m,1);
-                              S(t);
-                ];
-
                 obj.k = k;
                 obj.t = t0;
                 obj.w = [v0; v0t];
 
-                obj.F = @(w,t)(obj.M(t)*w + obj.C(t));
+                % Avoid matrix formulation because it is VERY slow
+                obj.F = @(w,t)[
+                    w(obj.m+1:end);
+                    D(t)*w(1:obj.m) + E(t)*w(obj.m+1:end) + S(t);
+                ];
             else
 
                 default_arg('D', sparse(obj.m, obj.m));

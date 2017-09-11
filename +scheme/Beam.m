@@ -90,6 +90,9 @@ classdef Beam < scheme.Scheme
             gamm = obj.gamm;
             delt = obj.delt;
 
+
+            % TODO: Can this be simplifed? Can I handle conditions on u on its own, u_x on its own ...
+
             switch type
                 case {'dn', 'clamped'} % Dirichlet-neumann boundary condition
                     alpha = obj.alpha;

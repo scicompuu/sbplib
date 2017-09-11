@@ -4,14 +4,16 @@ end
 
 function testIsDivision(testCase)
     cases = {
+        {[1 2] ,false},     % Must be a cell array
+        {{[1 2 3]} ,false}, % Must have two vectors
+        {{[],[]}, true}     % No blocks is a valid blockmatrix
+        {{[1 2],[]} ,true},
+        {{[],[1 2]} ,true},
         {{[2 2 2],[1 2]} ,true},
-        {{[1 2],[1 0]} ,false},
-        {{[0 2],[1 1]} ,false},
-        {{[1 2],[]} ,false},
+        {{[1 2],[1 0]} ,true},
+        {{[0 2],[1 1]} ,true},
         {{[1 2],[1]} ,true},
         {{[1 2],[1], [1 2 3]} ,false},
-        {{[1 2 3]} ,false},
-        {[1 2] ,false},
     };
 
     for i = 1:length(cases)

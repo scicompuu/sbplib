@@ -21,11 +21,11 @@ end
 
 function b = isDivisionVector(v)
     if isempty(v)
-        b = false;
+        b = true;
         return
     end
 
-    if any(v <= 0)
+    if any(v < 0)
         b = false;
         return
     end
