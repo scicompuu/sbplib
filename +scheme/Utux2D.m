@@ -9,7 +9,8 @@ classdef Utux2D < scheme.Scheme
         a % Wave speed a = [a1, a2];
 
         H % Discrete norm
-        Hi, Hx, Hy, Hxi, Hyi
+        H_x, H_y % Norms in the x and y directions
+        Hi, Hx, Hy, Hxi, Hyi % Kroneckered norms
 
         % Derivatives
         Dx, Dy
@@ -34,8 +35,8 @@ classdef Utux2D < scheme.Scheme
             m_y = m(2);
             m_tot = g.N();
 
-            xlim = g.x{1};
-            ylim = g.x{2};
+            xlim = {g.x{1}(1), g.x{1}(end)};
+            ylim = {g.x{2}(1), g.x{2}(end)};
             obj.grid = g;
 
             % Operator sets
@@ -49,6 +50,9 @@ classdef Utux2D < scheme.Scheme
             Hy = ops_y.H;
             Hxi = ops_x.HI;
             Hyi = ops_y.HI;
+            
+            obj.H_x = Hx;
+            obj.H_y = Hy;
             obj.H = kron(Hx,Hy);
             obj.Hi = kron(Hxi,Hyi);
             obj.Hx = kron(Hx,Iy);
@@ -71,7 +75,7 @@ classdef Utux2D < scheme.Scheme
             obj.m = m;
             obj.h = [ops_x.h ops_y.h];
             obj.order = order;
-            
+            obj.a = a;
             obj.D = -(a(1)*obj.Dx + a(2)*obj.Dy);
 
         end
@@ -88,11 +92,11 @@ classdef Utux2D < scheme.Scheme
             sigma = -1; % Scalar penalty parameter
             switch boundary
                 case {'w','W','west','West'}
-                    tau = sigma*obj.a(1)*obj.e_w*obj.Hy;
+                    tau = sigma*obj.a(1)*obj.e_w*obj.H_y;
                     closure = obj.Hi*tau*obj.e_w';
                     
                 case {'s','S','south','South'}
-                    tau = sigma*pbj.a(2)*obj.e_s*obj.Hx;
+                    tau = sigma*obj.a(2)*obj.e_s*obj.H_x;
                     closure = obj.Hi*tau*obj.e_s';
             end  
             penalty = -obj.Hi*tau;
@@ -119,16 +123,16 @@ classdef Utux2D < scheme.Scheme
              
              switch boundary
                  case {'w','W','west','West'}
-                     tau = sigma_ds*obj.a(1)*obj.e_w*obj.Hy;
+                     tau = sigma_ds*obj.a(1)*obj.e_w*obj.H_y;
                      closure = obj.Hi*tau*obj.e_w';       
                  case {'e','E','east','East'}
-                     tau = sigma_us*obj.a(1)*obj.e_e*obj.Hy;
+                     tau = sigma_us*obj.a(1)*obj.e_e*obj.H_y;
                      closure = obj.Hi*tau*obj.e_e';
                  case {'s','S','south','South'}
-                     tau = sigma_ds*obj.a(2)*obj.e_s*obj.Hx;
+                     tau = sigma_ds*obj.a(2)*obj.e_s*obj.H_x;
                      closure = obj.Hi*tau*obj.e_s'; 
                  case {'n','N','north','North'}
-                     tau = sigma_us*obj.a(2)*obj.e_n*obj.Hx;
+                     tau = sigma_us*obj.a(2)*obj.e_n*obj.H_x;
                      closure = obj.Hi*tau*obj.e_n';
              end
              penalty = -obj.Hi*tau*e_neighbour';
