@@ -98,7 +98,11 @@ classdef Rectangle < multiblock.Definition
             boundaryGroups.W = multiblock.BoundaryGroup(W);
             boundaryGroups.S = multiblock.BoundaryGroup(S);
             boundaryGroups.N = multiblock.BoundaryGroup(N);
-            boundaryGroups.all = multiblock.BoundaryGroup({E,W,S,N});
+            boundaryGroups.all = multiblock.BoundaryGroup([E,W,S,N]);
+            boundaryGroups.WS = multiblock.BoundaryGroup([W,S]);
+            boundaryGroups.WN = multiblock.BoundaryGroup([W,N]);
+            boundaryGroups.ES = multiblock.BoundaryGroup([E,S]);
+            boundaryGroups.EN = multiblock.BoundaryGroup([E,N]);
 
             obj.connections = conn;
             obj.nBlocks = nBlocks;
