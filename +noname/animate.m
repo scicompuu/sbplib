@@ -87,6 +87,7 @@ function hand = animate(discretization, time_modifier, Tend, dirname, opt)
         pause
         anim.animate(@G, Tstart, Tend, time_modifier);
     else
+        pause
         while true
             ts.step();
             sol = discretization.getTimeSnapshot(ts);
