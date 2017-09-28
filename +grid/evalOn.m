@@ -40,7 +40,6 @@ function gf = evalOn(g, func)
     end
 
     gf = zeros(g.N*k, 1);
-    % keyboard
     for i = 1:g.N
         % (1 + (i-1)*k):(i*k)
         % func(x{i,:})
