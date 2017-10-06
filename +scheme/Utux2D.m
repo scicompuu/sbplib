@@ -19,13 +19,20 @@ classdef Utux2D < scheme.Scheme
         e_w, e_e, e_s, e_n
         
         D % Total discrete operator
+
+        % String, type of interface coupling
+        % Default: 'upwind'
+        % Other:   'centered'
+        coupling_type 
+
         
     end
 
 
     methods 
-         function obj = Utux2D(g ,order, opSet, a)
-             
+         function obj = Utux2D(g ,order, opSet, a, coupling_type)
+            
+            default_arg('coupling_type','upwind'); 
             default_arg('a',1/sqrt(2)*[1, 1]); 
             default_arg('opSet',@sbp.D2Standard);
             assert(isa(g, 'grid.Cartesian'))
@@ -76,6 +83,7 @@ classdef Utux2D < scheme.Scheme
             obj.h = [ops_x.h ops_y.h];
             obj.order = order;
             obj.a = a;
+            obj.coupling_type = coupling_type;
             obj.D = -(a(1)*obj.Dx + a(2)*obj.Dy);
 
         end
@@ -117,9 +125,21 @@ classdef Utux2D < scheme.Scheme
                      e_neighbour = neighbour_scheme.e_s;
              end
              
-             % Upwind coupling
-             sigma_ds = -1; %"Downstream" penalty
-             sigma_us = 0; %"Upstream" penalty
+             switch obj.coupling_type
+             
+             % Upwind coupling (energy dissipation)
+             case 'upwind'
+                 sigma_ds = -1; %"Downstream" penalty
+                 sigma_us = 0; %"Upstream" penalty
+
+             % Energy-preserving coupling (no energy dissipation)
+             case 'centered'
+                 sigma_ds = -1/2; %"Downstream" penalty
+                 sigma_us = 1/2; %"Upstream" penalty
+
+             otherwise
+                error(['Interface coupling type ' coupling_type ' is not available.'])
+             end
              
              switch boundary
                  case {'w','W','west','West'}
