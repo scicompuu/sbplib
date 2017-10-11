@@ -62,6 +62,7 @@ classdef Timestepper < handle
 
 
         function [v, t] = stepTo(obj, n, progress_bar)
+            assertScalar(n);
             default_arg('progress_bar',false);
 
             [v, t] = obj.stepN(n-obj.n, progress_bar);
