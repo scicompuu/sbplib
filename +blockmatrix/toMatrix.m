@@ -17,11 +17,10 @@ function A = toMatrix(bm)
 
     for i = 1:size(bm,1)
         for j = 1:size(bm,2)
-            if isempty(bm{i,j})
-                continue
+            if(isempty(bm{i,j}))
+                bm{i,j} = sparse(n(i),m(j));
             end
-            % TODO: If this ever fails for large matrices. Try cell2mat instead.
-            A(n_ind(i)+1:n_ind(i+1),m_ind(j)+1:m_ind(j+1)) = bm{i,j};
         end
     end
+    A = cell2mat(bm);
 end

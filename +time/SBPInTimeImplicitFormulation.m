@@ -46,7 +46,6 @@ classdef SBPInTimeImplicitFormulation < time.Timestepper
                 obj.f = @(t)sparse(length(v0),1);
             end
 
-
             obj.k = k;
             obj.blockSize = blockSize;
             obj.N = length(v0);
@@ -99,7 +98,7 @@ classdef SBPInTimeImplicitFormulation < time.Timestepper
         function obj = step(obj)
             RHS = zeros(obj.blockSize*obj.N,1);
 
-            for i = 1:length(obj.blockSize)
+            for i = 1:obj.blockSize
                 RHS((1 + (i-1)*obj.N):(i*obj.N)) = obj.f(obj.t + obj.nodes(i));
             end
 
