@@ -23,8 +23,8 @@ function gf = evalOn(g, func)
     end
 
 
-    % Get coordinates and convert to cell array for easier use as a parameter
-    x = num2cell(g.points());
+    % Get coordinates
+    x = g.points();
 
     % Find the number of components
     if size(x,1) ~= 0
@@ -32,17 +32,43 @@ function gf = evalOn(g, func)
     else
         x0 = num2cell(ones(1,size(x,2)));
     end
-    f0 = func(x0{:});
+    
+    dim = length(x0);
+    % Evaluate f0 = func(x0(1),x0(2),...,x0(dim));
+    if(dim == 1)
+        f0 = func(x0);
+    else
+        eval_str = 'f0 = func(x0(1)';
+        for i = 2:dim
+            eval_str = [eval_str, sprintf(',x0(%d)',i)];
+        end
+        eval_str = [eval_str, ');'];
+        eval(eval_str);
+    end
+
+    % k = number of components
     k = length(f0);
 
     if size(f0,2) ~= 1
         error('grid:evalOn:VectorValuedWrongDim', 'A vector valued function must be given as a column vector')
     end
 
+    % Evaluate gf = func(x(:,1),x(:,2),...,x(:,dim));
+    if(dim == 1)
+        gf = func(x);
+    else
+        eval_str = 'gf = func(x(:,1)';
+        for i = 2:dim
+            eval_str = [eval_str, sprintf(',x(:,%d)',i)];
+        end
+        eval_str = [eval_str, ');'];
+        eval(eval_str);
+    end
+    
+    % Reorganize gf
+    gf_temp = gf;
     gf = zeros(g.N*k, 1);
-    for i = 1:g.N
-        % (1 + (i-1)*k):(i*k)
-        % func(x{i,:})
-        gf((1 + (i-1)*k):(i*k)) = func(x{i,:});
+    for i = 1:k
+        gf(i:k:end) = gf_temp((i-1)*g.N + 1 : i*g.N);
     end
 end
