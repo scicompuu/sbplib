@@ -31,12 +31,16 @@ classdef Utux2D < scheme.Scheme
         interpolation_type
 
         
+        % Cell array, damping on upwstream and downstream sides.
+        interpolation_damping
+
     end
 
 
     methods 
-         function obj = Utux2D(g ,order, opSet, a, coupling_type, interpolation_type)
+         function obj = Utux2D(g ,order, opSet, a, coupling_type, interpolation_type, interpolation_damping)
             
+            default_arg('interpolation_damping',{0,0});
             default_arg('interpolation_type','AWW'); 
             default_arg('coupling_type','upwind'); 
             default_arg('a',1/sqrt(2)*[1, 1]); 
@@ -91,6 +95,7 @@ classdef Utux2D < scheme.Scheme
             obj.a = a;
             obj.coupling_type = coupling_type;
             obj.interpolation_type = interpolation_type;
+            obj.interpolation_damping = interpolation_damping;
             obj.D = -(a(1)*obj.Dx + a(2)*obj.Dy);
 
         end
@@ -172,9 +177,13 @@ classdef Utux2D < scheme.Scheme
                     if grid_ratio < 1
                         I_neighbour2local_us = interpOpSet.IF2C;
                         I_neighbour2local_ds = interpOpSet.IF2C;
+                        I_local2neighbour_us = interpOpSet.IC2F;
+                        I_local2neighbour_ds = interpOpSet.IC2F;
                     elseif grid_ratio > 1
                         I_neighbour2local_us = interpOpSet.IC2F;
                         I_neighbour2local_ds = interpOpSet.IC2F;
+                        I_local2neighbour_us = interpOpSet.IF2C;
+                        I_local2neighbour_ds = interpOpSet.IF2C;
                     end
                 case 'AWW'
                     %String 'C2F' indicates that ICF2 is more accurate.
@@ -184,10 +193,14 @@ classdef Utux2D < scheme.Scheme
                         % Local is coarser than neighbour
                         I_neighbour2local_us = interpOpSetC2F.IF2C;
                         I_neighbour2local_ds = interpOpSetF2C.IF2C;
+                        I_local2neighbour_us = interpOpSetC2F.IC2F;
+                        I_local2neighbour_ds = interpOpSetF2C.IC2F;
                     elseif grid_ratio > 1
                         % Local is finer than neighbour 
                         I_neighbour2local_us = interpOpSetF2C.IC2F;
                         I_neighbour2local_ds = interpOpSetC2F.IC2F;
+                        I_local2neighbour_us = interpOpSetF2C.IF2C;
+                        I_local2neighbour_ds = interpOpSetC2F.IF2C;
                     end
                 otherwise
                     error(['Interpolation type ' obj.interpolation_type ...
@@ -200,23 +213,47 @@ classdef Utux2D < scheme.Scheme
                 I_neighbour2local_ds = speye(m,m);
             end    
              
+             int_damp_us = obj.interpolation_damping{1};
+             int_damp_ds = obj.interpolation_damping{2};
+
+             I = speye(m,m);
+             I_back_forth_us = I_neighbour2local_us*I_local2neighbour_us;
+             I_back_forth_ds = I_neighbour2local_ds*I_local2neighbour_ds;
+
+
              switch boundary
                  case {'w','W','west','West'}
                      tau = sigma_ds*obj.a(1)*obj.e_w*obj.H_y;
                      closure = obj.Hi*tau*obj.e_w';
-                     penalty = -obj.Hi*tau*I_neighbour2local_ds*e_neighbour';     
+                     penalty = -obj.Hi*tau*I_neighbour2local_ds*e_neighbour';
+
+                     beta = int_damp_ds*obj.a(1)...
+                            *obj.e_w*obj.H_y;
+                     closure = closure + obj.Hi*beta*(I_back_forth_ds - I)*obj.e_w';     
                  case {'e','E','east','East'}
                      tau = sigma_us*obj.a(1)*obj.e_e*obj.H_y;
                      closure = obj.Hi*tau*obj.e_e';
                      penalty = -obj.Hi*tau*I_neighbour2local_us*e_neighbour';
+
+                     beta = int_damp_us*obj.a(1)...
+                            *obj.e_e*obj.H_y;
+                     closure = closure + obj.Hi*beta*(I_back_forth_us - I)*obj.e_e'; 
                  case {'s','S','south','South'}
                      tau = sigma_ds*obj.a(2)*obj.e_s*obj.H_x;
                      closure = obj.Hi*tau*obj.e_s'; 
                      penalty = -obj.Hi*tau*I_neighbour2local_ds*e_neighbour';
+
+                     beta = int_damp_ds*obj.a(2)...
+                            *obj.e_s*obj.H_x;
+                     closure = closure + obj.Hi*beta*(I_back_forth_ds - I)*obj.e_s';
                  case {'n','N','north','North'}
                      tau = sigma_us*obj.a(2)*obj.e_n*obj.H_x;
                      closure = obj.Hi*tau*obj.e_n';
                      penalty = -obj.Hi*tau*I_neighbour2local_us*e_neighbour';
+
+                     beta = int_damp_us*obj.a(2)...
+                            *obj.e_n*obj.H_x;
+                     closure = closure + obj.Hi*beta*(I_back_forth_us - I)*obj.e_n'; 
              end
              
                  
