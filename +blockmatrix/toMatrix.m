@@ -12,9 +12,6 @@ function A = toMatrix(bm)
 
     A = sparse(N,M);
 
-    n_ind = [0 cumsum(n)];
-    m_ind = [0 cumsum(m)];
-
     for i = 1:size(bm,1)
         for j = 1:size(bm,2)
             if isempty(bm{i,j})
