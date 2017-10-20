@@ -16,7 +16,7 @@ function gf = evalOn(g, func)
     assert(g.D == nargin(func),'grid:evalOn:WrongNumberOfInputs', 'The number of inputs of the function must match the dimension of the domain.')
 
     x = num2cell(g.points(),1);
-    k = numberOfComponents(func, x);
+    k = numberOfComponents(func);
 
     gf = func(x{:});
 
@@ -29,12 +29,9 @@ function gf = evalOn(g, func)
 end
 
 % Find the number of vector components of func
-function k = numberOfComponents(func, x)
-    x0 = num2cell(ones(1,size(x,2)));
-
+function k = numberOfComponents(func)
+    x0 = num2cell(ones(1,nargin(func)));
     f0 = func(x0{:});
-    % k = number of components
-    k = length(f0);
-
     assert(size(f0,2) == 1, 'grid:evalOn:VectorValuedWrongDim', 'A vector valued function must be given as a column vector');
+    k = length(f0);
 end
