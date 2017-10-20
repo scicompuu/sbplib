@@ -19,13 +19,7 @@ function gf = evalOn(g, func)
     k = numberOfComponents(func);
 
     gf = func(x{:});
-
-    % Reorganize gf
-    gf_temp = gf;
-    gf = zeros(g.N*k, 1);
-    for i = 1:k
-        gf(i:k:end) = gf_temp((i-1)*g.N + 1 : i*g.N);
-    end
+    gf = reorderComponents(gf, k);
 end
 
 % Find the number of vector components of func
@@ -34,4 +28,13 @@ function k = numberOfComponents(func)
     f0 = func(x0{:});
     assert(size(f0,2) == 1, 'grid:evalOn:VectorValuedWrongDim', 'A vector valued function must be given as a column vector');
     k = length(f0);
+end
+
+% Reorder the components of the function to sit together
+function gf = reorderComponents(a, k)
+    N = length(a)/k;
+    gf = zeros(N*k, 1);
+    for i = 1:k
+        gf(i:k:end) = a((i-1)*N + 1 : i*N);
+    end
 end
