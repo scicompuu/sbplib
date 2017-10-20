@@ -20,11 +20,31 @@ function gf = evalOn(g, func)
         error('grid:evalOn:WrongNumberOfInputs', 'The number of inputs of the function must match the dimension of the domain.')
     end
 
-
-    % Get coordinates
     x = g.points();
+    k = numberOfComponents(func, x);
 
-    % Find the number of components
+    % Evaluate gf = func(x(:,1),x(:,2),...,x(:,dim));
+    if(g.D == 1)
+        gf = func(x);
+    else
+        eval_str = 'gf = func(x(:,1)';
+        for i = 2:g.D
+            eval_str = [eval_str, sprintf(',x(:,%d)',i)];
+        end
+        eval_str = [eval_str, ');'];
+        eval(eval_str);
+    end
+
+    % Reorganize gf
+    gf_temp = gf;
+    gf = zeros(g.N*k, 1);
+    for i = 1:k
+        gf(i:k:end) = gf_temp((i-1)*g.N + 1 : i*g.N);
+    end
+end
+
+% Find the number of vector components of func
+function k = numberOfComponents(func, x)
     if size(x,1) ~= 0
         x0 = x(1,:);
     else
@@ -49,24 +69,5 @@ function gf = evalOn(g, func)
 
     if size(f0,2) ~= 1
         error('grid:evalOn:VectorValuedWrongDim', 'A vector valued function must be given as a column vector')
-    end
-
-    % Evaluate gf = func(x(:,1),x(:,2),...,x(:,dim));
-    if(dim == 1)
-        gf = func(x);
-    else
-        eval_str = 'gf = func(x(:,1)';
-        for i = 2:dim
-            eval_str = [eval_str, sprintf(',x(:,%d)',i)];
-        end
-        eval_str = [eval_str, ');'];
-        eval(eval_str);
-    end
-
-    % Reorganize gf
-    gf_temp = gf;
-    gf = zeros(g.N*k, 1);
-    for i = 1:k
-        gf(i:k:end) = gf_temp((i-1)*g.N + 1 : i*g.N);
     end
 end
