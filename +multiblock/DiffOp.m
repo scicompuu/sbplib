@@ -194,6 +194,7 @@ classdef DiffOp < scheme.Scheme
                 p{I} = blockPenalty;
                 penalty = blockmatrix.toMatrix(p);
             else
+                % TODO: used by beam equation, should be eliminated. SHould only set one BC per call
                 for i = 1:length(blockPenalty)
                     div{2} = size(blockPenalty{i}, 2); % Penalty is a column vector
                     p = blockmatrix.zero(div);

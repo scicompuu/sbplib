@@ -46,6 +46,8 @@ classdef Animation < handle
                 r = obj.representationMaker(obj.timeStepper);
                 obj.update(r);
 
+                % TODO: Make it never go faster than a certain fram rate
+
                 if do_pause
                     pause
                 end
