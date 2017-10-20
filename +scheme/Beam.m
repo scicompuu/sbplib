@@ -126,6 +126,44 @@ classdef Beam < scheme.Scheme
                     penalty{1} = -obj.Hi*tau;
                     penalty{1} = -obj.Hi*sig;
 
+                case 'e'
+                    alpha = obj.alpha;
+                    tuning = 1.1;
+
+                    tau1 = tuning * alpha/delt;
+                    tau4 = s*alpha;
+
+                    tau = tau1*e+tau4*d3;
+
+                    closure = obj.Hi*tau*e';
+                    penalty = -obj.Hi*tau;
+                case 'd1'
+                    alpha = obj.alpha;
+
+                    tuning = 1.1;
+
+                    sig2 = tuning * alpha/gamm;
+                    sig3 = -s*alpha;
+
+                    sig = sig2*d1+sig3*d2;
+
+                    closure = obj.Hi*sig*d1';
+                    penalty = -obj.Hi*sig;
+
+                case 'd2'
+                    a = obj.alpha;
+
+                    tau =  s*a*d1;
+
+                    closure = obj.Hi*tau*d2';
+                    penalty = -obj.Hi*tau;
+                case 'd3'
+                    a = obj.alpha;
+
+                    sig = -s*a*e;
+
+                    closure = obj.Hi*sig*d3';
+                    penalty = -obj.Hi*sig;
 
                 otherwise % Unknown, boundary condition
                     error('No such boundary condition: type = %s',type);
