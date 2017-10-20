@@ -7,18 +7,13 @@
 function gf = evalOn(g, func)
     if ~isa(func, 'function_handle')
         % We should have a constant.
-        if size(func,2) ~= 1
-            error('grid:evalOn:VectorValuedWrongDim', 'A vector valued function must be given as a column vector')
-        end
+        assert(size(func,2) == 1,'grid:evalOn:VectorValuedWrongDim', 'A vector valued function must be given as a column vector');
 
         gf = repmat(func,[g.N, 1]);
         return
     end
     % func should now be a function_handle
-
-    if g.D ~= nargin(func)
-        error('grid:evalOn:WrongNumberOfInputs', 'The number of inputs of the function must match the dimension of the domain.')
-    end
+    assert(g.D == nargin(func),'grid:evalOn:WrongNumberOfInputs', 'The number of inputs of the function must match the dimension of the domain.')
 
     x = g.points();
     k = numberOfComponents(func, x);
@@ -67,7 +62,5 @@ function k = numberOfComponents(func, x)
     % k = number of components
     k = length(f0);
 
-    if size(f0,2) ~= 1
-        error('grid:evalOn:VectorValuedWrongDim', 'A vector valued function must be given as a column vector')
-    end
+    assert(size(f0,2) == 1, 'grid:evalOn:VectorValuedWrongDim', 'A vector valued function must be given as a column vector');
 end
