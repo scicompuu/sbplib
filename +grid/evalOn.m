@@ -17,8 +17,6 @@ function gf = evalOn(g, func)
     % func should now be a function_handle
 
     if g.D ~= nargin(func)
-        g.D
-        nargin(func)
         error('grid:evalOn:WrongNumberOfInputs', 'The number of inputs of the function must match the dimension of the domain.')
     end
 

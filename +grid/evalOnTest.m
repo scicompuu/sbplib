@@ -31,7 +31,7 @@ function testNumberOfInputs(testCase)
     cases = {
         {getTestGrid('1d'), @(x,y)x-y},
         {getTestGrid('2d'), @(x)x    },
-    }
+    };
 
     for i = 1:length(cases)
         g = cases{i}{1};
@@ -111,9 +111,9 @@ end
 
 
 function testInputErrorVectorValued(testCase)
-     in  = {
+    in  = {
         [1,2,3],
-        @(x,y)[x,-y];
+        @(x,y)[x,-y],
     };
 
     g = getTestGrid('2d');
