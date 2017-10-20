@@ -17,7 +17,7 @@ function A = toMatrix(bm)
 
     for i = 1:size(bm,1)
         for j = 1:size(bm,2)
-            if(isempty(bm{i,j}))
+            if isempty(bm{i,j})
                 bm{i,j} = sparse(n(i),m(j));
             end
         end
