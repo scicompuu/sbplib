@@ -32,7 +32,7 @@ function gf = evalOn(g, func)
     else
         x0 = num2cell(ones(1,size(x,2)));
     end
-    
+
     dim = length(x0);
     % Evaluate f0 = func(x0(1),x0(2),...,x0(dim));
     if(dim == 1)
@@ -64,7 +64,7 @@ function gf = evalOn(g, func)
         eval_str = [eval_str, ');'];
         eval(eval_str);
     end
-    
+
     % Reorganize gf
     gf_temp = gf;
     gf = zeros(g.N*k, 1);
