@@ -15,20 +15,10 @@ function gf = evalOn(g, func)
     % func should now be a function_handle
     assert(g.D == nargin(func),'grid:evalOn:WrongNumberOfInputs', 'The number of inputs of the function must match the dimension of the domain.')
 
-    x = g.points();
+    x = num2cell(g.points(),1);
     k = numberOfComponents(func, x);
 
-    % Evaluate gf = func(x(:,1),x(:,2),...,x(:,dim));
-    if(g.D == 1)
-        gf = func(x);
-    else
-        eval_str = 'gf = func(x(:,1)';
-        for i = 2:g.D
-            eval_str = [eval_str, sprintf(',x(:,%d)',i)];
-        end
-        eval_str = [eval_str, ');'];
-        eval(eval_str);
-    end
+    gf = func(x{:});
 
     % Reorganize gf
     gf_temp = gf;
@@ -40,25 +30,9 @@ end
 
 % Find the number of vector components of func
 function k = numberOfComponents(func, x)
-    if size(x,1) ~= 0
-        x0 = x(1,:);
-    else
-        x0 = num2cell(ones(1,size(x,2)));
-    end
+    x0 = num2cell(ones(1,size(x,2)));
 
-    dim = length(x0);
-    % Evaluate f0 = func(x0(1),x0(2),...,x0(dim));
-    if(dim == 1)
-        f0 = func(x0);
-    else
-        eval_str = 'f0 = func(x0(1)';
-        for i = 2:dim
-            eval_str = [eval_str, sprintf(',x0(%d)',i)];
-        end
-        eval_str = [eval_str, ');'];
-        eval(eval_str);
-    end
-
+    f0 = func(x0{:});
     % k = number of components
     k = length(f0);
 
