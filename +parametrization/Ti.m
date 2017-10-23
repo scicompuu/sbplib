@@ -21,16 +21,29 @@ classdef Ti
             D = g4(0);
 
             function o = S_fun(u,v)
+                if isrow(u) && isrow(v)
+                    flipped = false;
+                else
+                    flipped = true;
+                    u = u';
+                    v = v';
+                end
+
                 x1 = g1(u);
                 x2 = g2(v);
                 x3 = g3(1-u);
                 x4 = g4(1-v);
+
                 o1 = (1-v).*x1(1,:) + u.*x2(1,:) + v.*x3(1,:) + (1-u).*x4(1,:) ...
                     -((1-u).*(1-v).*A(1,:) + u.*(1-v).*B(1,:) + u.*v.*C(1,:) + (1-u).*v.*D(1,:));
                 o2 = (1-v).*x1(2,:) + u.*x2(2,:) + v.*x3(2,:) + (1-u).*x4(2,:) ...
                     -((1-u).*(1-v).*A(2,:) + u.*(1-v).*B(2,:) + u.*v.*C(2,:) + (1-u).*v.*D(2,:));
 
-                o = [o1;o2];
+                if ~flipped
+                    o = [o1;o2];
+                else
+                    o = [o1'; o2'];
+                end
             end
 
             obj.S = @S_fun;
