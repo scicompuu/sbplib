@@ -4,6 +4,7 @@
 % m are grid size parameters.
 % N are number of timesteps to use for each gird size
 % timeOpt are options for the timeStepper
+% errorFun is a function_handle taking 2 or 3 arguments, errorFun(trueSolution, approxSolution), errorFun(trueSolution, approxSolution, discr)
 function e = calculateErrors(schemeFactory, T, m, N, errorFun, timeOpt)
     %TODO: Ability to choose paralell or not
     assertType(schemeFactory, 'function_handle');
@@ -11,11 +12,15 @@ function e = calculateErrors(schemeFactory, T, m, N, errorFun, timeOpt)
     assertScalar(T);
     assert(length(m) == length(N), 'Vectors m and N must have the same length');
     assertType(errorFun, 'function_handle');
-    assertNumberOfArguments(errorFun, 2);
+
+    if ~ismember(nargin(errorFun), [2,3])
+        error('sbplib:noname:calculateErrors:wrongNumberOfArguments', '"%s" must have 2 or 3, found %d', toString(errorFun), nargin(errorFun));
+    end
+
     default_arg('timeOpt', struct());
 
 
-    e = [];
+    e = zeros(1,length(m));
     parfor i = 1:length(m)
         done = timeTask('m = %3d ', m(i));
 
@@ -27,7 +32,12 @@ function e = calculateErrors(schemeFactory, T, m, N, errorFun, timeOpt)
         ts.stepTo(N(i), true);
         approxSolution = discr.getTimeSnapshot(ts);
 
-        e(i) = errorFun(trueSolution, approxSolution);
+        switch nargin(errorFun)
+            case 2
+                e(i) = errorFun(trueSolution, approxSolution);
+            case 3
+                e(i) = errorFun(trueSolution, approxSolution, discr);
+        end
 
         fprintf('e = %.4e', e(i))
         done()
