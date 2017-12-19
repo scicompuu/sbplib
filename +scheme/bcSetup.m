@@ -22,7 +22,7 @@ function [closure, S] = bcSetup(diffOp, bc, S_sign)
         [localClosure, penalty] = diffOp.boundary_condition(bc{i}.boundary, bc{i}.type);
         closure = closure + localClosure;
 
-        if isempty(bc{i}.data)
+        if ~isfield(bc,'data') || isempty(bc{i}.data)
             continue
         end
         assertType(bc{i}.data, 'function_handle');
