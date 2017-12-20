@@ -44,11 +44,12 @@ classdef elasticShearVariable < scheme.Scheme
             m_tot = g.N();
 
             h = g.scaling();
+            L = (m-1).*h;
 
             % 1D operators
             ops = cell(dim,1);
             for i = 1:dim
-                ops{i} = opSet(m(i), {0, 1}, order);
+                ops{i} = opSet(m(i), {0, L(i)}, order);
             end
 
             I = cell(dim,1);
@@ -230,17 +231,23 @@ classdef elasticShearVariable < scheme.Scheme
 
                 % Free boundary condition
                 case {'F','f','Free','free'}
-                    closure = sparse(obj.dim*obj.grid.N,obj.dim*obj.grid.N);
-                    penalty = sparse(obj.dim*obj.grid.N,obj.dim*obj.grid.N);
+                    closures = cell(obj.dim,1);
+                    penalties = cell(obj.dim,1);
                     % Loop over components
                     for i = 1:obj.dim
-                        closure = closure + E{i}*inv(RHO)*(-nj)*Hi*e{j}*H_gamma*(...
+                        closures{i} = E{i}*inv(RHO)*(-nj)*Hi*e{j}*H_gamma*(...
                                 e{j}'*A*e{j}*d{j}'*E{i}' + ...
                                 delta(i,j)*e{j}'*A*e{i}*d{i}'*E{j}' + ...
                                 delta_b(i,j)*e{j}'*A*D1{i}*E{j}' ...
                                 );
-                        penalty = penalty - E{i}*inv(RHO)*(-nj)*Hi*e{j}*H_gamma*e{j}'*E{j}';
+                        penalties{i} = - E{i}*inv(RHO)*(-nj)*Hi*e{j}*H_gamma;
                     end
+                    [rows, cols] = size(closures{1});
+                    closure = sparse(rows, cols);
+                    for i = 1:obj.dim
+                        closure = closure + closures{i};
+                    end
+                    penalty = penalties;
 
 
                 % Unknown boundary condition
