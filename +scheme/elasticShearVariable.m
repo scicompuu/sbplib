@@ -15,6 +15,9 @@ classdef elasticShearVariable < scheme.Scheme
         D1 % First derivatives
         D2 % Second derivatives
         H, Hi % Inner products
+        phi % Borrowing constant for (d1 - e^T*D1) from R
+        gamma % Borrowing constant for d1 from M
+        H11 % First element of H
         e_l, e_r
         d1_l, d1_r % Normal derivatives at the boundary
         E % E{i}^T picks out component i
@@ -51,6 +54,12 @@ classdef elasticShearVariable < scheme.Scheme
             for i = 1:dim
                 ops{i} = opSet(m(i), {0, L(i)}, order);
             end
+
+            % Borrowing constants
+            beta = ops{1}.borrowing.R.delta_D;
+            obj.H11 = ops{1}.borrowing.H11;
+            obj.phi = beta/obj.H11;
+            obj.gamma = ops{1}.borrowing.M.d1;
 
             I = cell(dim,1);
             D1 = cell(dim,1);
@@ -210,24 +219,90 @@ classdef elasticShearVariable < scheme.Scheme
             RHO = obj.RHO;
             D1 = obj.D1;
 
+            phi = obj.phi;
+            gamma = obj.gamma;
+            H11 = obj.H11;
+            h = obj.h;
+
             switch type
                 % Dirichlet boundary condition
                 case {'D','d','dirichlet'}
-                    error('Dirichlet not implemented')
                     tuning = 1.2;
-                    % tuning = 20.2;
+                    phi = obj.phi;
 
-                    b1 = gamm*obj.lambda./obj.a11.^2;
-                    b2 = gamm*obj.lambda./obj.a22.^2;
+                    closures = cell(obj.dim,1);
+                    penalties = cell(obj.dim,obj.dim);
+                    % Loop over components
+                    for i = 1:obj.dim
+                        H_gamma_i = obj.H_boundary{i};
+                        sigma_ij = tuning*delta(i,j)*2/(gamma*h(j)) +...
+                                   tuning*delta_b(i,j)*(2/(H11*h(j)) + 2/(H11*h(j)*phi));
 
-                    tau1 = tuning * spdiag(-1./b1 - 1./b2);
-                    tau2 = 1;
+                        ci = E{i}*inv(RHO)*nj*Hi*...
+                                ( (e{j}*H_gamma*e{j}'*A*e{j}*d{j}')'*E{i}' + ...
+                                  delta(i,j)*(e{j}*H_gamma*e{j}'*A*e{j}*d{j}')'*E{j}' ...
+                                   ) ...
+                                - sigma_ij*E{i}*inv(RHO)*Hi*A*e{j}*H_gamma*e{j}'*E{i}';
 
-                    tau = (tau1*e + tau2*d)*H_b;
+                        cj = E{j}*inv(RHO)*nj*Hi*...
+                                ( delta_b(i,j)*(e{j}*H_gamma*e{j}'*A*D1{i})'*E{i}' ...
+                                   );
 
-                    closure =  obj.a*obj.Hi*tau*e';
-                    penalty = -obj.a*obj.Hi*tau;
+                        if isempty(closures{i})
+                            closures{i} = ci;
+                        else
+                            closures{i} = closures{i} + ci;
+                        end
 
+                        if isempty(closures{j})
+                            closures{j} = cj;
+                        else
+                            closures{j} = closures{j} + cj;
+                        end
+   
+                        pii = - E{i}*inv(RHO)*nj*Hi*...
+                                ( (H_gamma*e{j}'*A*e{j}*d{j}')' + ...
+                                  delta(i,j)*(H_gamma*e{j}'*A*e{j}*d{j}')' ...
+                                   ) ...
+                                + sigma_ij*E{i}*inv(RHO)*Hi*A*e{j}*H_gamma;
+
+                        pji = - E{j}*inv(RHO)*nj*Hi*...
+                                ( delta_b(i,j)*(H_gamma*e{j}'*A*D1{i})' );
+
+                        % Dummies
+                        pij = - 0*E{i}*e{j};
+                        pjj = - 0*E{j}*e{j};
+
+                        if isempty(penalties{i,i})
+                            penalties{i,i} = pii;
+                        else
+                            penalties{i,i} = penalties{i,i} + pii;
+                        end
+
+                        if isempty(penalties{j,i})
+                            penalties{j,i} = pji;
+                        else
+                            penalties{j,i} = penalties{j,i} + pji;
+                        end
+
+                        if isempty(penalties{i,j})
+                            penalties{i,j} = pij;
+                        else
+                            penalties{i,j} = penalties{i,j} + pij;
+                        end
+
+                        if isempty(penalties{j,j})
+                            penalties{j,j} = pjj;
+                        else
+                            penalties{j,j} = penalties{j,j} + pjj;
+                        end
+                    end
+                    [rows, cols] = size(closures{1});
+                    closure = sparse(rows, cols);
+                    for i = 1:obj.dim
+                        closure = closure + closures{i};
+                    end
+                    penalty = penalties;
 
                 % Free boundary condition
                 case {'F','f','Free','free'}
