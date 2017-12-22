@@ -26,6 +26,17 @@ classdef D2Variable < sbp.OpSet
             obj.x = linspace(x_l,x_r,m)';
 
             switch order
+
+                case 6
+
+                    [obj.H, obj.HI, obj.D1, obj.D2, ...
+                    ~, obj.e_l, obj.e_r, ~, ~, ~, ~, ~,...
+                     obj.d1_l, obj.d1_r] = ...
+                        sbp.implementations.d4_variable_6(m, obj.h);
+                    obj.borrowing.M.d1 = 0.1878;
+                    obj.borrowing.R.delta_D = 0.3696;
+                    % Borrowing e^T*D1 - d1 from R
+
                 case 4
                     [obj.H, obj.HI, obj.D1, obj.D2, obj.e_l,...
                         obj.e_r, obj.d1_l, obj.d1_r] = ...
