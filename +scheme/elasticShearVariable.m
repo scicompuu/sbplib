@@ -8,7 +8,7 @@ classdef elasticShearVariable < scheme.Scheme
 
         order % Order accuracy for the approximation
 
-        A % Variable coefficient lambda of the operator (as diagonal matrix here)
+        A % Variable coefficient mu of the operator (as diagonal matrix here)
         RHO % Density (as diagonal matrix here)
 
         D % Total operator
@@ -31,7 +31,7 @@ classdef elasticShearVariable < scheme.Scheme
     methods
         % Implements the shear part of the elastic wave equation, i.e.
         % rho u_{i,tt} = d_i a d_j u_j + d_j a d_j u_i
-        % where a = lambda.
+        % where a = mu.
 
         function obj = elasticShearVariable(g ,order, a_fun, rho_fun, opSet)
             default_arg('opSet',@sbp.D2Variable);
@@ -186,6 +186,7 @@ classdef elasticShearVariable < scheme.Scheme
 
         % Closure functions return the operators applied to the own domain to close the boundary
         % Penalty functions return the operators to force the solution. In the case of an interface it returns the operator applied to the other doamin.
+        % Here penalty{i,j} enforces data component j on solution component i
         %       boundary            is a string specifying the boundary e.g. 'l','r' or 'e','w','n','s'.
         %       type                is a string specifying the type of boundary condition if there are several.
         %       data                is a function returning the data that should be applied at the boundary.
@@ -307,7 +308,7 @@ classdef elasticShearVariable < scheme.Scheme
                 % Free boundary condition
                 case {'F','f','Free','free'}
                     closures = cell(obj.dim,1);
-                    penalties = cell(obj.dim,1);
+                    penalties = cell(obj.dim,obj.dim);
                     % Loop over components
                     for i = 1:obj.dim
                         closures{i} = E{i}*inv(RHO)*(-nj)*Hi*e{j}*H_gamma*(...
@@ -315,12 +316,18 @@ classdef elasticShearVariable < scheme.Scheme
                                 delta(i,j)*e{j}'*A*e{i}*d{i}'*E{j}' + ...
                                 delta_b(i,j)*e{j}'*A*D1{i}*E{j}' ...
                                 );
-                        penalties{i} = - E{i}*inv(RHO)*(-nj)*Hi*e{j}*H_gamma;
+                        penalties{i,i} = - E{i}*inv(RHO)*(-nj)*Hi*e{j}*H_gamma;
                     end
                     [rows, cols] = size(closures{1});
                     closure = sparse(rows, cols);
                     for i = 1:obj.dim
                         closure = closure + closures{i};
+                        for j = 1:obj.dim
+                            if i~=j
+                                [rows cols] = size(penalties{j,j});
+                                penalties{i,j} = sparse(rows,cols);
+                            end
+                        end
                     end
                     penalty = penalties;
 
