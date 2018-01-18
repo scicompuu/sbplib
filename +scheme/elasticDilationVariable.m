@@ -172,8 +172,10 @@ classdef elasticDilationVariable < scheme.Scheme
 
             % Divergence operator for BC
             Div = cell(dim,1);
+            % Loop over boundaries
             for i = 1:dim
                 Div{i} = sparse(m_tot,dim*m_tot);
+                % Loop over components
                 for j = 1:dim
                     Div{i} = Div{i} + d(i,j)*(obj.e_l{i}*obj.d1_l{i}' + obj.e_r{i}*obj.d1_r{i}')*E{j}' ...
                               + db(i,j)*obj.D1{j}*E{j}';
@@ -234,83 +236,35 @@ classdef elasticDilationVariable < scheme.Scheme
             switch type
                 % Dirichlet boundary condition
                 case {'D','d','dirichlet'}
-                    error('Not implemented');
                     tuning = 1.2;
                     phi = obj.phi;
 
-                    closures = cell(obj.dim,1);
-                    penalties = cell(obj.dim,obj.dim);
-                    % Loop over components
-                    for i = 1:obj.dim
-                        H_gamma_i = obj.H_boundary{i};
-                        sigma_ij = tuning*delta(i,j)*2/(gamma*h(j)) +...
-                                   tuning*delta_b(i,j)*(2/(H11*h(j)) + 2/(H11*h(j)*phi));
+                    % Initialize with zeros
+                    m_tot = obj.grid.N();
+                    closure = sparse(m_tot*obj.dim, m_tot*obj.dim);
+                    penalty = 0*E{j}*e{j};
 
-                        ci = E{i}*inv(RHO)*nj*Hi*...
-                                ( (e{j}*H_gamma*e{j}'*A*e{j}*d{j}')'*E{i}' + ...
+                    % Loop over components to put penalties on
+                    for i = 1:obj.dim
+                        sigma_i = tuning * obj.dim/(H11*h(j)) +...
+                                   tuning * 1/(H11*h(j)*phi);
+
+                        closure = closure + E{i}*inv(RHO)*nj*Hi*...
+                                ( ...
                                   delta(i,j)*(e{j}*H_gamma*e{j}'*A*e{j}*d{j}')'*E{j}' ...
-                                   ) ...
-                                - sigma_ij*E{i}*inv(RHO)*Hi*A*e{j}*H_gamma*e{j}'*E{i}';
+                                + delta_b(i,j)*(e{j}*H_gamma*e{j}'*A*D1{i})'*E{j}' ...
+                                ) ...
+                                - delta(i,j)*sigma_i*E{i}*inv(RHO)*Hi*A*e{j}*H_gamma*e{j}'*E{j}';
 
-                        cj = E{j}*inv(RHO)*nj*Hi*...
-                                ( delta_b(i,j)*(e{j}*H_gamma*e{j}'*A*D1{i})'*E{i}' ...
-                                   );
+                        penalty = penalty - ... 
+                                    E{i}*inv(RHO)*nj*Hi*...
+                                    ( ...
+                                      delta(i,j)*(H_gamma*e{j}'*A*e{j}*d{j}')' ...
+                                    + delta_b(i,j)*(H_gamma*e{j}'*A*D1{i})' ...
+                                    ) ...
+                                    + delta(i,j)*sigma_i*E{i}*inv(RHO)*Hi*A*e{j}*H_gamma;
 
-                        if isempty(closures{i})
-                            closures{i} = ci;
-                        else
-                            closures{i} = closures{i} + ci;
-                        end
-
-                        if isempty(closures{j})
-                            closures{j} = cj;
-                        else
-                            closures{j} = closures{j} + cj;
-                        end
-   
-                        pii = - E{i}*inv(RHO)*nj*Hi*...
-                                ( (H_gamma*e{j}'*A*e{j}*d{j}')' + ...
-                                  delta(i,j)*(H_gamma*e{j}'*A*e{j}*d{j}')' ...
-                                   ) ...
-                                + sigma_ij*E{i}*inv(RHO)*Hi*A*e{j}*H_gamma;
-
-                        pji = - E{j}*inv(RHO)*nj*Hi*...
-                                ( delta_b(i,j)*(H_gamma*e{j}'*A*D1{i})' );
-
-                        % Dummies
-                        pij = - 0*E{i}*e{j};
-                        pjj = - 0*E{j}*e{j};
-
-                        if isempty(penalties{i,i})
-                            penalties{i,i} = pii;
-                        else
-                            penalties{i,i} = penalties{i,i} + pii;
-                        end
-
-                        if isempty(penalties{j,i})
-                            penalties{j,i} = pji;
-                        else
-                            penalties{j,i} = penalties{j,i} + pji;
-                        end
-
-                        if isempty(penalties{i,j})
-                            penalties{i,j} = pij;
-                        else
-                            penalties{i,j} = penalties{i,j} + pij;
-                        end
-
-                        if isempty(penalties{j,j})
-                            penalties{j,j} = pjj;
-                        else
-                            penalties{j,j} = penalties{j,j} + pjj;
-                        end
                     end
-                    [rows, cols] = size(closures{1});
-                    closure = sparse(rows, cols);
-                    for i = 1:obj.dim
-                        closure = closure + closures{i};
-                    end
-                    penalty = penalties;
 
                 % Free boundary condition
                 case {'F','f','Free','free'}
@@ -320,25 +274,10 @@ classdef elasticDilationVariable < scheme.Scheme
                     % Divergence operator
                     Div = obj.Div{j};
 
-                    % Loop over components
-                    %for i = 1:obj.dim
-                        closure = -nj*E{j}*inv(RHO)*Hi*e{j} ...
-                                     *H_gamma*e{j}'*A*e{j}*e{j}'*Div;
-                        penalty = nj*E{j}*inv(RHO)*Hi*e{j} ...
-                                     *H_gamma*e{j}'*A*e{j};
-                    %end
-                    % [rows, cols] = size(closures{1});
-                    % closure = sparse(rows, cols);
-                    % for i = 1:obj.dim
-                    %     closure = closure + closures{i};
-                    %     for j = 1:obj.dim
-                    %         if i~=j
-                    %             [rows cols] = size(penalties{j,j});
-                    %             penalties{i,j} = sparse(rows,cols);
-                    %         end
-                    %     end
-                    % end
-                    % penalty = penalties;
+                    closure = -nj*E{j}*inv(RHO)*Hi*e{j} ...
+                                 *H_gamma*e{j}'*A*e{j}*e{j}'*Div;
+                    penalty = nj*E{j}*inv(RHO)*Hi*e{j} ...
+                                 *H_gamma*e{j}'*A*e{j};
 
 
                 % Unknown boundary condition
