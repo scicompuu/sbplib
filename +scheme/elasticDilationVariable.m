@@ -9,7 +9,7 @@ classdef elasticDilationVariable < scheme.Scheme
         order % Order accuracy for the approximation
 
         A % Variable coefficient lambda of the operator (as diagonal matrix here)
-        RHO % Density (as diagonal matrix here)
+        RHO, RHOi % Density (as diagonal matrix here)
 
         D % Total operator
         D1 % First derivatives
@@ -26,6 +26,10 @@ classdef elasticDilationVariable < scheme.Scheme
 
         A_boundary_l % Variable coefficient at boundaries
         A_boundary_r % 
+
+        % Kroneckered norms and coefficients
+        RHOi_kron
+        Hi_kron
     end
 
     methods
@@ -87,7 +91,7 @@ classdef elasticDilationVariable < scheme.Scheme
             obj.A = A;
             RHO = spdiag(rho);
             obj.RHO = RHO;
-
+            obj.RHOi = inv(RHO);
 
             obj.D1 = cell(dim,1);
             obj.D2 = cell(dim,1);
@@ -183,6 +187,11 @@ classdef elasticDilationVariable < scheme.Scheme
             end
             obj.Div = Div;
 
+            % Kroneckered norms and coefficients
+            I_dim = speye(dim);
+            obj.RHOi_kron = kron(obj.RHOi, I_dim);
+            obj.Hi_kron = kron(obj.Hi, I_dim);
+
             % Misc.
             obj.m = m;
             obj.h = h;
@@ -195,7 +204,6 @@ classdef elasticDilationVariable < scheme.Scheme
 
         % Closure functions return the operators applied to the own domain to close the boundary
         % Penalty functions return the operators to force the solution. In the case of an interface it returns the operator applied to the other doamin.
-        % Here penalty{i,j} enforces data component j on solution component i
         %       boundary            is a string specifying the boundary e.g. 'l','r' or 'e','w','n','s'.
         %       type                is a string specifying the type of boundary condition if there are several.
         %       data                is a function returning the data that should be applied at the boundary.
@@ -204,9 +212,6 @@ classdef elasticDilationVariable < scheme.Scheme
         function [closure, penalty] = boundary_condition(obj, boundary, type, parameter)
             default_arg('type','free');
             default_arg('parameter', []);
-
-            delta = @kroneckerDelta;    % Kronecker delta
-            delta_b = @(i,j) 1-delta(i,j); % Logical not of Kronecker delta
 
             % j is the coordinate direction of the boundary
             % nj: outward unit normal component. 
@@ -226,12 +231,17 @@ classdef elasticDilationVariable < scheme.Scheme
             Hi = obj.Hi;
             H_gamma = obj.H_boundary{j};
             A = obj.A;
-            RHO = obj.RHO;
-            D1 = obj.D1;
+            RHOi = obj.RHOi;
 
             phi = obj.phi;
             H11 = obj.H11;
             h = obj.h;
+
+            RHOi_kron = obj.RHOi_kron;
+            Hi_kron = obj.Hi_kron;
+
+            % Divergence operator
+            Div = obj.Div{j};
 
             switch type
                 % Dirichlet boundary condition
@@ -239,44 +249,21 @@ classdef elasticDilationVariable < scheme.Scheme
                     tuning = 1.2;
                     phi = obj.phi;
 
-                    % Initialize with zeros
-                    m_tot = obj.grid.N();
-                    closure = sparse(m_tot*obj.dim, m_tot*obj.dim);
-                    penalty = 0*E{j}*e{j};
+                    sigma = tuning * obj.dim/(H11*h(j)) +...
+                            tuning * 1/(H11*h(j)*phi);
 
-                    % Loop over components to put penalties on
-                    for i = 1:obj.dim
-                        sigma_i = tuning * obj.dim/(H11*h(j)) +...
-                                   tuning * 1/(H11*h(j)*phi);
+                    closure = - sigma*E{j}*RHOi*Hi*A*e{j}*H_gamma*e{j}'*E{j}' ... 
+                              + nj*RHOi_kron*Hi_kron*Div'*A*e{j}*H_gamma*e{j}'*E{j}';
 
-                        closure = closure + E{i}*inv(RHO)*nj*Hi*...
-                                ( ...
-                                  delta(i,j)*(e{j}*H_gamma*e{j}'*A*e{j}*d{j}')'*E{j}' ...
-                                + delta_b(i,j)*(e{j}*H_gamma*e{j}'*A*D1{i})'*E{j}' ...
-                                ) ...
-                                - delta(i,j)*sigma_i*E{i}*inv(RHO)*Hi*A*e{j}*H_gamma*e{j}'*E{j}';
-
-                        penalty = penalty - ... 
-                                    E{i}*inv(RHO)*nj*Hi*...
-                                    ( ...
-                                      delta(i,j)*(H_gamma*e{j}'*A*e{j}*d{j}')' ...
-                                    + delta_b(i,j)*(H_gamma*e{j}'*A*D1{i})' ...
-                                    ) ...
-                                    + delta(i,j)*sigma_i*E{i}*inv(RHO)*Hi*A*e{j}*H_gamma;
-
-                    end
+                    penalty = + sigma*E{j}*RHOi*Hi*A*e{j}*H_gamma ... 
+                              - nj*RHOi_kron*Hi_kron*Div'*A*e{j}*H_gamma;
 
                 % Free boundary condition
                 case {'F','f','Free','free'}
-                    closures = cell(obj.dim,1);
-                    penalties = cell(obj.dim,obj.dim);
 
-                    % Divergence operator
-                    Div = obj.Div{j};
-
-                    closure = -nj*E{j}*inv(RHO)*Hi*e{j} ...
+                    closure = -nj*E{j}*RHOi*Hi*e{j} ...
                                  *H_gamma*e{j}'*A*e{j}*e{j}'*Div;
-                    penalty = nj*E{j}*inv(RHO)*Hi*e{j} ...
+                    penalty = nj*E{j}*RHOi*Hi*e{j} ...
                                  *H_gamma*e{j}'*A*e{j};
 
 
