@@ -3,7 +3,6 @@ classdef elasticVariable < scheme.Scheme
 % Discretizes the elastic wave equation:
 % rho u_{i,tt} = di lambda dj u_j + dj mu di u_j + dj mu dj u_i 
 
-
     properties
         m % Number of points in each direction, possibly a vector
         h % Grid spacing
@@ -16,7 +15,7 @@ classdef elasticVariable < scheme.Scheme
         % Diagonal matrices for varible coefficients
         LAMBDA % Variable coefficient, related to dilation
         MU     % Shear modulus, variable coefficient
-        RHO, RHOi % Density
+        RHO, RHOi % Density, variable
 
         D % Total operator
         D1 % First derivatives
@@ -31,6 +30,7 @@ classdef elasticVariable < scheme.Scheme
 
         H, Hi % Inner products
         phi % Borrowing constant for (d1 - e^T*D1) from R
+        gamma % Borrowing constant for d1 from M
         H11 % First element of H
         e_l, e_r
         d1_l, d1_r % Normal derivatives at the boundary
@@ -38,20 +38,12 @@ classdef elasticVariable < scheme.Scheme
         
         H_boundary % Boundary inner products
 
-        LAMBDA_boundary_l % Variable coefficients at boundaries
-        LAMBDA_boundary_r 
-        MU_boundary_l 
-        MU_boundary_r 
-
         % Kroneckered norms and coefficients
         RHOi_kron
         Hi_kron
     end
 
     methods
-        % Implements the shear part of the elastic wave equation, i.e.
-        % rho u_{i,tt} = d_i a d_j u_j + d_j a d_j u_i
-        % where a = mu.
 
         function obj = elasticVariable(g ,order, lambda_fun, mu_fun, rho_fun, opSet)
             default_arg('opSet',@sbp.D2Variable);
@@ -81,6 +73,7 @@ classdef elasticVariable < scheme.Scheme
             beta = ops{1}.borrowing.R.delta_D;
             obj.H11 = ops{1}.borrowing.H11;
             obj.phi = beta/obj.H11;
+            obj.gamma = ops{1}.borrowing.M.d1;
 
             I = cell(dim,1);
             D1 = cell(dim,1);
@@ -167,18 +160,6 @@ classdef elasticVariable < scheme.Scheme
             obj.H_boundary = cell(dim,1);
             obj.H_boundary{1} = H{2};
             obj.H_boundary{2} = H{1};
-
-            % Boundary coefficient matrices
-            obj.LAMBDA_boundary_l = cell(dim,1);
-            obj.LAMBDA_boundary_r = cell(dim,1);
-            obj.MU_boundary_l = cell(dim,1);
-            obj.MU_boundary_r = cell(dim,1);
-            for i = 1:dim
-                obj.LAMBDA_boundary_l{i} = obj.e_l{i}'*LAMBDA*obj.e_l{i};
-                obj.LAMBDA_boundary_r{i} = obj.e_r{i}'*LAMBDA*obj.e_r{i};
-                obj.MU_boundary_l{i} = obj.e_l{i}'*MU*obj.e_l{i};
-                obj.MU_boundary_r{i} = obj.e_r{i}'*MU*obj.e_r{i};
-            end
 
             % E{i}^T picks out component i.
             E = cell(dim,1);
@@ -277,12 +258,12 @@ classdef elasticVariable < scheme.Scheme
         % Closure functions return the operators applied to the own domain to close the boundary
         % Penalty functions return the operators to force the solution. In the case of an interface it returns the operator applied to the other doamin.
         %       boundary            is a string specifying the boundary e.g. 'l','r' or 'e','w','n','s'.
-        %       type                is a string specifying the type of boundary condition if there are several.
+        %       type                is a cell array of strings specifying the type of boundary condition for each component.
         %       data                is a function returning the data that should be applied at the boundary.
         %       neighbour_scheme    is an instance of Scheme that should be interfaced to.
         %       neighbour_boundary  is a string specifying which boundary to interface to.
         function [closure, penalty] = boundary_condition(obj, boundary, type, parameter)
-            default_arg('type','free');
+            default_arg('type',{'free','free'});
             default_arg('parameter', []);
 
             % j is the coordinate direction of the boundary
@@ -310,46 +291,60 @@ classdef elasticVariable < scheme.Scheme
             MU = obj.MU;
             RHOi = obj.RHOi;
 
-            phi = obj.phi;
-            H11 = obj.H11;
-            h = obj.h;
             dim = obj.dim;
             m_tot = obj.grid.N();
 
             RHOi_kron = obj.RHOi_kron;
             Hi_kron = obj.Hi_kron;
 
+            % Preallocate
             closure = sparse(dim*m_tot, dim*m_tot);
             penalty = cell(dim,1);
-            switch type
+            for k = 1:dim
+                penalty{k} = sparse(dim*m_tot, m_tot/obj.m(j));
+            end
+
+            % Loop over components that we (potentially) have different BC on
+            for k = 1:dim
+                switch type{k}
+
                 % Dirichlet boundary condition
-                case {'D','d','dirichlet'}
-                    error('not implemented')
+                case {'D','d','dirichlet','Dirichlet'}
+
                     tuning = 1.2;
                     phi = obj.phi;
+                    h = obj.h(j);
+                    h11 = obj.H11*h;
+                    gamma = obj.gamma;
 
-                    sigma = tuning * obj.dim/(H11*h(j)) +...
-                            tuning * 1/(H11*h(j)*phi);
+                    a_lambda = dim/h11 + 1/(h11*phi);
+                    a_mu_i = 2/(gamma*h);
+                    a_mu_ij = 2/h11 + 1/(h11*phi);
 
-                    closure = - sigma*E{j}*RHOi*Hi*A*e{j}*H_gamma*e{j}'*E{j}' ... 
-                              + nj*RHOi_kron*Hi_kron*Div'*A*e{j}*H_gamma*e{j}'*E{j}';
+                    d = @kroneckerDelta;  % Kronecker delta
+                    db = @(i,j) 1-d(i,j); % Logical not of Kronecker delta
+                    alpha = @(i,j) tuning*( d(i,j)* a_lambda*LAMBDA ...
+                                          + d(i,j)* a_mu_i*MU ...
+                                          + db(i,j)*a_mu_ij*MU ); 
 
-                    penalty = + sigma*E{j}*RHOi*Hi*A*e{j}*H_gamma ... 
-                              - nj*RHOi_kron*Hi_kron*Div'*A*e{j}*H_gamma;
+                    % Loop over components that Dirichlet penalties end up on
+                    for i = 1:dim
+                        C = T{k,i};
+                        A = -d(i,k)*alpha(i,j);
+                        B = A + C;
+                        closure = closure + E{i}*RHOi*Hi*B'*e{j}*H_gamma*(e{j}'*E{k}' ); 
+                        penalty{k} = penalty{k} - E{i}*RHOi*Hi*B'*e{j}*H_gamma;
+                    end 
 
                 % Free boundary condition
-                case {'F','f','Free','free'}
-
-                    % Loop over components of traction
-                    for i = 1:dim
-                        closure = closure - E{i}*RHOi*Hi*e{j}*H_gamma* (e{j}'*tau{i} ); 
-                        penalty{i} = E{i}*RHOi*Hi*e{j}*H_gamma;
-                    end
-
+                case {'F','f','Free','free','traction','Traction','t','T'}
+                        closure = closure - E{k}*RHOi*Hi*e{j}*H_gamma* (e{j}'*tau{k} ); 
+                        penalty{k} = penalty{k} + E{k}*RHOi*Hi*e{j}*H_gamma;
 
                 % Unknown boundary condition
                 otherwise
                     error('No such boundary condition: type = %s',type);
+                end
             end
         end
 
