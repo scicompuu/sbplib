@@ -29,19 +29,14 @@ classdef D2VariablePeriodic < sbp.OpSet
             switch order
 
                 case 6
-                     error('Not impl')
-
-                    [obj.H, obj.HI, obj.D1, obj.D2, ...
-                    ~, obj.e_l, obj.e_r, ~, ~, ~, ~, ~,...
-                     obj.d1_l, obj.d1_r] = ...
-                        sbp.implementations.d4_variable_periodic_6(m, obj.h);
+                    [obj.H, obj.HI, obj.D1, obj.D2, obj.e_l,...
+                        obj.e_r, obj.d1_l, obj.d1_r] = ...
+                        sbp.implementations.d2_variable_periodic_6(m,obj.h);
                     obj.borrowing.M.d1 = 0.1878;
                     obj.borrowing.R.delta_D = 0.3696;
                     % Borrowing e^T*D1 - d1 from R
 
                 case 4
-                    error('Not impl')
-
                     [obj.H, obj.HI, obj.D1, obj.D2, obj.e_l,...
                         obj.e_r, obj.d1_l, obj.d1_r] = ...
                         sbp.implementations.d2_variable_periodic_4(m,obj.h);
@@ -63,6 +58,7 @@ classdef D2VariablePeriodic < sbp.OpSet
                     error('Invalid operator order %d.',order);
             end
             obj.borrowing.H11 = obj.H(1,1)/obj.h; % First element in H/h,
+
             obj.m = m;
             obj.M = [];
         end

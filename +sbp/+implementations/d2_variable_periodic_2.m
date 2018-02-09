@@ -1,9 +1,8 @@
 function [H, HI, D1, D2, e_l, e_r, d1_l, d1_r] = d2_variable_periodic_2(m,h)
     % m = number of unique grid points, i.e. h = L/m;
 
-    BP = 1;
-    if(m<2*BP)
-        error(['Operator requires at least ' num2str(2*BP) ' grid points']);
+    if(m<3)
+        error(['Operator requires at least ' num2str(3) ' grid points']);
     end
 
     % Norm
