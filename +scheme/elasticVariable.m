@@ -2,6 +2,8 @@ classdef elasticVariable < scheme.Scheme
 
 % Discretizes the elastic wave equation:
 % rho u_{i,tt} = di lambda dj u_j + dj mu di u_j + dj mu dj u_i 
+% opSet should be cell array of opSets, one per dimension. This
+% is useful if we have periodic BC in one direction.
 
     properties
         m % Number of points in each direction, possibly a vector
@@ -46,7 +48,7 @@ classdef elasticVariable < scheme.Scheme
     methods
 
         function obj = elasticVariable(g ,order, lambda_fun, mu_fun, rho_fun, opSet)
-            default_arg('opSet',@sbp.D2Variable);
+            default_arg('opSet',{@sbp.D2Variable, @sbp.D2Variable});
             default_arg('lambda_fun', @(x,y) 0*x+1);
             default_arg('mu_fun', @(x,y) 0*x+1);
             default_arg('rho_fun', @(x,y) 0*x+1);
@@ -61,19 +63,21 @@ classdef elasticVariable < scheme.Scheme
             m_tot = g.N();
 
             h = g.scaling();
-            L = (m-1).*h;
+            lim = g.lim;
 
             % 1D operators
             ops = cell(dim,1);
             for i = 1:dim
-                ops{i} = opSet(m(i), {0, L(i)}, order);
+                ops{i} = opSet{i}(m(i), lim{i}, order);
             end
 
             % Borrowing constants
-            beta = ops{1}.borrowing.R.delta_D;
-            obj.H11 = ops{1}.borrowing.H11;
-            obj.phi = beta/obj.H11;
-            obj.gamma = ops{1}.borrowing.M.d1;
+            for i = 1:dim
+                beta = ops{i}.borrowing.R.delta_D;
+                obj.H11{i} = ops{i}.borrowing.H11;
+                obj.phi{i} = beta/obj.H11{i};
+                obj.gamma{i} = ops{i}.borrowing.M.d1;
+            end
 
             I = cell(dim,1);
             D1 = cell(dim,1);
@@ -312,10 +316,10 @@ classdef elasticVariable < scheme.Scheme
                 case {'D','d','dirichlet','Dirichlet'}
 
                     tuning = 1.2;
-                    phi = obj.phi;
+                    phi = obj.phi{j};
                     h = obj.h(j);
-                    h11 = obj.H11*h;
-                    gamma = obj.gamma;
+                    h11 = obj.H11{j}*h;
+                    gamma = obj.gamma{j};
 
                     a_lambda = dim/h11 + 1/(h11*phi);
                     a_mu_i = 2/(gamma*h);
