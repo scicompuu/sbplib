@@ -27,7 +27,7 @@ function A = spdiagsVariablePeriodic(vals,diags)
         % Super-diagonals
         elseif d > 0
             a_bulk = a(1:end-d);
-            a_corner = a(end-d+1,end);
+            a_corner = a(end-d+1:end);
             corner_diag = -m + d;
             A = A + spdiagVariable(a_bulk, d); 
             A = A + spdiagVariable(a_corner, corner_diag);
