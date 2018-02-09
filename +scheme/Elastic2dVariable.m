@@ -1,4 +1,4 @@
-classdef elasticVariable < scheme.Scheme
+classdef Elastic2dVariable < scheme.Scheme
 
 % Discretizes the elastic wave equation:
 % rho u_{i,tt} = di lambda dj u_j + dj mu di u_j + dj mu dj u_i 
@@ -47,7 +47,7 @@ classdef elasticVariable < scheme.Scheme
 
     methods
 
-        function obj = elasticVariable(g ,order, lambda_fun, mu_fun, rho_fun, opSet)
+        function obj = Elastic2dVariable(g ,order, lambda_fun, mu_fun, rho_fun, opSet)
             default_arg('opSet',{@sbp.D2Variable, @sbp.D2Variable});
             default_arg('lambda_fun', @(x,y) 0*x+1);
             default_arg('mu_fun', @(x,y) 0*x+1);
