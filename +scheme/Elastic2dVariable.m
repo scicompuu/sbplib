@@ -403,9 +403,9 @@ classdef Elastic2dVariable < scheme.Scheme
                 case 'd'
                     switch boundary
                         case {'w','W','west','West','s','S','south','South'}
-                            return_op = obj.d_l{j};
+                            return_op = obj.d1_l{j};
                         case {'e', 'E', 'east', 'East','n', 'N', 'north', 'North'}
-                            return_op = obj.d_r{j};
+                            return_op = obj.d1_r{j};
                     end
                 otherwise
                     error(['No such operator: operatr = ' op]);
