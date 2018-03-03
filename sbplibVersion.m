@@ -1,11 +1,10 @@
 % Prints the version and location of the sbplib currently in use.
 function sbplibVersion()
-    scriptname  = mfilename('fullpath');
-    [folder,~,~] = fileparts(scriptname);
+    location = sbplibLocation();
 
     name = 'sbplib (feature/grids)';
     ver = '0.0.x';
 
     fprintf('%s %s\n', name, ver);
-    fprintf('Running in:\n%s\n',folder);
+    fprintf('Running in:\n%s\n', location);
 end
