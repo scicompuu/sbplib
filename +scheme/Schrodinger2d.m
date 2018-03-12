@@ -28,14 +28,19 @@ classdef Schrodinger2d < scheme.Scheme
         H, Hi % Inner products
         e_l, e_r
         d1_l, d1_r % Normal derivatives at the boundary
+        e_w, e_e, e_s, e_n
+        d_w, d_e, d_s, d_n
         
         H_boundary % Boundary inner products
+
+        interpolation_type % MC or AWW
 
     end
 
     methods
 
-        function obj = Schrodinger2d(g ,order, a, opSet)
+        function obj = Schrodinger2d(g ,order, a, opSet, interpolation_type)
+            default_arg('interpolation_type','AWW');
             default_arg('opSet',{@sbp.D2Variable, @sbp.D2Variable});
             default_arg('a',1);
             dim = 2;
@@ -133,6 +138,15 @@ classdef Schrodinger2d < scheme.Scheme
             obj.grid = g;
             obj.dim = dim;
             obj.a = a;
+            obj.e_w = obj.e_l{1};
+            obj.e_e = obj.e_r{1};
+            obj.e_s = obj.e_l{2};
+            obj.e_n = obj.e_r{2};
+            obj.d_w = obj.d1_l{1};
+            obj.d_e = obj.d1_r{1};
+            obj.d_s = obj.d1_l{2};
+            obj.d_n = obj.d1_r{2};
+            obj.interpolation_type = interpolation_type;
 
         end
 
@@ -187,7 +201,113 @@ classdef Schrodinger2d < scheme.Scheme
         function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
-            error('Interface not implemented');
+            % Get neighbour boundary operator
+
+            [coord_nei, n_nei] = get_boundary_number(obj, neighbour_boundary);
+            [coord, n] = get_boundary_number(obj, boundary);
+            switch n_nei
+            case 1
+                % North or east boundary
+                e_neighbour = neighbour_scheme.e_r;
+                d_neighbour = neighbour_scheme.d1_r;
+            case -1
+                % South or west boundary
+                e_neighbour = neighbour_scheme.e_l;
+                d_neighbour = neighbour_scheme.d1_l;
+            end
+
+            e_neighbour = e_neighbour{coord_nei};
+            d_neighbour = d_neighbour{coord_nei};
+            H_gamma = obj.H_boundary{coord};
+            Hi = obj.Hi;
+            a = obj.a;
+
+            switch coord_nei
+            case 1
+                m_neighbour = neighbour_scheme.m(2);
+            case 2
+                m_neighbour = neighbour_scheme.m(1);
+            end
+
+            switch coord
+            case 1
+                m = obj.m(2);
+            case 2
+                m = obj.m(1);
+            end
+
+           switch n
+            case 1
+                % North or east boundary
+                e = obj.e_r;
+                d = obj.d1_r;
+            case -1
+                % South or west boundary
+                e = obj.e_l;
+                d = obj.d1_l;
+            end
+            e = e{coord};
+            d = d{coord}; 
+
+            Hi = obj.Hi;
+            sigma = -n*1i*a/2;
+            tau = -n*(1i*a)'/2;
+
+            grid_ratio = m/m_neighbour;
+             if grid_ratio ~= 1
+
+                [ms, index] = sort([m, m_neighbour]);
+                orders = [obj.order, neighbour_scheme.order];
+                orders = orders(index);
+
+                switch obj.interpolation_type
+                case 'MC'
+                    interpOpSet = sbp.InterpMC(ms(1),ms(2),orders(1),orders(2));
+                    if grid_ratio < 1
+                        I_neighbour2local_e = interpOpSet.IF2C;
+                        I_neighbour2local_d = interpOpSet.IF2C;
+                        I_local2neighbour_e = interpOpSet.IC2F;
+                        I_local2neighbour_d = interpOpSet.IC2F;
+                    elseif grid_ratio > 1
+                        I_neighbour2local_e = interpOpSet.IC2F;
+                        I_neighbour2local_d = interpOpSet.IC2F;
+                        I_local2neighbour_e = interpOpSet.IF2C;
+                        I_local2neighbour_d = interpOpSet.IF2C;
+                    end
+                case 'AWW'
+                    %String 'C2F' indicates that ICF2 is more accurate.
+                    interpOpSetF2C = sbp.InterpAWW(ms(1),ms(2),orders(1),orders(2),'F2C');
+                    interpOpSetC2F = sbp.InterpAWW(ms(1),ms(2),orders(1),orders(2),'C2F'); 
+                    if grid_ratio < 1 
+                        % Local is coarser than neighbour
+                        I_neighbour2local_e = interpOpSetF2C.IF2C;
+                        I_neighbour2local_d = interpOpSetC2F.IF2C;
+                        I_local2neighbour_e = interpOpSetC2F.IC2F;
+                        I_local2neighbour_d = interpOpSetF2C.IC2F;
+                    elseif grid_ratio > 1
+                        % Local is finer than neighbour 
+                        I_neighbour2local_e = interpOpSetC2F.IC2F;
+                        I_neighbour2local_d = interpOpSetF2C.IC2F;
+                        I_local2neighbour_e = interpOpSetF2C.IF2C;
+                        I_local2neighbour_d = interpOpSetC2F.IF2C;
+                    end
+                otherwise
+                    error(['Interpolation type ' obj.interpolation_type ...
+                         ' is not available.' ]);
+                end
+
+             else 
+                % No interpolation required
+                I_neighbour2local_e = speye(m,m);
+                I_neighbour2local_d = speye(m,m);
+                I_local2neighbour_e = speye(m,m);
+                I_local2neighbour_d = speye(m,m);
+            end
+
+            closure = tau*Hi*d*H_gamma*e' + sigma*Hi*e*H_gamma*d';
+            penalty = -tau*Hi*d*H_gamma*I_neighbour2local_e*e_neighbour' ...
+                      -sigma*Hi*e*H_gamma*I_neighbour2local_d*d_neighbour'; 
+             
         end
 
         % Returns the coordinate number and outward normal component for the boundary specified by the string boundary.
