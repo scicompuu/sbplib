@@ -188,7 +188,8 @@ classdef Heat2dVariable < scheme.Scheme
             % Free boundary condition
             case {'N','n','neumann','Neumann'}
                     closure = -nj*Hi*e{j}*kappa_gamma*H_gamma*(d{j}' ); 
-                    penalty =  nj*Hi*e{j}*kappa_gamma*H_gamma; 
+                    penalty =  Hi*e{j}*kappa_gamma*H_gamma; 
+                    % penalty is for normal derivative and not for derivative, hence the sign.
 
             % Unknown boundary condition
             otherwise
