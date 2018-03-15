@@ -38,22 +38,25 @@ classdef LaplaceCurvilinear < scheme.Scheme
         du_n, dv_n
         gamm_u, gamm_v
         lambda
+
+        interpolation_type
     end
 
     methods
         % Implements  a*div(b*grad(u)) as a SBP scheme
         % TODO: Implement proper H, it should be the real physical quadrature, the logic quadrature may be but in a separate variable (H_logic?)
 
-        function obj = LaplaceCurvilinear(g ,order, a, b, opSet)
+        function obj = LaplaceCurvilinear(g ,order, a, b, opSet, interpolation_type)
             default_arg('opSet',@sbp.D2Variable);
             default_arg('a', 1);
             default_arg('b', 1);
+            default_arg('interpolation_type','AWW');
 
             if b ~=1
                 error('Not implemented yet')
             end
 
-            assert(isa(g, 'grid.Curvilinear'))
+            % assert(isa(g, 'grid.Curvilinear'))
 
             m = g.size();
             m_u = m(1);
@@ -209,6 +212,7 @@ classdef LaplaceCurvilinear < scheme.Scheme
             obj.h = [h_u h_v];
             obj.order = order;
             obj.grid = g;
+            obj.interpolation_type = interpolation_type;
 
             obj.a = a;
             obj.b = b;
@@ -269,13 +273,70 @@ classdef LaplaceCurvilinear < scheme.Scheme
         end
 
         function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
+
+            [e_u, d_u, gamm_u, H_b_u, I_u] = obj.get_boundary_ops(boundary);
+            [e_v, d_v, gamm_v, H_b_v, I_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
+            Hi = obj.Hi;
+            a = obj.a;
+
+            m_u = length(H_b_u);
+            m_v = length(H_b_v);
+
+            grid_ratio = m_u/m_v;
+             if grid_ratio ~= 1
+
+                [ms, index] = sort([m_u, m_v]);
+                orders = [obj.order, neighbour_scheme.order];
+                orders = orders(index);
+
+                switch obj.interpolation_type
+                case 'MC'
+                    interpOpSet = sbp.InterpMC(ms(1),ms(2),orders(1),orders(2));
+                    if grid_ratio < 1
+                        I_v2u_good = interpOpSet.IF2C;
+                        I_v2u_bad = interpOpSet.IF2C;
+                        I_u2v_good = interpOpSet.IC2F;
+                        I_u2v_bad = interpOpSet.IC2F;
+                    elseif grid_ratio > 1
+                        I_v2u_good = interpOpSet.IC2F;
+                        I_v2u_bad = interpOpSet.IC2F;
+                        I_u2v_good = interpOpSet.IF2C;
+                        I_u2v_bad = interpOpSet.IF2C;
+                    end
+                case 'AWW'
+                    %String 'C2F' indicates that ICF2 is more accurate.
+                    interpOpSetF2C = sbp.InterpAWW(ms(1),ms(2),orders(1),orders(2),'F2C');
+                    interpOpSetC2F = sbp.InterpAWW(ms(1),ms(2),orders(1),orders(2),'C2F'); 
+                    if grid_ratio < 1 
+                        % Local is coarser than neighbour
+                        I_v2u_good = interpOpSetF2C.IF2C;
+                        I_v2u_bad = interpOpSetC2F.IF2C;
+                        I_u2v_good = interpOpSetC2F.IC2F;
+                        I_u2v_bad = interpOpSetF2C.IC2F;
+                    elseif grid_ratio > 1
+                        % Local is finer than neighbour 
+                        I_v2u_good = interpOpSetC2F.IC2F;
+                        I_v2u_bad = interpOpSetF2C.IC2F;
+                        I_u2v_good = interpOpSetF2C.IF2C;
+                        I_u2v_bad = interpOpSetC2F.IF2C;
+                    end
+                otherwise
+                    error(['Interpolation type ' obj.interpolation_type ...
+                         ' is not available.' ]);
+                end
+
+             else 
+                % No interpolation required
+                I_v2u_good = speye(m_u,m_u);
+                I_v2u_bad = speye(m_u,m_u);
+                I_u2v_good = speye(m_u,m_u);
+                I_u2v_bad = speye(m_u,m_u);
+            end
+
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
             tuning = 1.2;
             % tuning = 20.2;
-            [e_u, d_u, gamm_u, H_b_u, I_u] = obj.get_boundary_ops(boundary);
-            [e_v, d_v, gamm_v, H_b_v, I_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
-
             u = obj;
             v = neighbour_scheme;
 
@@ -284,18 +345,24 @@ classdef LaplaceCurvilinear < scheme.Scheme
             b1_v = gamm_v*v.lambda(I_v)./v.a11(I_v).^2;
             b2_v = gamm_v*v.lambda(I_v)./v.a22(I_v).^2;
 
-            tau1 = -1./(4*b1_u) -1./(4*b1_v) -1./(4*b2_u) -1./(4*b2_v);
-            tau1 = tuning * spdiag(tau1);
-            tau2 = 1/2;
+            tau_u = -1./(4*b1_u) -1./(4*b2_u);
+            tau_v = -1./(4*b1_v) -1./(4*b2_v);
 
-            sig1 = -1/2;
-            sig2 = 0;
+            tau_u = tuning * spdiag(tau_u);
+            tau_v = tuning * spdiag(tau_v);
+            beta_u = tau_v;
 
-            tau = (e_u*tau1 + tau2*d_u)*H_b_u;
-            sig = (sig1*e_u + sig2*d_u)*H_b_u;
+            closure = a*Hi*e_u*tau_u*H_b_u*e_u' + ...
+                      a*Hi*e_u*H_b_u*I_v2u_bad*beta_u*I_u2v_good*e_u' + ...
+                      a*1/2*Hi*d_u*H_b_u*e_u' + ...
+                      -a*1/2*Hi*e_u*H_b_u*d_u';
 
-            closure = obj.a*obj.Hi*( tau*e_u' + sig*d_u');
-            penalty = obj.a*obj.Hi*(-tau*e_v' + sig*d_v');
+            penalty = -a*Hi*e_u*tau_u*H_b_u*I_v2u_good*e_v' + ...
+                      -a*Hi*e_u*H_b_u*I_v2u_bad*beta_u*e_v' + ...
+                      -a*1/2*Hi*d_u*H_b_u*I_v2u_good*e_v' + ...
+                      -a*1/2*Hi*e_u*H_b_u*I_v2u_bad*d_v';
+            
+
         end
 
         % Ruturns the boundary ops and sign for the boundary specified by the string boundary.
