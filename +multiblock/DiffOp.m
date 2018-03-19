@@ -10,13 +10,13 @@ classdef DiffOp < scheme.Scheme
     end
 
     methods
-        function obj = DiffOp(doHand, grid, order, doParam)
+        function obj = DiffOp(doHand, g, order, doParam)
             %  doHand -- may either be a function handle or a cell array of
             %            function handles for each grid. The function handle(s)
             %            should be on the form do = doHand(grid, order, ...)
             %            Additional parameters for each doHand may be provided in
             %            the doParam input.
-            %    grid -- a multiblock grid
+            %       g -- a multiblock grid
             %   order -- integer specifying the order of accuracy
             % doParam -- may either be a cell array or a cell array of cell arrays
             %            for each block. If it is a cell array with length equal
@@ -26,9 +26,9 @@ classdef DiffOp < scheme.Scheme
             %            extra parameters to all doHand: doHand(..., doParam{:})
             default_arg('doParam', [])
 
-            [getHand, getParam] = parseInput(doHand, grid, doParam);
+            [getHand, getParam] = parseInput(doHand, g, doParam);
 
-            nBlocks = grid.nBlocks();
+            nBlocks = g.nBlocks();
 
             obj.order = order;
 
@@ -40,7 +40,7 @@ classdef DiffOp < scheme.Scheme
                 if ~iscell(p)
                     p = {p};
                 end
-                obj.diffOps{i} = h(grid.grids{i}, order, p{:});
+                obj.diffOps{i} = h(g.grids{i}, order, p{:});
             end
 
 
@@ -53,7 +53,7 @@ classdef DiffOp < scheme.Scheme
 
 
             % Build the differentiation matrix
-            obj.blockmatrixDiv = {grid.Ns, grid.Ns};
+            obj.blockmatrixDiv = {g.Ns, g.Ns};
             D = blockmatrix.zero(obj.blockmatrixDiv);
             for i = 1:nBlocks
                 D{i,i} = obj.diffOps{i}.D;
@@ -61,7 +61,7 @@ classdef DiffOp < scheme.Scheme
 
             for i = 1:nBlocks
                 for j = 1:nBlocks
-                    intf = grid.connections{i,j};
+                    intf = g.connections{i,j};
                     if isempty(intf)
                         continue
                     end
@@ -79,12 +79,12 @@ classdef DiffOp < scheme.Scheme
             obj.D = blockmatrix.toMatrix(D);
 
 
-            function [getHand, getParam] = parseInput(doHand, grid, doParam)
-                if ~isa(grid, 'multiblock.Grid')
+            function [getHand, getParam] = parseInput(doHand, g, doParam)
+                if ~isa(g, 'multiblock.Grid')
                     error('multiblock:DiffOp:DiffOp:InvalidGrid', 'Requires a multiblock grid.');
                 end
 
-                if iscell(doHand) && length(doHand) == grid.nBlocks()
+                if iscell(doHand) && length(doHand) == g.nBlocks()
                     getHand = @(i)doHand{i};
                 elseif isa(doHand, 'function_handle')
                     getHand = @(i)doHand;
@@ -104,7 +104,7 @@ classdef DiffOp < scheme.Scheme
 
                 % doParam is a non-empty cell-array
 
-                if length(doParam) == grid.nBlocks() && all(cellfun(@iscell, doParam))
+                if length(doParam) == g.nBlocks() && all(cellfun(@iscell, doParam))
                     % doParam is a cell-array of cell-arrays
                     getParam = @(i)doParam{i};
                     return
@@ -116,7 +116,7 @@ classdef DiffOp < scheme.Scheme
 
         function ops = splitOp(obj, op)
             % Splits a matrix operator into a cell-matrix of matrix operators for
-            % each grid.
+            % each g.
             ops = sparse2cell(op, obj.NNN);
         end
 
