@@ -28,6 +28,7 @@ classdef Heat2dVariable < scheme.Scheme
         H, Hi % Inner products
         e_l, e_r
         d1_l, d1_r % Normal derivatives at the boundary
+        alpha % Vector of borrowing constants
         
         H_boundary % Boundary inner products
 
@@ -144,6 +145,7 @@ classdef Heat2dVariable < scheme.Scheme
             obj.order = order;
             obj.grid = g;
             obj.dim = dim;
+            obj.alpha = [ops{1}.borrowing.M.d1, ops{2}.borrowing.M.d1];
 
         end
 
@@ -155,9 +157,10 @@ classdef Heat2dVariable < scheme.Scheme
         %       data                is a function returning the data that should be applied at the boundary.
         %       neighbour_scheme    is an instance of Scheme that should be interfaced to.
         %       neighbour_boundary  is a string specifying which boundary to interface to.
-        function [closure, penalty] = boundary_condition(obj, boundary, type, parameter)
+        function [closure, penalty] = boundary_condition(obj, boundary, type, symmetric, tuning)
             default_arg('type','Neumann');
-            default_arg('parameter', []);
+            default_arg('symmetric', false);
+            default_arg('tuning',1.2);
 
             % j is the coordinate direction of the boundary
             % nj: outward unit normal component. 
@@ -177,13 +180,23 @@ classdef Heat2dVariable < scheme.Scheme
             H_gamma = obj.H_boundary{j};
             KAPPA = obj.KAPPA;
             kappa_gamma = e{j}'*KAPPA*e{j}; 
+            h = obj.h(j);
+            alpha = h*obj.alpha(j);
 
             switch type
 
             % Dirichlet boundary condition
             case {'D','d','dirichlet','Dirichlet'}
+
+                if ~symmetric
                     closure = -nj*Hi*d{j}*kappa_gamma*H_gamma*(e{j}' ); 
                     penalty =  nj*Hi*d{j}*kappa_gamma*H_gamma;
+                else
+                    closure = nj*Hi*d{j}*kappa_gamma*H_gamma*(e{j}' )...
+                              -tuning*2/alpha*Hi*e{j}*kappa_gamma*H_gamma*(e{j}' ) ; 
+                    penalty =  -nj*Hi*d{j}*kappa_gamma*H_gamma ...
+                              +tuning*2/alpha*Hi*e{j}*kappa_gamma*H_gamma;
+                end
 
             % Free boundary condition
             case {'N','n','neumann','Neumann'}
