@@ -53,7 +53,11 @@ classdef DiffOp < scheme.Scheme
 
 
             % Build the differentiation matrix
-            obj.blockmatrixDiv = {grid.Ns, grid.Ns};
+            Ns = zeros(nBlocks,1);
+            for i = 1:nBlocks
+                Ns(i) = length(obj.diffOps{i}.D);
+            end
+            obj.blockmatrixDiv = {Ns, Ns};
             D = blockmatrix.zero(obj.blockmatrixDiv);
             for i = 1:nBlocks
                 D{i,i} = obj.diffOps{i}.D;

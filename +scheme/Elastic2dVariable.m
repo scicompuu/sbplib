@@ -64,6 +64,13 @@ classdef Elastic2dVariable < scheme.Scheme
 
             h = g.scaling();
             lim = g.lim;
+            if isempty(lim)
+                x = g.x;
+                lim = cell(length(x),1);
+                for i = 1:length(x)
+                    lim{i} = {min(x{i}), max(x{i})};
+                end
+            end
 
             % 1D operators
             ops = cell(dim,1);
@@ -270,6 +277,10 @@ classdef Elastic2dVariable < scheme.Scheme
             default_arg('type',{'free','free'});
             default_arg('parameter', []);
 
+            if ~iscell(type)
+                type = {type, type};
+            end
+
             % j is the coordinate direction of the boundary
             j = obj.get_boundary_number(boundary);
             [e, T, tau, H_gamma] = obj.get_boundary_operator({'e','T','tau','H'}, boundary);
@@ -407,11 +418,11 @@ classdef Elastic2dVariable < scheme.Scheme
 
             % Loop over components that penalties end up on
             for i = 1:dim
-                closure = closure - sigma(i,j)*E{i}*RHOi*Hi*e*H_gamma*e'*E{i}';
-                penalty = penalty + sigma(i,j)*E{i}*RHOi*Hi*e*H_gamma*e_v'*E_v{i}';
+                closure = closure - E{i}*RHOi*Hi*e*sigma(i,j)*H_gamma*e'*E{i}';
+                penalty = penalty + E{i}*RHOi*Hi*e*sigma(i,j)*H_gamma*e_v'*E_v{i}';
 
-                closure = closure - 1/2*E{i}*RHOi*Hi*e*H_gamma*e'*tau{i}';
-                penalty = penalty - 1/2*E{i}*RHOi*Hi*e*H_gamma*e_v'*tau_v{i}';
+                closure = closure - 1/2*E{i}*RHOi*Hi*e*H_gamma*e'*tau{i};
+                penalty = penalty - 1/2*E{i}*RHOi*Hi*e*H_gamma*e_v'*tau_v{i};
 
                 % Loop over components that we have interface conditions on
                 for k = 1:dim
