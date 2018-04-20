@@ -271,22 +271,8 @@ classdef Elastic2dVariable < scheme.Scheme
             default_arg('parameter', []);
 
             % j is the coordinate direction of the boundary
-            % nj: outward unit normal component. 
-            % nj = -1 for west, south, bottom boundaries
-            % nj = 1  for east, north, top boundaries
-            [j, nj] = obj.get_boundary_number(boundary);
-            switch nj
-            case 1
-                e = obj.e_r;
-                d = obj.d1_r;
-                tau = obj.tau_r{j};
-                T = obj.T_r{j};
-            case -1
-                e = obj.e_l;
-                d = obj.d1_l;
-                tau = obj.tau_l{j};
-                T = obj.T_l{j};
-            end
+            j = obj.get_boundary_number(boundary);
+            [e, T, tau] = obj.get_boundary_operator({'e','T','tau'}, boundary);
 
             E = obj.E;
             Hi = obj.Hi;
@@ -336,14 +322,14 @@ classdef Elastic2dVariable < scheme.Scheme
                         C = T{k,i};
                         A = -d(i,k)*alpha(i,j);
                         B = A + C;
-                        closure = closure + E{i}*RHOi*Hi*B'*e{j}*H_gamma*(e{j}'*E{k}' ); 
-                        penalty{k} = penalty{k} - E{i}*RHOi*Hi*B'*e{j}*H_gamma;
+                        closure = closure + E{i}*RHOi*Hi*B'*e*H_gamma*(e'*E{k}' ); 
+                        penalty{k} = penalty{k} - E{i}*RHOi*Hi*B'*e*H_gamma;
                     end 
 
                 % Free boundary condition
                 case {'F','f','Free','free','traction','Traction','t','T'}
-                        closure = closure - E{k}*RHOi*Hi*e{j}*H_gamma* (e{j}'*tau{k} ); 
-                        penalty{k} = penalty{k} + E{k}*RHOi*Hi*e{j}*H_gamma;
+                        closure = closure - E{k}*RHOi*Hi*e*H_gamma* (e'*tau{k} ); 
+                        penalty{k} = penalty{k} + E{k}*RHOi*Hi*e*H_gamma;
 
                 % Unknown boundary condition
                 otherwise
@@ -380,8 +366,9 @@ classdef Elastic2dVariable < scheme.Scheme
             end
         end
 
-        % Returns the coordinate number and outward normal component for the boundary specified by the string boundary.
-        function [return_op] = get_boundary_operator(obj, op, boundary)
+        % Returns the boundary operator op for the boundary specified by the string boundary.
+        % op: may be a cell array of strings
+        function [varargout] = get_boundary_operator(obj, op, boundary)
 
             switch boundary
                 case {'w','W','west','West', 'e', 'E', 'east', 'East'}
@@ -392,23 +379,45 @@ classdef Elastic2dVariable < scheme.Scheme
                     error('No such boundary: boundary = %s',boundary);
             end
 
-            switch op
-                case 'e'
-                    switch boundary
-                        case {'w','W','west','West','s','S','south','South'}
-                            return_op = obj.e_l{j};
-                        case {'e', 'E', 'east', 'East','n', 'N', 'north', 'North'}
-                            return_op = obj.e_r{j};
-                    end
-                case 'd'
-                    switch boundary
-                        case {'w','W','west','West','s','S','south','South'}
-                            return_op = obj.d1_l{j};
-                        case {'e', 'E', 'east', 'East','n', 'N', 'north', 'North'}
-                            return_op = obj.d1_r{j};
-                    end
-                otherwise
-                    error(['No such operator: operatr = ' op]);
+            if ~iscell(op)
+                op = {op};
+            end
+
+            for i = 1:length(op)
+                switch op{i}
+                    case 'e'
+                        switch boundary
+                            case {'w','W','west','West','s','S','south','South'}
+                                varargout{i} = obj.e_l{j};
+                            case {'e', 'E', 'east', 'East','n', 'N', 'north', 'North'}
+                                varargout{i} = obj.e_r{j};
+                        end
+                    case 'd'
+                        switch boundary
+                            case {'w','W','west','West','s','S','south','South'}
+                                varargout{i} = obj.d1_l{j};
+                            case {'e', 'E', 'east', 'East','n', 'N', 'north', 'North'}
+                                varargout{i} = obj.d1_r{j};
+                        end
+                    case 'H'
+                        varargout{i} = obj.H_boundary{j};
+                    case 'T'
+                        switch boundary
+                            case {'w','W','west','West','s','S','south','South'}
+                                varargout{i} = obj.T_l{j};
+                            case {'e', 'E', 'east', 'East','n', 'N', 'north', 'North'}
+                                varargout{i} = obj.T_r{j};
+                        end
+                    case 'tau'
+                        switch boundary
+                            case {'w','W','west','West','s','S','south','South'}
+                                varargout{i} = obj.tau_l{j};
+                            case {'e', 'E', 'east', 'East','n', 'N', 'north', 'North'}
+                                varargout{i} = obj.tau_r{j};
+                        end                        
+                    otherwise
+                        error(['No such operator: operator = ' op{i}]);
+                end
             end
 
         end
