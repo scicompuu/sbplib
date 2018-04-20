@@ -272,20 +272,16 @@ classdef Elastic2dVariable < scheme.Scheme
 
             % j is the coordinate direction of the boundary
             j = obj.get_boundary_number(boundary);
-            [e, T, tau] = obj.get_boundary_operator({'e','T','tau'}, boundary);
+            [e, T, tau, H_gamma] = obj.get_boundary_operator({'e','T','tau','H'}, boundary);
 
             E = obj.E;
             Hi = obj.Hi;
-            H_gamma = obj.H_boundary{j};
             LAMBDA = obj.LAMBDA;
             MU = obj.MU;
             RHOi = obj.RHOi;
 
             dim = obj.dim;
             m_tot = obj.grid.N();
-
-            RHOi_kron = obj.RHOi_kron;
-            Hi_kron = obj.Hi_kron;
 
             % Preallocate
             closure = sparse(dim*m_tot, dim*m_tot);
@@ -341,9 +337,88 @@ classdef Elastic2dVariable < scheme.Scheme
         function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
+            % Operators without subscripts are from the own domain.
             tuning = 1.2;
-            % tuning = 20.2;
-            error('Interface not implemented');
+
+            % j is the coordinate direction of the boundary
+            j = obj.get_boundary_number(boundary);
+            j_v = neighbour_scheme.get_boundary_number(neighbour_boundary);
+
+            % Get boundary operators
+            [e, T, tau, H_gamma] = obj.get_boundary_operator({'e','T','tau','H'}, boundary);
+            [e_v, tau_v] = neighbour_scheme.get_boundary_operator({'e','tau'}, neighbour_boundary);
+
+            % Operators and quantities that correspond to the own domain only
+            Hi = obj.Hi;
+            RHOi = obj.RHOi;
+            dim = obj.dim;
+        
+            %--- Other operators ----
+            m_tot_u = obj.grid.N();
+            E = obj.E;
+            LAMBDA_u = obj.LAMBDA;
+            MU_u = obj.MU;
+            lambda_u = e'*LAMBDA_u*e;
+            mu_u = e'*MU_u*e;
+
+            m_tot_v = neighbour_scheme.grid.N();
+            E_v = neighbour_scheme.E;
+            LAMBDA_v = neighbour_scheme.LAMBDA;
+            MU_v = neighbour_scheme.MU;
+            lambda_v = e_v'*LAMBDA_v*e_v;
+            mu_v = e_v'*MU_v*e_v;
+            %-------------------------
+            
+            % Borrowing constants
+            phi_u = obj.phi{j};
+            h_u = obj.h(j);
+            h11_u = obj.H11{j}*h_u;
+            gamma_u = obj.gamma{j};
+
+            phi_v = neighbour_scheme.phi{j_v};
+            h_v = neighbour_scheme.h(j_v);
+            h11_v = neighbour_scheme.H11{j_v}*h_v;
+            gamma_v = neighbour_scheme.gamma{j_v};
+
+            % E > sum_i 1/(2*alpha_ij)*(tau_i)^2
+            function [alpha_ii, alpha_ij] = computeAlpha(phi,h,h11,gamma,lambda,mu) 
+                th1 = h11/(2*dim);
+                th2 = h11*phi/2;
+                th3 = h*gamma;
+                a1 = ( (th1 + th2)*th3*lambda + 4*th1*th2*mu ) / (2*th1*th2*th3);
+                a2 = ( 16*(th1 + th2)*lambda*mu ) / (th1*th2*th3);
+                alpha_ii = a1 + sqrt(a2 + a1^2);
+
+                alpha_ij = 2/h11 + 1/(phi*h11);
+            end
+
+            [alpha_ii_u, alpha_ij_u] = computeAlpha(phi_u,h_u,h11_u,gamma_u,lambda_u,mu_u);
+            [alpha_ii_v, alpha_ij_v] = computeAlpha(phi_v,h_v,h11_v,gamma_v,lambda_v,mu_v);  
+            sigma_ii = tuning*(alpha_ii_u + alpha_ii_v)/4;
+            sigma_ij = tuning*(alpha_ij_u + alpha_ij_v)/4;
+
+            d = @kroneckerDelta;  % Kronecker delta
+            db = @(i,j) 1-d(i,j); % Logical not of Kronecker delta
+            sigma = @(i,j) tuning*(d(i,j)*sigma_ii + db(i,j)*sigma_ij);
+
+            % Preallocate
+            closure = sparse(dim*m_tot_u, dim*m_tot_u);
+            penalty = sparse(dim*m_tot_u, dim*m_tot_v);
+
+            % Loop over components that penalties end up on
+            for i = 1:dim
+                closure = closure - sigma(i,j)*E{i}*RHOi*Hi*e*H_gamma*e'*E{i}';
+                penalty = penalty + sigma(i,j)*E{i}*RHOi*Hi*e*H_gamma*e_v'*E_v{i}';
+
+                closure = closure - 1/2*E{i}*RHOi*Hi*e*H_gamma*e'*tau{i}';
+                penalty = penalty - 1/2*E{i}*RHOi*Hi*e*H_gamma*e_v'*tau_v{i}';
+
+                % Loop over components that we have interface conditions on
+                for k = 1:dim
+                    closure = closure + 1/2*E{i}*RHOi*Hi*T{k,i}'*e*H_gamma*e'*E{k}'; 
+                    penalty = penalty - 1/2*E{i}*RHOi*Hi*T{k,i}'*e*H_gamma*e_v'*E_v{k}'; 
+                end 
+            end
         end
 
         % Returns the coordinate number and outward normal component for the boundary specified by the string boundary.
