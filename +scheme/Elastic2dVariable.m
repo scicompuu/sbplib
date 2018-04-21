@@ -400,7 +400,7 @@ classdef Elastic2dVariable < scheme.Scheme
                 a2 = ( 16*(th1 + th2)*lambda*mu ) / (th1*th2*th3);
                 alpha_ii = a1 + sqrt(a2 + a1^2);
 
-                alpha_ij = 2/h11 + 1/(phi*h11);
+                alpha_ij = mu*(2/h11 + 1/(phi*h11));
             end
 
             [alpha_ii_u, alpha_ij_u] = computeAlpha(phi_u,h_u,h11_u,gamma_u,lambda_u,mu_u);
