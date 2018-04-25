@@ -509,7 +509,7 @@ classdef Elastic2dVariable < scheme.Scheme
         end
 
         function N = size(obj)
-            N = prod(obj.m);
+            N = obj.dim*prod(obj.m);
         end
     end
 end
