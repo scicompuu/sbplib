@@ -25,10 +25,17 @@ function [closure, S] = bcSetup(diffOp, bc, S_sign)
         if isempty(bc{i}.data)
             continue
         end
-        assertType(bc{i}.data, 'function_handle');
 
         coord = diffOp.grid.getBoundary(bc{i}.boundary);
-        assertNumberOfArguments(bc{i}.data, 1+size(coord,2));
+        if iscell(bc{i}.data)
+            for j = 1:length(bc{i}.data)
+                assertType(bc{i}.data{j}, 'function_handle');
+                assertNumberOfArguments(bc{i}.data{j}, 1+size(coord,2));
+            end
+        else
+            assertType(bc{i}.data, 'function_handle');
+            assertNumberOfArguments(bc{i}.data, 1+size(coord,2));
+        end
 
         penalties{end+1} = penalty;
         dataFunctions{end+1} = bc{i}.data;
@@ -39,7 +46,13 @@ function [closure, S] = bcSetup(diffOp, bc, S_sign)
     function v = S_fun(t)
         v = O;
         for i = 1:length(dataFunctions)
-            v = v + penalties{i}*dataFunctions{i}(t, dataParams{i}{:});
+            if iscell(penalties{i})
+                for j = 1:length(penalties{i})
+                    v = v + penalties{i}{j}*dataFunctions{i}{j}(t, dataParams{i}{:});
+                end
+            else
+                v = v + penalties{i}*dataFunctions{i}(t, dataParams{i}{:});
+            end
         end
 
         v = S_sign * v;
