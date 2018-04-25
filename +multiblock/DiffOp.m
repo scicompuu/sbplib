@@ -81,6 +81,7 @@ classdef DiffOp < scheme.Scheme
                 end
             end
             obj.D = blockmatrix.toMatrix(D);
+            obj.grid = grid;
 
 
             function [getHand, getParam] = parseInput(doHand, grid, doParam)
