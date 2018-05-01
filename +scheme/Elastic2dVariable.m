@@ -273,9 +273,9 @@ classdef Elastic2dVariable < scheme.Scheme
         %       data                is a function returning the data that should be applied at the boundary.
         %       neighbour_scheme    is an instance of Scheme that should be interfaced to.
         %       neighbour_boundary  is a string specifying which boundary to interface to.
-        function [closure, penalty] = boundary_condition(obj, boundary, type, parameter)
+        function [closure, penalty] = boundary_condition(obj, boundary, type, tuning)
             default_arg('type',{'free','free'});
-            default_arg('parameter', []);
+            default_arg('tuning', 1.2);
 
             if ~iscell(type)
                 type = {type, type};
@@ -308,7 +308,6 @@ classdef Elastic2dVariable < scheme.Scheme
                 % Dirichlet boundary condition
                 case {'D','d','dirichlet','Dirichlet'}
 
-                    tuning = 1.2;
                     phi = obj.phi{j};
                     h = obj.h(j);
                     h11 = obj.H11{j}*h;
