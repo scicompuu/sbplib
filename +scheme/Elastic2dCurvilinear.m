@@ -138,10 +138,18 @@ classdef Elastic2dCurvilinear < scheme.Scheme
             x = coords(:,1);
             y = coords(:,2);
 
-            x_xi = obj.D1{1}*x;
-            x_eta = obj.D1{2}*x;
-            y_xi = obj.D1{1}*y;
-            y_eta = obj.D1{2}*y;
+            % Use non-periodic difference operators for metric even if opSet is periodic.
+            xmax = max(ops{1}.x);
+            ymax = max(ops{2}.x);
+            opSetMetric{1} = sbp.D2Variable(m(1), {0, xmax}, order);
+            opSetMetric{2} = sbp.D2Variable(m(2), {0, ymax}, order);
+            D1Metric{1} = kron(opSetMetric{1}.D1, I{2});
+            D1Metric{2} = kron(I{1}, opSetMetric{2}.D1); 
+
+            x_xi = D1Metric{1}*x;
+            x_eta = D1Metric{2}*x;
+            y_xi = D1Metric{1}*y;
+            y_eta = D1Metric{2}*y;
 
             J = x_xi.*y_eta - x_eta.*y_xi;
 
@@ -155,7 +163,6 @@ classdef Elastic2dCurvilinear < scheme.Scheme
             beta = cell(dim,1);
             beta{1} = sqrt(x_eta.^2 + y_eta.^2);
             beta{2} = sqrt(x_xi.^2 + y_xi.^2);
-
 
             J = spdiag(J);
             Ji = inv(J);
