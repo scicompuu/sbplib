@@ -29,6 +29,7 @@ classdef Elastic2dCurvilinear < scheme.Scheme
         % Metric coefficients
         b % Cell matrix of size dim x dim
         J, Ji
+        beta % Cell array of scale factors
 
         D % Total operator
         D1 % First derivatives
@@ -175,6 +176,7 @@ classdef Elastic2dCurvilinear < scheme.Scheme
             obj.J = J;
             obj.Ji = Ji;
             obj.b = b;
+            obj.beta = beta;
             %----------------------------
 
             % Boundary operators

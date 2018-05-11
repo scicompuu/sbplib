@@ -36,6 +36,7 @@ classdef Heat2dCurvilinear < scheme.Scheme
         % Metric coefficients
         b % Cell matrix of size dim x dim
         J, Ji
+        beta % Cell array of scale factors
 
         % Numerical boundary flux operators
         flux_l, flux_r
@@ -139,6 +140,7 @@ classdef Heat2dCurvilinear < scheme.Scheme
             obj.J = J;
             obj.Ji = Ji;
             obj.b = b;
+            obj.beta = beta;
             %----------------------------
 
             % Boundary operators
