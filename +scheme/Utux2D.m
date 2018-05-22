@@ -7,6 +7,7 @@ classdef Utux2D < scheme.Scheme
         v0 % Initial data
         
         a % Wave speed a = [a1, a2];
+          % Can either be a constant vector or a cell array of function handles.
 
         H % Discrete norm
         H_x, H_y % Norms in the x and y directions
@@ -45,7 +46,15 @@ classdef Utux2D < scheme.Scheme
             default_arg('coupling_type','upwind'); 
             default_arg('a',1/sqrt(2)*[1, 1]); 
             default_arg('opSet',@sbp.D2Standard);
+
             assert(isa(g, 'grid.Cartesian'))
+            if iscell(a)
+                a1 = grid.evalOn(g, a{1});
+                a2 = grid.evalOn(g, a{2});
+                a = {spdiag(a1), spdiag(a2)};
+            else
+                a = {a(1), a(2)};
+            end
              
             m = g.size();
             m_x = m(1);
@@ -96,7 +105,7 @@ classdef Utux2D < scheme.Scheme
             obj.coupling_type = coupling_type;
             obj.interpolation_type = interpolation_type;
             obj.interpolation_damping = interpolation_damping;
-            obj.D = -(a(1)*obj.Dx + a(2)*obj.Dy);
+            obj.D = -(a{1}*obj.Dx + a{2}*obj.Dy);
 
         end
         % Closure functions return the opertors applied to the own domain to close the boundary
@@ -112,11 +121,11 @@ classdef Utux2D < scheme.Scheme
             sigma = -1; % Scalar penalty parameter
             switch boundary
                 case {'w','W','west','West'}
-                    tau = sigma*obj.a(1)*obj.e_w*obj.H_y;
+                    tau = sigma*obj.a{1}*obj.e_w*obj.H_y;
                     closure = obj.Hi*tau*obj.e_w';
                     
                 case {'s','S','south','South'}
-                    tau = sigma*obj.a(2)*obj.e_s*obj.H_x;
+                    tau = sigma*obj.a{2}*obj.e_s*obj.H_x;
                     closure = obj.Hi*tau*obj.e_s';
             end  
             penalty = -obj.Hi*tau;
@@ -223,35 +232,35 @@ classdef Utux2D < scheme.Scheme
 
              switch boundary
                  case {'w','W','west','West'}
-                     tau = sigma_ds*obj.a(1)*obj.e_w*obj.H_y;
+                     tau = sigma_ds*obj.a{1}*obj.e_w*obj.H_y;
                      closure = obj.Hi*tau*obj.e_w';
                      penalty = -obj.Hi*tau*I_neighbour2local_ds*e_neighbour';
 
-                     beta = int_damp_ds*obj.a(1)...
+                     beta = int_damp_ds*obj.a{1}...
                             *obj.e_w*obj.H_y;
                      closure = closure + obj.Hi*beta*(I_back_forth_ds - I)*obj.e_w';     
                  case {'e','E','east','East'}
-                     tau = sigma_us*obj.a(1)*obj.e_e*obj.H_y;
+                     tau = sigma_us*obj.a{1}*obj.e_e*obj.H_y;
                      closure = obj.Hi*tau*obj.e_e';
                      penalty = -obj.Hi*tau*I_neighbour2local_us*e_neighbour';
 
-                     beta = int_damp_us*obj.a(1)...
+                     beta = int_damp_us*obj.a{1}...
                             *obj.e_e*obj.H_y;
                      closure = closure + obj.Hi*beta*(I_back_forth_us - I)*obj.e_e'; 
                  case {'s','S','south','South'}
-                     tau = sigma_ds*obj.a(2)*obj.e_s*obj.H_x;
+                     tau = sigma_ds*obj.a{2}*obj.e_s*obj.H_x;
                      closure = obj.Hi*tau*obj.e_s'; 
                      penalty = -obj.Hi*tau*I_neighbour2local_ds*e_neighbour';
 
-                     beta = int_damp_ds*obj.a(2)...
+                     beta = int_damp_ds*obj.a{2}...
                             *obj.e_s*obj.H_x;
                      closure = closure + obj.Hi*beta*(I_back_forth_ds - I)*obj.e_s';
                  case {'n','N','north','North'}
-                     tau = sigma_us*obj.a(2)*obj.e_n*obj.H_x;
+                     tau = sigma_us*obj.a{2}*obj.e_n*obj.H_x;
                      closure = obj.Hi*tau*obj.e_n';
                      penalty = -obj.Hi*tau*I_neighbour2local_us*e_neighbour';
 
-                     beta = int_damp_us*obj.a(2)...
+                     beta = int_damp_us*obj.a{2}...
                             *obj.e_n*obj.H_x;
                      closure = closure + obj.Hi*beta*(I_back_forth_us - I)*obj.e_n'; 
              end

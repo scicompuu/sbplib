@@ -57,6 +57,10 @@ classdef LaplaceCurvilinear < scheme.Scheme
             end
 
             % assert(isa(g, 'grid.Curvilinear'))
+            if isa(a, 'function_handle')
+                a = grid.evalOn(g, a);
+                a = spdiag(a);
+            end
 
             m = g.size();
             m_u = m(1);

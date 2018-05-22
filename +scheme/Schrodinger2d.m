@@ -46,6 +46,10 @@ classdef Schrodinger2d < scheme.Scheme
             dim = 2;
 
             assert(isa(g, 'grid.Cartesian'))
+            if isa(a, 'function_handle')
+                a = grid.evalOn(g, a);
+                a = spdiag(a);
+            end
 
             m = g.size();
             m_tot = g.N();
@@ -178,7 +182,7 @@ classdef Schrodinger2d < scheme.Scheme
 
             Hi = obj.Hi;
             H_gamma = obj.H_boundary{j};
-            a = obj.a;
+            a = e{j}'*obj.a*e{j};
 
             switch type
 
