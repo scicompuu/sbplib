@@ -43,7 +43,7 @@ classdef Laplace < scheme.Scheme
         end
 
         function [closure, penalty] = boundary_condition(obj,boundary,type) % TODO: Change name to boundaryCondition
-            [closure, penalty] = boundary_condition(obj.mbDiffOp, boundary, type)
+            [closure, penalty] = boundary_condition(obj.mbDiffOp, boundary, type);
         end
         function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
             error('Not implemented')
