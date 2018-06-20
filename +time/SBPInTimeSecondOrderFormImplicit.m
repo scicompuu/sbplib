@@ -23,7 +23,7 @@ classdef SBPInTimeSecondOrderFormImplicit < time.Timestepper
 
             m = length(v0);
 
-            default_arg('A', sparse(m, m));
+            default_arg('A', speye(m, m));
             default_arg('B', sparse(m, m));
             default_arg('C', sparse(m, m));
 
