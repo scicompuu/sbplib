@@ -42,6 +42,10 @@ classdef Laplace < scheme.Scheme
             op = getBoundaryOperator(obj.mbDiffOp, opName, boundary);
         end
 
+        function op = getBoundaryQuadrature(obj, boundary)
+            op = getBoundaryQuadrature(obj.mbDiffOp, boundary);
+        end
+
         function [closure, penalty] = boundary_condition(obj,boundary,type) % TODO: Change name to boundaryCondition
             [closure, penalty] = boundary_condition(obj.mbDiffOp, boundary, type);
         end

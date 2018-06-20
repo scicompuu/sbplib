@@ -144,6 +144,27 @@ classdef DiffOp < scheme.Scheme
             end
         end
 
+        function op = getBoundaryQuadrature(obj, boundary)
+            opName = 'H';
+            switch class(boundary)
+                case 'cell'
+                    localOpName = [opName '_' boundary{2}];
+                    blockId = boundary{1};
+                    op = obj.diffOps{blockId}.(localOpName);
+
+                    return
+                case 'multiblock.BoundaryGroup'
+                    N = length(boundary);
+                    H_bm = cell(N,N);
+                    for i = 1:N
+                        H_bm{i,i} = obj.getBoundaryQuadrature(boundary{i});
+                    end
+                    op = blockmatrix.toMatrix(H_bm);
+                otherwise
+                    error('Unknown boundary indentifier')
+            end
+        end
+
         % Creates the closure and penalty matrix for a given boundary condition,
         %    boundary -- the name of the boundary on the form {id,name} where
         %                id is the number of a block and name is the name of a
