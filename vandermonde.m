@@ -1,10 +1,15 @@
 % Create vandermonde matrix for points x and polynomials of order p
-% x and p are vectors
-% v is a length(x) by length(p) matrix
+% x is a list of N points of size [N,dim],
+% p is a list of polynomial orders of size [M, dim].
+% the given mononomials are evaluated and the NxM matrix V is returned.
 function V = vandermonde(x, p)
-    V = sym(zeros(length(x), length(p))); % Is there a way to make this work for both double and sym
+    assert(size(x,2) == size(p,2), 'x and p must have the same number of columns')
+    n = size(x,1);
+    m = size(p,1);
 
-    for i = 1:length(p)
-        V(:, i) = mononomial(x,p(i));
+    for i = 1:m
+        V(:,i) = mononomial(x, p(i,:));
     end
+
+    assertSize(V,[n,m]);
 end
