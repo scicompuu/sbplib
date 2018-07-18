@@ -76,7 +76,7 @@ classdef Def
                     for i = 1:obj.nBlocks
                         labels{i} = num2str(i);
                     end
-                otherwise
+                case 'none'
                     axis equal
                     return
             end
