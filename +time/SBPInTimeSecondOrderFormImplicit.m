@@ -19,7 +19,7 @@ classdef SBPInTimeSecondOrderFormImplicit < time.Timestepper
             default_arg('TYPE', []);
             default_arg('order', []);
             default_arg('blockSize',[]);
-            default_arg('do_scaling', true);
+            default_arg('do_scaling', false);
 
             m = length(v0);
 
