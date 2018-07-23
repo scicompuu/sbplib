@@ -43,7 +43,7 @@ function [closure, S] = bcSetup(diffOp, bc, S_sign)
         if nargin(bc{i}.data) == 1
             % Grid data
             boundarySize = [size(diffOp.grid.getBoundary(bc{i}.boundary),1),1];
-            assert_size(bc{i}.data(0), boundarySize); % Eval for t = 0 and make sure the function returns a grid vector of the correct size.
+            assertSize(bc{i}.data(0), boundarySize); % Eval for t = 0 and make sure the function returns a grid vector of the correct size.
             gridDataPenalties{end+1} = penalty;
             gridDataFunctions{end+1} = bc{i}.data;
         elseif nargin(bc{i}.data) == 1+dim
