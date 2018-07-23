@@ -21,7 +21,7 @@ classdef Laplace < scheme.Scheme
 
             obj.D = obj.mbDiffOp.D;
             obj.J = obj.jacobian();
-            obj.H = obj.mbDiffOp.H * obj.jacobian();
+            obj.H = obj.mbDiffOp.H;
         end
 
         function s = size(obj)
