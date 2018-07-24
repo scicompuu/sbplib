@@ -36,14 +36,11 @@ function [closure, S] = bcSetup(diffOp, bcs, S_sign)
             continue
         end
 
-        % Find dimension
-        dim = size(diffOp.grid.getBoundary(bcs{i}.boundary), 2);
-
         if nargin(bcs{i}.data) == 1
             % Grid data
             gridDataPenalties{end+1} = penalty;
             gridDataFunctions{end+1} = bcs{i}.data;
-        elseif nargin(bcs{i}.data) == 1+dim
+        elseif nargin(bcs{i}.data) > 1
             % Symbolic data
             coord = diffOp.grid.getBoundary(bcs{i}.boundary);
             symbolicDataPenalties{end+1} = penalty;
