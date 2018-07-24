@@ -20,11 +20,8 @@ function [closure, S] = bcSetup(diffOp, bcs, S_sign)
 
     % Setup storage arrays
     closure = spzeros(size(diffOp));
-    gridDataPenalties = {};
-    gridDataFunctions = {};
-    symbolicDataPenalties = {};
-    symbolicDataFunctions = {};
-    symbolicDataCoords = {};
+    gridData = {};
+    symbolicData = {};
 
     % Collect closures, penalties and data
     for i = 1:length(bcs)
@@ -38,14 +35,14 @@ function [closure, S] = bcSetup(diffOp, bcs, S_sign)
 
         if nargin(bcs{i}.data) == 1
             % Grid data
-            gridDataPenalties{end+1} = penalty;
-            gridDataFunctions{end+1} = bcs{i}.data;
+            gridData{end+1}.penalty = penalty;
+            gridData{end}.func = bcs{i}.data;
         elseif nargin(bcs{i}.data) > 1
             % Symbolic data
             coord = diffOp.grid.getBoundary(bcs{i}.boundary);
-            symbolicDataPenalties{end+1} = penalty;
-            symbolicDataFunctions{end+1} = bcs{i}.data;
-            symbolicDataCoords{end+1} = num2cell(coord ,1);
+            symbolicData{end+1}.penalty = penalty;
+            symbolicData{end}.func = bcs{i}.data;
+            symbolicData{end}.coords = num2cell(coord ,1);
         end
     end
 
@@ -53,12 +50,12 @@ function [closure, S] = bcSetup(diffOp, bcs, S_sign)
     O = spzeros(size(diffOp),1);
     function v = S_fun(t)
         v = O;
-        for i = 1:length(gridDataFunctions)
-            v = v + gridDataPenalties{i}*gridDataFunctions{i}(t);
+        for i = 1:length(gridData)
+            v = v + gridData{i}.penalty*gridData{i}.func(t);
         end
 
-        for i = 1:length(symbolicDataFunctions)
-            v = v + symbolicDataPenalties{i}*symbolicDataFunctions{i}(t, symbolicDataCoords{i}{:});
+        for i = 1:length(symbolicData)
+            v = v + symbolicData{i}.penalty*symbolicData{i}.func(t, symbolicData{i}.coords{:});
         end
 
         v = S_sign * v;
