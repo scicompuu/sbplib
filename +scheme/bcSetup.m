@@ -16,6 +16,7 @@ function [closure, S] = bcSetup(diffOp, bcs, S_sign)
     assertType(bcs, 'cell');
     assert(S_sign == 1 || S_sign == -1, 'S_sign must be either 1 or -1');
 
+    verifyBcFormat(bcs);
 
     % Setup storage arrays
     closure = spzeros(size(diffOp));
@@ -27,7 +28,6 @@ function [closure, S] = bcSetup(diffOp, bcs, S_sign)
 
     % Collect closures, penalties and data
     for i = 1:length(bcs)
-        assertType(bcs{i}, 'struct');
         [localClosure, penalty] = diffOp.boundary_condition(bcs{i}.boundary, bcs{i}.type);
         closure = closure + localClosure;
 
@@ -35,7 +35,6 @@ function [closure, S] = bcSetup(diffOp, bcs, S_sign)
             % Skip to next loop if there is no data
             continue
         end
-        assertType(bcs{i}.data, 'function_handle');
 
         % Find dimension
         dim = size(diffOp.grid.getBoundary(bcs{i}.boundary), 2);
@@ -74,7 +73,17 @@ function [closure, S] = bcSetup(diffOp, bcs, S_sign)
     S = @S_fun;
 end
 
-function parseData()
+function verifyBcFormat(bcs)
+    for i = 1:length(bcs)
+        assertType(bcs{i}, 'struct');
+        assertStructFields(bcs{i}, {'type', 'boundary'});
 
+        if ~isfield(bcs{i}, 'data') || isempty(bcs{i}.data)
+            continue
+        end
+
+        if ~isa(bcs{i}.data, 'function_handle')
+            error('bcs{%d}.data should be a function of time or a function of time and space',i);
+        end
+    end
 end
-
