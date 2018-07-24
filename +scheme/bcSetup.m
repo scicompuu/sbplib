@@ -11,9 +11,9 @@
 % In the case where it only depends on time it should return the data as grid function for the boundary.
 % In the case where it also takes space coordinates the number of space coordinates should match the number of dimensions of the problem domain.
 % For example in the 2D case: f(t,x,y).
-function [closure, S] = bcSetup(diffOp, bc, S_sign)
+function [closure, S] = bcSetup(diffOp, bcs, S_sign)
     default_arg('S_sign', 1);
-    assertType(bc, 'cell');
+    assertType(bcs, 'cell');
     assert(S_sign == 1 || S_sign == -1, 'S_sign must be either 1 or -1');
 
 
@@ -26,34 +26,34 @@ function [closure, S] = bcSetup(diffOp, bc, S_sign)
     symbolicDataCoords = {};
 
     % Collect closures, penalties and data
-    for i = 1:length(bc)
-        assertType(bc{i}, 'struct');
-        [localClosure, penalty] = diffOp.boundary_condition(bc{i}.boundary, bc{i}.type);
+    for i = 1:length(bcs)
+        assertType(bcs{i}, 'struct');
+        [localClosure, penalty] = diffOp.boundary_condition(bcs{i}.boundary, bcs{i}.type);
         closure = closure + localClosure;
 
-        if ~isfield(bc{i},'data') || isempty(bc{i}.data)
+        if ~isfield(bcs{i},'data') || isempty(bcs{i}.data)
             % Skip to next loop if there is no data
             continue
         end
-        assertType(bc{i}.data, 'function_handle');
+        assertType(bcs{i}.data, 'function_handle');
 
         % Find dimension
-        dim = size(diffOp.grid.getBoundary(bc{i}.boundary), 2);
+        dim = size(diffOp.grid.getBoundary(bcs{i}.boundary), 2);
 
-        if nargin(bc{i}.data) == 1
+        if nargin(bcs{i}.data) == 1
             % Grid data
-            boundarySize = [size(diffOp.grid.getBoundary(bc{i}.boundary),1),1];
-            assertSize(bc{i}.data(0), boundarySize); % Eval for t = 0 and make sure the function returns a grid vector of the correct size.
+            boundarySize = [size(diffOp.grid.getBoundary(bcs{i}.boundary),1),1];
+            assertSize(bcs{i}.data(0), boundarySize); % Eval for t = 0 and make sure the function returns a grid vector of the correct size.
             gridDataPenalties{end+1} = penalty;
-            gridDataFunctions{end+1} = bc{i}.data;
-        elseif nargin(bc{i}.data) == 1+dim
+            gridDataFunctions{end+1} = bcs{i}.data;
+        elseif nargin(bcs{i}.data) == 1+dim
             % Symbolic data
-            coord = diffOp.grid.getBoundary(bc{i}.boundary);
+            coord = diffOp.grid.getBoundary(bcs{i}.boundary);
             symbolicDataPenalties{end+1} = penalty;
-            symbolicDataFunctions{end+1} = bc{i}.data;
+            symbolicDataFunctions{end+1} = bcs{i}.data;
             symbolicDataCoords{end+1} = num2cell(coord ,1);
         else
-            error('sbplib:scheme:bcSetup:DataWrongNumberOfArguments', 'bc{%d}.data has the wrong number of input arguments. Must be either only time or time and space.', i);
+            error('sbplib:scheme:bcSetup:DataWrongNumberOfArguments', 'bcs{%d}.data has the wrong number of input arguments. Must be either only time or time and space.', i);
         end
     end
 
@@ -73,3 +73,8 @@ function [closure, S] = bcSetup(diffOp, bc, S_sign)
     end
     S = @S_fun;
 end
+
+function parseData()
+
+end
+
