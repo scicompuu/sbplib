@@ -16,7 +16,7 @@ function [closure, S] = bcSetup(diffOp, bcs, S_sign)
     assertType(bcs, 'cell');
     assert(S_sign == 1 || S_sign == -1, 'S_sign must be either 1 or -1');
 
-    verifyBcFormat(bcs);
+    verifyBcFormat(bcs, diffOp);
 
     % Setup storage arrays
     closure = spzeros(size(diffOp));
@@ -41,8 +41,6 @@ function [closure, S] = bcSetup(diffOp, bcs, S_sign)
 
         if nargin(bcs{i}.data) == 1
             % Grid data
-            boundarySize = [size(diffOp.grid.getBoundary(bcs{i}.boundary),1),1];
-            assertSize(bcs{i}.data(0), boundarySize); % Eval for t = 0 and make sure the function returns a grid vector of the correct size.
             gridDataPenalties{end+1} = penalty;
             gridDataFunctions{end+1} = bcs{i}.data;
         elseif nargin(bcs{i}.data) == 1+dim
@@ -51,8 +49,6 @@ function [closure, S] = bcSetup(diffOp, bcs, S_sign)
             symbolicDataPenalties{end+1} = penalty;
             symbolicDataFunctions{end+1} = bcs{i}.data;
             symbolicDataCoords{end+1} = num2cell(coord ,1);
-        else
-            error('sbplib:scheme:bcSetup:DataWrongNumberOfArguments', 'bcs{%d}.data has the wrong number of input arguments. Must be either only time or time and space.', i);
         end
     end
 
@@ -73,7 +69,7 @@ function [closure, S] = bcSetup(diffOp, bcs, S_sign)
     S = @S_fun;
 end
 
-function verifyBcFormat(bcs)
+function verifyBcFormat(bcs, diffOp)
     for i = 1:length(bcs)
         assertType(bcs{i}, 'struct');
         assertStructFields(bcs{i}, {'type', 'boundary'});
@@ -84,6 +80,17 @@ function verifyBcFormat(bcs)
 
         if ~isa(bcs{i}.data, 'function_handle')
             error('bcs{%d}.data should be a function of time or a function of time and space',i);
+        end
+
+        b = diffOp.grid.getBoundary(bc.boundart);
+
+        dim = size(b,2);
+
+        if nargin(bc.data) == 1
+            % Grid data (only function of time)
+            assertSize(bc.data(0), 1, size(b));
+        elseif nargin(bc.data) ~= 1+dim
+           error('sbplib:scheme:bcSetup:DataWrongNumberOfArguments', 'bcs{%d}.data has the wrong number of input arguments. Must be either only time or time and space.', i);
         end
     end
 end
