@@ -1,4 +1,4 @@
-classdef Def
+classdef DefCurvilinear < multiblock.Definition
     properties
         nBlocks
         blockMaps % Maps from logical blocks to physical blocks build from transfinite interpolation
@@ -10,7 +10,7 @@ classdef Def
     methods
         % Defines a multiblock setup for transfinite interpolation blocks
         % TODO: How to bring in plotting of points?
-        function obj = Def(blockMaps, connections, boundaryGroups, blockNames)
+        function obj = DefCurvilinear(blockMaps, connections, boundaryGroups, blockNames)
             default_arg('boundaryGroups', struct());
             default_arg('blockNames',{});
 
