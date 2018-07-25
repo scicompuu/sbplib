@@ -59,6 +59,14 @@ function [closure, S] = bcSetup(diffOp, bcs, S_sign)
     S = @S_fun;
 end
 
+% Borde man använda eval on här??
+% Borde man dela upp bcSetup i bcSetupSymbolic(name?) och bcSetupGridData
+% och sen skriva en wrapper som sorterar och wrappar de två andra??
+
+% Erbjuda en separat function for att validera en bc specifikation?
+%  alltid kräva alla fields?
+%  literal struct improvement?
+
 function verifyBcFormat(bcs, diffOp)
     for i = 1:length(bcs)
         assertType(bcs{i}, 'struct');
