@@ -23,6 +23,7 @@ classdef InterpAWW < sbp.InterpOps
         % accOp : String, 'C2F' or 'F2C'. Specifies which of the operators
         % should have higher accuracy.
         function obj = InterpAWW(m_C,m_F,order_C,order_F,accOp)
+            assertIsMember(accOp, {'C2F','F2C'});
 
             ratio = (m_F-1)/(m_C-1);
             h_C = 1;
