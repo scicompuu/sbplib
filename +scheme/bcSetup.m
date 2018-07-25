@@ -28,21 +28,17 @@ function [closure, S] = bcSetup(diffOp, bcs, S_sign)
         [localClosure, penalty] = diffOp.boundary_condition(bcs{i}.boundary, bcs{i}.type);
         closure = closure + localClosure;
 
-        if ~isfield(bcs{i},'data') || isempty(bcs{i}.data)
-            % Skip to next loop if there is no data
+        [ok, isSym, data] = parseData(bcs{i}, penalty, diffOp.grid)
+
+        if ~ok
+            % There was no data
             continue
         end
 
-        if nargin(bcs{i}.data) == 1
-            % Grid data
-            gridData{end+1}.penalty = penalty;
-            gridData{end}.func = bcs{i}.data;
-        elseif nargin(bcs{i}.data) > 1
-            % Symbolic data
-            coord = diffOp.grid.getBoundary(bcs{i}.boundary);
-            symbolicData{end+1}.penalty = penalty;
-            symbolicData{end}.func = bcs{i}.data;
-            symbolicData{end}.coords = num2cell(coord ,1);
+        if isSym
+            gridData{end+1} = data;
+        else
+            symbolicData{end+1} = data;
         end
     end
 
@@ -86,5 +82,29 @@ function verifyBcFormat(bcs, diffOp)
         elseif nargin(bc.data) ~= 1+dim
            error('sbplib:scheme:bcSetup:DataWrongNumberOfArguments', 'bcs{%d}.data has the wrong number of input arguments. Must be either only time or time and space.', i);
         end
+    end
+end
+
+function [ok, isSym, dataStruct] = parseData(bc, penalty, grid)
+    if ~isfield(bc,'data') || isempty(bc.data)
+        ok = false;
+        return
+    end
+    ok = true;
+
+    nArg = nargin(bc.data);
+
+    if nArg > 1
+        % Symbolic data
+        isSym = true;
+        coord = grid.getBoundary(bc.boundary);
+        dataStruct.penalty = penalty;
+        dataStruct.func = bc.data;
+        dataStruct.coords = num2cell(coord, 1);
+    else
+        % Grid data
+        isSym = false;
+        dataStruct.penalty = penalty;
+        dataStruct.func = bcs{i}.data;
     end
 end
