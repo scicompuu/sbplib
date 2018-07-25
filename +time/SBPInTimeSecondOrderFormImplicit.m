@@ -14,15 +14,16 @@ classdef SBPInTimeSecondOrderFormImplicit < time.Timestepper
         % Solves A*u_tt + B*u_t + C*u = f(t)
         % A, B can either both be constants or both be function handles,
         % They can also be omitted by setting them equal to the empty matrix.
-        function obj = SBPInTimeSecondOrderFormImplicit(A, B, C, f, k, t0, v0, v0t, TYPE, order, blockSize)
+        function obj = SBPInTimeSecondOrderFormImplicit(A, B, C, f, k, t0, v0, v0t, do_scaling, TYPE, order, blockSize)
             default_arg('f', []);
             default_arg('TYPE', []);
             default_arg('order', []);
             default_arg('blockSize',[]);
+            default_arg('do_scaling', false);
 
             m = length(v0);
 
-            default_arg('A', sparse(m, m));
+            default_arg('A', speye(m, m));
             default_arg('B', sparse(m, m));
             default_arg('C', sparse(m, m));
 
@@ -56,7 +57,12 @@ classdef SBPInTimeSecondOrderFormImplicit < time.Timestepper
             obj.t = t0;
             obj.n = 0;
 
-            obj.firstOrderTimeStepper = time.SBPInTimeImplicitFormulation(obj.AA, obj.BB, obj.ff, obj.k, obj.t, w0, TYPE, order, blockSize);
+            if do_scaling
+                scaling = [ones(m,1); sqrt(diag(C))];
+                obj.firstOrderTimeStepper = time.SBPInTimeScaled(obj.AA, obj.BB, obj.ff, obj.k, obj.t, w0, scaling, TYPE, order, blockSize);
+            else
+                obj.firstOrderTimeStepper = time.SBPInTimeImplicitFormulation(obj.AA, obj.BB, obj.ff, obj.k, obj.t, w0, TYPE, order, blockSize);
+            end
         end
 
         function [v,t] = getV(obj)

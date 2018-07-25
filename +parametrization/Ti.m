@@ -21,16 +21,29 @@ classdef Ti
             D = g4(0);
 
             function o = S_fun(u,v)
+                if isrow(u) && isrow(v)
+                    flipped = false;
+                else
+                    flipped = true;
+                    u = u';
+                    v = v';
+                end
+
                 x1 = g1(u);
                 x2 = g2(v);
                 x3 = g3(1-u);
                 x4 = g4(1-v);
-                o1 = (1-v).*x1(1,:) + u.*x2(1,:) + v.*x3(1,:) + (1-u).*x4(1,:) ...
-                    -((1-u)*(1-v).*A(1,:) + u*(1-v).*B(1,:) + u*v.*C(1,:) + (1-u)*v.*D(1,:));
-                o2 = (1-v).*x1(2,:) + u.*x2(2,:) + v.*x3(2,:) + (1-u).*x4(2,:) ...
-                    -((1-u)*(1-v).*A(2,:) + u*(1-v).*B(2,:) + u*v.*C(2,:) + (1-u)*v.*D(2,:));
 
-                o = [o1;o2];
+                o1 = (1-v).*x1(1,:) + u.*x2(1,:) + v.*x3(1,:) + (1-u).*x4(1,:) ...
+                    -((1-u).*(1-v).*A(1,:) + u.*(1-v).*B(1,:) + u.*v.*C(1,:) + (1-u).*v.*D(1,:));
+                o2 = (1-v).*x1(2,:) + u.*x2(2,:) + v.*x3(2,:) + (1-u).*x4(2,:) ...
+                    -((1-u).*(1-v).*A(2,:) + u.*(1-v).*B(2,:) + u.*v.*C(2,:) + (1-u).*v.*D(2,:));
+
+                if ~flipped
+                    o = [o1;o2];
+                else
+                    o = [o1'; o2'];
+                end
             end
 
             obj.S = @S_fun;
@@ -116,13 +129,13 @@ classdef Ti
             S = obj.S;
 
             if(nu>2 || nv>2)
-                h_grid = obj.plot(nu,nv);
-                set(h_grid,'Color',[0 0.4470 0.7410]);
+                h.grid = obj.plot(nu,nv);
+                set(h.grid,'Color',[0 0.4470 0.7410]);
             end
 
-            h_bord = obj.plot(2,2);
-            set(h_bord,'Color',[0.8500 0.3250 0.0980]);
-            set(h_bord,'LineWidth',2);
+            h.border = obj.plot(2,2);
+            set(h.border,'Color',[0.8500 0.3250 0.0980]);
+            set(h.border,'LineWidth',2);
         end
 
 

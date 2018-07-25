@@ -181,8 +181,8 @@ classdef Curve
         end
 
         function D = mirror(C, a, b)
-            assert_size(a,[2,1]);
-            assert_size(b,[2,1]);
+            assertSize(a,[2,1]);
+            assertSize(b,[2,1]);
 
             g = C.g;
             gp = C.gp;
@@ -219,8 +219,8 @@ classdef Curve
         end
 
         function D = rotate(C,a,rad)
-            assert_size(a, [2,1]);
-            assert_size(rad, [1,1]);
+            assertSize(a, [2,1]);
+            assertSize(rad, [1,1]);
             g = C.g;
             gp = C.gp;
 
