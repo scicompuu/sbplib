@@ -10,6 +10,10 @@ classdef Color
         black     = [0.000 0.000 0.000];
         white     = [1.000 1.000 1.000];
         colors = { Color.blue, Color.red, Color.yellow, Color.green, Color.purple, Color.lightblue, Color.darkred, Color.black, Color.white};
+        markers = {'+', 'o', '*', '.', 'x', 'square', 'diamond', 'v', '^', '>', '<', 'pentagram', 'hexagram'};
+        lineStyles = {'-', '--', ':', '-.'};
+
+        solidMarkers = {'o', 'square', 'diamond', 'v', 'pentagram', '^', '>', '<', 'hexagram'};
 
         notabilityYellow     = [100.0   99.0    22.0    ]/100;
         notabilityOrange     = [97.0    61.0    15.0    ]/100;
@@ -34,13 +38,11 @@ classdef Color
 
     methods(Static)
         function sample()
-            markers ={'+', 'o', '*', '.', 'x', 'square', 'diamond', 'v', '^', '>', '<', 'pentagram', 'hexagram'};
             % Filled and non-filled markers?
-            lineStyles = {'-', '--', ':', '-.'};
 
 
             function showMarkers(x0, y0, lx, ly, color, filled)
-                n = length(markers);
+                n = length(Color.markers);
                 s = ceil(sqrt(n));
 
                 x = linspace(x0, x0 + lx, s);
@@ -50,7 +52,7 @@ classdef Color
 
                 for i = 1:n
                     lh = line(X(i),Y(i));
-                    lh.Marker = markers{i};
+                    lh.Marker = Color.markers{i};
                     lh.MarkerSize = 12;
                     lh.Color = color;
 
@@ -79,13 +81,13 @@ classdef Color
             end
 
             function showLines(y0, ly, A, w)
-                n = length(lineStyles);
+                n = length(Color.lineStyles);
                 x = linspace(0,1,100);
                 y = linspace(y0, y0+ ly, n);
                 for i = 1:n
                     lh = line(x, y(i) + A*sin(pi*x*w));
                     lh.LineWidth = 2;
-                    lh.LineStyle = lineStyles{i};
+                    lh.LineStyle = Color.lineStyles{i};
                 end
             end
 

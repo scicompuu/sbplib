@@ -4,28 +4,36 @@ classdef TextTable < handle
         fmtArray
         vertDiv
         horzDiv
-
-        nCols
-        nRows
     end
 
     methods
-        function obj = TextTable(data, vertDiv, horzDiv);
+        function obj = TextTable(data, vertDiv, horzDiv)
             default_arg('vertDiv', []);
             default_arg('horzDiv', []);
-
 
             obj.data = data;
             obj.vertDiv = vertDiv;
             obj.horzDiv = horzDiv;
 
-            [obj.nRows, obj.nCols] = size(data);
             obj.fmtArray = cell(size(data));
             obj.formatAll('%s');
 
         end
 
+        function n = nRows(obj)
+            n = size(obj.data, 1);
+        end
+
+        function n = nCols(obj)
+            n = size(obj.data, 2);
+        end
+
+        function print(obj)
+            disp(obj.toString());
+        end
+
         function formatAll(obj, fmt)
+            obj.fmtArray = cell(size(obj.data));
             obj.fmtArray(:,:) = {fmt};
         end
 
@@ -58,28 +66,31 @@ classdef TextTable < handle
 
             str = '';
 
+            N = size(strArray, 2);
+
             % First horzDiv
-            if ismember(0, obj.horzDiv)
+            if isDiv(0, obj.horzDiv, N);
                 str = [str, obj.getHorzDiv(widths)];
             end
 
             for i = 1:obj.nRows
-                str = [str, TextTable.rowToString(strArray(i,:), widths, obj.vertDiv, obj.horzDiv)];
+                str = [str, TextTable.rowToString(strArray(i,:), widths, obj.vertDiv)];
 
                 % Interior horzDiv
-                if ismember(i, obj.horzDiv)
+                if isDiv(i, obj.horzDiv, N)
                     str = [str, obj.getHorzDiv(widths)];
                 end
             end
         end
 
         function str = getHorzDiv(obj, widths)
-            str = TextTable.rowToString(cell(1,obj.nCols), widths, obj.vertDiv, obj.horzDiv);
+            str = TextTable.rowToString(cell(1,obj.nCols), widths, obj.vertDiv);
             str(find(' ' == str)) = '-';
             str(find('|' == str)) = '+';
         end
 
         function strArray = getStringArray(obj)
+            assert(all(size(obj.data) == size(obj.fmtArray)), 'Sizes of format matrix and data matrix do not match.')
             strArray = cell(size(obj.data));
 
             for i = 1:obj.nRows
@@ -91,32 +102,42 @@ classdef TextTable < handle
     end
 
     methods (Static)
-        function str = rowToString(strs, widths, vertDiv, horzDiv)
+        function str = rowToString(strs, widths, vertDiv)
+            N = length(strs);
+
             % First vertDiv
-            if ismember(0, vertDiv)
-                str = '| ';
+            if isDiv(0, vertDiv, N)
+                prefix = '| ';
             else
-                str = ' ';
+                prefix = ' ';
             end
 
-            % Interior cols
-            for j = 1:length(strs) - 1
-                str = [str, sprintf('%*s ', widths(j), strs{j})];
+            % Pad strings
+            for i = 1:N
+                strs{i} = sprintf('%*s', widths(i), strs{i});
+            end
 
-                % Interior vertDiv
-                if ismember(j, vertDiv)
-                    str = [str, '| '];
+            % Column delimiters
+            delims = cell(1,N-1);
+            for i = 1:length(delims)
+                if isDiv(i, vertDiv, N);
+                    delims{i} = '| ';
+                else
+                    delims{i} = ' ';
                 end
             end
 
-            % Last col
-            str = [str, sprintf('%*s ', widths(end), strs{end})];
-
-            if ismember(length(strs), vertDiv)
-                str = [str, '|'];
+            if isDiv(N, vertDiv, N);
+                suffix = '|';
+            else
+                suffix = '';
             end
 
-            str = [str, sprintf('\n')];
+            str = [prefix, strjoin(strs, delims), suffix, sprintf('\n')];
         end
     end
+end
+
+function b = isDiv(i, div, N)
+    b = ismember(i, div) || ismember(i, N+div+1);
 end

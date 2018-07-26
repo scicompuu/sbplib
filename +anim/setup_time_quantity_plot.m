@@ -16,7 +16,7 @@ function [update_data, plot_handles] = setup_time_quantity_plot(yfun)
         if ishandle(axis_handle)
             % t = [t t_now];
             for j = 1:length(yfun)
-                addpoints(plot_handles(j),t_now,yfun{j}(varargin{:}));
+                addpoints(plot_handles(j),t_now,full(yfun{j}(varargin{:})));
             end
 
             [t,~] = getpoints(plot_handles(1));

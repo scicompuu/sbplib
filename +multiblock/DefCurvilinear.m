@@ -48,13 +48,14 @@ classdef DefCurvilinear < multiblock.Definition
             g = multiblock.Grid(grids, obj.connections, obj.boundaryGroups);
         end
 
-        function show(obj, label, gridLines, varargin)
+        function h = show(obj, label, gridLines, varargin)
             default_arg('label', 'name')
             default_arg('gridLines', false);
 
+            h = [];
             if isempty('label') && ~gridLines
                 for i = 1:obj.nBlocks
-                    obj.blockMaps{i}.show(2,2);
+                    h = [h, obj.blockMaps{i}.show(2,2)];
                 end
                 axis equal
                 return
@@ -63,7 +64,7 @@ classdef DefCurvilinear < multiblock.Definition
             if gridLines
                 ms = obj.getGridSizes(varargin{:});
                 for i = 1:obj.nBlocks
-                    obj.blockMaps{i}.show(ms{i}(1),ms{i}(2));
+                    h = [h, obj.blockMaps{i}.show(ms{i}(1),ms{i}(2))];
                 end
             end
 
@@ -76,7 +77,7 @@ classdef DefCurvilinear < multiblock.Definition
                     for i = 1:obj.nBlocks
                         labels{i} = num2str(i);
                     end
-                otherwise
+                case 'none'
                     axis equal
                     return
             end
