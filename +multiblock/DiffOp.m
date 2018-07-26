@@ -164,9 +164,6 @@ classdef DiffOp < scheme.Scheme
                     for i = 1:length(boundary)
                         [closurePart, penaltyPart] = obj.boundary_condition(boundary{i}, type);
                         closure = closure + closurePart;
-                        if iscell(penaltyPart)
-                            penaltyPart = blockmatrix.toMatrix(penaltyPart);
-                        end
                         penalty = [penalty, penaltyPart];
                     end
                 otherwise
