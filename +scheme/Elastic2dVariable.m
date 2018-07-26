@@ -269,17 +269,17 @@ classdef Elastic2dVariable < scheme.Scheme
         % Closure functions return the operators applied to the own domain to close the boundary
         % Penalty functions return the operators to force the solution. In the case of an interface it returns the operator applied to the other doamin.
         %       boundary            is a string specifying the boundary e.g. 'l','r' or 'e','w','n','s'.
-        %       type                is a cell array of strings specifying the type of boundary condition for each component.
+        %       bc                  is a cell array of component and bc type, e.g. {1, 'd'} for Dirichlet condition
+        %                           on the first component.               
         %       data                is a function returning the data that should be applied at the boundary.
         %       neighbour_scheme    is an instance of Scheme that should be interfaced to.
         %       neighbour_boundary  is a string specifying which boundary to interface to.
-        function [closure, penalty] = boundary_condition(obj, boundary, type, tuning)
-            default_arg('type',{'free','free'});
+        function [closure, penalty] = boundary_condition(obj, boundary, bc, tuning)
             default_arg('tuning', 1.2);
 
-            if ~iscell(type)
-                type = {type, type};
-            end
+            assert( iscell(bc), 'The BC type must be a 2x1 cell array' );
+            comp = bc{1};
+            type = bc{2};
 
             % j is the coordinate direction of the boundary
             j = obj.get_boundary_number(boundary);
@@ -296,51 +296,46 @@ classdef Elastic2dVariable < scheme.Scheme
 
             % Preallocate
             closure = sparse(dim*m_tot, dim*m_tot);
-            penalty = cell(dim,1);
-            for k = 1:dim
-                penalty{k} = sparse(dim*m_tot, m_tot/obj.m(j));
-            end
+            penalty = sparse(dim*m_tot, m_tot/obj.m(j));
 
-            % Loop over components that we (potentially) have different BC on
-            for k = 1:dim
-                switch type{k}
+            k = comp;
+            switch type
 
-                % Dirichlet boundary condition
-                case {'D','d','dirichlet','Dirichlet'}
+            % Dirichlet boundary condition
+            case {'D','d','dirichlet','Dirichlet'}
 
-                    phi = obj.phi{j};
-                    h = obj.h(j);
-                    h11 = obj.H11{j}*h;
-                    gamma = obj.gamma{j};
+                phi = obj.phi{j};
+                h = obj.h(j);
+                h11 = obj.H11{j}*h;
+                gamma = obj.gamma{j};
 
-                    a_lambda = dim/h11 + 1/(h11*phi);
-                    a_mu_i = 2/(gamma*h);
-                    a_mu_ij = 2/h11 + 1/(h11*phi);
+                a_lambda = dim/h11 + 1/(h11*phi);
+                a_mu_i = 2/(gamma*h);
+                a_mu_ij = 2/h11 + 1/(h11*phi);
 
-                    d = @kroneckerDelta;  % Kronecker delta
-                    db = @(i,j) 1-d(i,j); % Logical not of Kronecker delta
-                    alpha = @(i,j) tuning*( d(i,j)* a_lambda*LAMBDA ...
-                                          + d(i,j)* a_mu_i*MU ...
-                                          + db(i,j)*a_mu_ij*MU ); 
+                d = @kroneckerDelta;  % Kronecker delta
+                db = @(i,j) 1-d(i,j); % Logical not of Kronecker delta
+                alpha = @(i,j) tuning*( d(i,j)* a_lambda*LAMBDA ...
+                                      + d(i,j)* a_mu_i*MU ...
+                                      + db(i,j)*a_mu_ij*MU ); 
 
-                    % Loop over components that Dirichlet penalties end up on
-                    for i = 1:dim
-                        C = T{k,i};
-                        A = -d(i,k)*alpha(i,j);
-                        B = A + C;
-                        closure = closure + E{i}*RHOi*Hi*B'*e*H_gamma*(e'*E{k}' ); 
-                        penalty{k} = penalty{k} - E{i}*RHOi*Hi*B'*e*H_gamma;
-                    end 
+                % Loop over components that Dirichlet penalties end up on
+                for i = 1:dim
+                    C = T{k,i};
+                    A = -d(i,k)*alpha(i,j);
+                    B = A + C;
+                    closure = closure + E{i}*RHOi*Hi*B'*e*H_gamma*(e'*E{k}' ); 
+                    penalty = penalty - E{i}*RHOi*Hi*B'*e*H_gamma;
+                end 
 
-                % Free boundary condition
-                case {'F','f','Free','free','traction','Traction','t','T'}
-                        closure = closure - E{k}*RHOi*Hi*e*H_gamma* (e'*tau{k} ); 
-                        penalty{k} = penalty{k} + E{k}*RHOi*Hi*e*H_gamma;
+            % Free boundary condition
+            case {'F','f','Free','free','traction','Traction','t','T'}
+                    closure = closure - E{k}*RHOi*Hi*e*H_gamma* (e'*tau{k} ); 
+                    penalty = penalty + E{k}*RHOi*Hi*e*H_gamma;
 
-                % Unknown boundary condition
-                otherwise
-                    error('No such boundary condition: type = %s',type);
-                end
+            % Unknown boundary condition
+            otherwise
+                error('No such boundary condition: type = %s',type);
             end
         end
 
