@@ -30,7 +30,7 @@ function [H, HI, D1, D2, e_l, e_r, d1_l, d1_r] = d2_variable_periodic_4(m,h)
 
     scheme_width = 5;
     scheme_radius = (scheme_width-1)/2;
-    
+
     r = 1:m;
     offset = scheme_width;
     r = r + offset;
@@ -47,7 +47,7 @@ function [H, HI, D1, D2, e_l, e_r, d1_l, d1_r] = d2_variable_periodic_4(m,h)
 
         vals = -[Mm2,Mm1,M0,Mp1,Mp2];
         diags = -scheme_radius : scheme_radius;
-        M = spdiagsVariablePeriodic(vals,diags); 
+        M = spdiagsPeriodic(vals,diags);
 
         M=M/h;
         D2=HI*(-M );

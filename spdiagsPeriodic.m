@@ -1,4 +1,4 @@
-function A = spdiagsVariablePeriodic(vals,diags)
+function A = spdiagsPeriodic(vals,diags)
     % Creates an m x m periodic discretization matrix.
     % vals - m x ndiags matrix of values
     % diags - 1 x ndiags vector of the 'center diagonals' that vals end up on
