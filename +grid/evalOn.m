@@ -13,7 +13,7 @@ function gf = evalOn(g, func)
         return
     end
     % func should now be a function_handle
-    assert(g.D == nargin(func),'grid:evalOn:WrongNumberOfInputs', 'The number of inputs of the function must match the dimension of the domain.')
+    assert(g.D == nargin(func) || nargin(func) < 0,'grid:evalOn:WrongNumberOfInputs', 'The number of inputs of the function must match the dimension of the domain.')
 
     x = num2cell(g.points(),1);
     k = numberOfComponents(func);
