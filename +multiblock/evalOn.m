@@ -2,7 +2,7 @@
 % f: cell array of function handles fi
 % f_i = f_i(x1,y,...,t)
 % t: time point. If not specified, it is assumed that the functions take only spatial arguments.
-function gf = blockEvalOn(g, f, t)
+function gf = evalOn(g, f, t)
 default_arg('t',[]);
 
 grids = g.grids;
