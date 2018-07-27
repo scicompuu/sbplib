@@ -18,16 +18,8 @@ function gf = evalOn(g, f, t)
             gf{i} = grid.evalOn(grids{i}, f{i});
         end
     else
-        dim = nargin(f{1}) - 1;
         for i = 1:nBlocks
-            switch dim
-                case 1
-                    gf{i} = grid.evalOn(grids{i}, @(x)f{i}(t,x));
-                case 2
-                    gf{i} = grid.evalOn(grids{i}, @(x,y)f{i}(t,x,y));
-                case 3
-                    gf{i} = grid.evalOn(grids{i}, @(x,y,z)f{i}(t,x,y,z));
-            end
+            gf{i} = grid.evalOn(grids{i}, @(varargin)f{i}(t,varargin{:}));
         end
     end
 
