@@ -63,6 +63,9 @@ end
 % Borde man dela upp bcSetup i bcSetupSymbolic(name?) och bcSetupGridData
 % och sen skriva en wrapper som sorterar och wrappar de två andra??
 
+% Borde man ha en separat funktion för closure penalty generering
+% och en separat för att bygga ihop penaltyn med data?
+
 % Erbjuda en separat function for att validera en bc specifikation?
 %  alltid kräva alla fields?
 %  literal struct improvement?
