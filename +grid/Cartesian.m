@@ -28,7 +28,11 @@ classdef Cartesian < grid.Structured
             end
 
             obj.h = [];
-            obj.lim = [];
+
+            obj.lim = cell(1,obj.d);
+            for i = 1:obj.d
+                obj.lim{i} = {obj.x{i}(1), obj.x{i}(end)};
+            end
         end
         % n returns the number of points in the grid
         function o = N(obj)
