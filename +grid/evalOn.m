@@ -16,15 +16,15 @@ function gf = evalOn(g, func)
     assert(g.D == nargin(func) || nargin(func) < 0,'grid:evalOn:WrongNumberOfInputs', 'The number of inputs of the function must match the dimension of the domain.')
 
     x = num2cell(g.points(),1);
-    k = numberOfComponents(func);
+    k = numberOfComponents(func, g.D);
 
     gf = func(x{:});
     gf = reorderComponents(gf, k);
 end
 
 % Find the number of vector components of func
-function k = numberOfComponents(func)
-    x0 = num2cell(ones(1,nargin(func)));
+function k = numberOfComponents(func, dim)
+    x0 = num2cell(ones(1, dim));
     f0 = func(x0{:});
     assert(size(f0,2) == 1, 'grid:evalOn:VectorValuedWrongDim', 'A vector valued function must be given as a column vector');
     k = length(f0);
