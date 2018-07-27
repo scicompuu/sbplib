@@ -28,7 +28,7 @@ function [closure, S] = bcSetup(diffOp, bcs, S_sign)
         [localClosure, penalty] = diffOp.boundary_condition(bcs{i}.boundary, bcs{i}.type);
         closure = closure + localClosure;
 
-        [ok, isSym, data] = parseData(bcs{i}, penalty, diffOp.grid)
+        [ok, isSym, data] = parseData(bcs{i}, penalty, diffOp.grid);
 
         if ~ok
             % There was no data
@@ -36,9 +36,9 @@ function [closure, S] = bcSetup(diffOp, bcs, S_sign)
         end
 
         if isSym
-            gridData{end+1} = data;
-        else
             symbolicData{end+1} = data;
+        else
+            gridData{end+1} = data;
         end
     end
 
@@ -83,14 +83,14 @@ function verifyBcFormat(bcs, diffOp)
             error('bcs{%d}.data should be a function of time or a function of time and space',i);
         end
 
-        b = diffOp.grid.getBoundary(bc.boundart);
+        b = diffOp.grid.getBoundary(bcs{i}.boundary);
 
         dim = size(b,2);
 
-        if nargin(bc.data) == 1
+        if nargin(bcs{i}.data) == 1
             % Grid data (only function of time)
-            assertSize(bc.data(0), 1, size(b));
-        elseif nargin(bc.data) ~= 1+dim
+            assertSize(bcs{i}.data(0), 1, size(b));
+        elseif nargin(bcs{i}.data) ~= 1+dim
            error('sbplib:scheme:bcSetup:DataWrongNumberOfArguments', 'bcs{%d}.data has the wrong number of input arguments. Must be either only time or time and space.', i);
         end
     end

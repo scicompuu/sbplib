@@ -5,6 +5,7 @@ classdef Cartesian < grid.Structured
         m % Number of points in each direction
         x % Cell array of vectors with node placement for each dimension.
         h % Spacing/Scaling
+        lim % Cell array of left and right boundaries for each dimension.
     end
 
     % General d dimensional grid with n points
@@ -27,6 +28,11 @@ classdef Cartesian < grid.Structured
             end
 
             obj.h = [];
+
+            obj.lim = cell(1,obj.d);
+            for i = 1:obj.d
+                obj.lim{i} = {obj.x{i}(1), obj.x{i}(end)};
+            end
         end
         % n returns the number of points in the grid
         function o = N(obj)
