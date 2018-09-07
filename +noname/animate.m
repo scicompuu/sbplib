@@ -1,14 +1,18 @@
-% hand = noname.animate(discretization, time_modifier, Tend, dirname, opt)
+% noname.animate(discretization, time_modifier, Tend, dirname, opt)
 %
 % Example:
 %      noname.animate(discr,timemodifier,tend)
 %      noname.animate(discr,1, [tstart tend],'my_mov', opt)
 
-function hand = animate(discretization, time_modifier, Tend, dirname, opt)
-    default_arg('time_modifier',1);
+function animate(discretization, time_modifier, Tend, dirname, opt)
+    default_arg('time_modifier', 1);
     default_arg('Tend', Inf);
-    default_arg('dirname','');
-    default_arg('opt', []);
+    default_arg('dirname', '');
+
+    optDefault.plotType = 'animation';
+    optDefault.time = [];
+
+    default_struct('opt', optDefault);
 
 
     if time_modifier < 0
@@ -34,7 +38,7 @@ function hand = animate(discretization, time_modifier, Tend, dirname, opt)
     fprintf('m        : %d\n',size(discretization));
 
 
-    ts = discretization.getTimestepper(opt);
+    ts = discretization.getTimestepper(opt.time);
 
     if numel(Tend) == 2
         Tstart = Tend(1);
@@ -50,7 +54,7 @@ function hand = animate(discretization, time_modifier, Tend, dirname, opt)
         Tstart = start_solution.t;
     end
 
-    [update, figure_handle] = discretization.setupPlot('animation');
+    [update, figure_handle] = discretization.setupPlot(opt.plotType);
     if makemovies
         save_frame = anim.setup_fig_mov(figure_handle,dirname);
     end
@@ -83,7 +87,8 @@ function hand = animate(discretization, time_modifier, Tend, dirname, opt)
         pause
         anim.animate(@G, Tstart, Tend, time_modifier);
     else
-        while true
+        pause
+        while ts.t < Tend
             ts.step();
             sol = discretization.getTimeSnapshot(ts);
             update(sol);

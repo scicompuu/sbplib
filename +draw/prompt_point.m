@@ -1,22 +1,23 @@
-function [p, button] = prompt_point(s,varargin)
+function [p, button] = prompt_point(s, varargin)
     default_arg('s',[])
 
     set(gcf,'Pointer','crosshair')
 
     if ~isempty(s)
-        fprintf(s,varargin{:});
+        fprintf(s, varargin{:});
     end
 
-    a = gca;
+    fh = gcf();
+    ah = gca();
 
-    function get_point(src,event)
-        cp = a.CurrentPoint;
+    function get_point(src, event)
+        cp = ah.CurrentPoint;
         p = cp(1,1:2)';
-        a.ButtonDownFcn = [];
+        fh.WindowButtonUpFcn = [];
     end
 
-    a.ButtonDownFcn = @get_point;
-    waitfor(a,'ButtonDownFcn', [])
+    fh.WindowButtonUpFcn = @get_point;
+    waitfor(fh,'WindowButtonUpFcn', [])
 
     set(gcf,'Pointer','arrow')
 

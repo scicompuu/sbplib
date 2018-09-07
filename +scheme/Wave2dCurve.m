@@ -2,9 +2,9 @@ classdef Wave2dCurve < scheme.Scheme
     properties
         m % Number of points in each direction, possibly a vector
         h % Grid spacing
-        u,v % Grid
-        x,y % Values of x and y for each grid point
-        X,Y % Grid point locations as matrices
+
+        grid
+
         order % Order accuracy for the approximation
 
         D % non-stabalized scheme operator
@@ -26,24 +26,32 @@ classdef Wave2dCurve < scheme.Scheme
         du_n, dv_n
         gamm_u, gamm_v
         lambda
+
+        Dx, Dy % Physical derivatives
+
+        x_u
+        x_v
+        y_u
+        y_v
     end
 
     methods
-        function obj = Wave2dCurve(m,ti,order,c,opSet)
+        function obj = Wave2dCurve(g ,order, c, opSet)
             default_arg('opSet',@sbp.D2Variable);
             default_arg('c', 1);
 
-            if length(m) == 1
-                m = [m m];
-            end
+            warning('Use LaplaceCruveilinear instead')
 
+            assert(isa(g, 'grid.Curvilinear'))
+
+            m = g.size();
             m_u = m(1);
             m_v = m(2);
-            m_tot = m_u*m_v;
+            m_tot = g.N();
 
-            [u, h_u] = util.get_grid(0, 1, m_u);
-            [v, h_v] = util.get_grid(0, 1, m_v);
-
+            h = g.scaling();
+            h_u = h(1);
+            h_v = h(2);
 
             % Operators
             ops_u = opSet(m_u, {0, 1}, order);
@@ -52,65 +60,63 @@ classdef Wave2dCurve < scheme.Scheme
             I_u = speye(m_u);
             I_v = speye(m_v);
 
-            D1_u = sparse(ops_u.D1);
+            D1_u = ops_u.D1;
             D2_u = ops_u.D2;
-            H_u =  sparse(ops_u.H);
-            Hi_u = sparse(ops_u.HI);
-            % M_u =  sparse(ops_u.M);
-            e_l_u = sparse(ops_u.e_l);
-            e_r_u = sparse(ops_u.e_r);
-            d1_l_u = sparse(ops_u.d1_l);
-            d1_r_u = sparse(ops_u.d1_r);
+            H_u =  ops_u.H;
+            Hi_u = ops_u.HI;
+            e_l_u = ops_u.e_l;
+            e_r_u = ops_u.e_r;
+            d1_l_u = ops_u.d1_l;
+            d1_r_u = ops_u.d1_r;
 
-            D1_v = sparse(ops_v.D1);
+            D1_v = ops_v.D1;
             D2_v = ops_v.D2;
-            H_v =  sparse(ops_v.H);
-            Hi_v = sparse(ops_v.HI);
-            % M_v =  sparse(ops_v.M);
-            e_l_v = sparse(ops_v.e_l);
-            e_r_v = sparse(ops_v.e_r);
-            d1_l_v = sparse(ops_v.d1_l);
-            d1_r_v = sparse(ops_v.d1_r);
+            H_v =  ops_v.H;
+            Hi_v = ops_v.HI;
+            e_l_v = ops_v.e_l;
+            e_r_v = ops_v.e_r;
+            d1_l_v = ops_v.d1_l;
+            d1_r_v = ops_v.d1_r;
+
+            Du = kr(D1_u,I_v);
+            Dv = kr(I_u,D1_v);
 
             % Metric derivatives
-            [X,Y] = ti.map(u,v);
+            coords = g.points();
+            x = coords(:,1);
+            y = coords(:,2);
 
-            [x_u,x_v] = gridDerivatives(X,D1_u,D1_v);
-            [y_u,y_v] = gridDerivatives(Y,D1_u,D1_v);
-
-
+            x_u = Du*x;
+            x_v = Dv*x;
+            y_u = Du*y;
+            y_v = Dv*y;
 
             J = x_u.*y_v - x_v.*y_u;
-            a11 =  1./J .* (x_v.^2  + y_v.^2);  %% GÖR SOM MATRISER
+            a11 =  1./J .* (x_v.^2  + y_v.^2);
             a12 = -1./J .* (x_u.*x_v + y_u.*y_v);
             a22 =  1./J .* (x_u.^2  + y_u.^2);
             lambda = 1/2 * (a11 + a22 - sqrt((a11-a22).^2 + 4*a12.^2));
 
-            dof_order = reshape(1:m_u*m_v,m_v,m_u);
+            % Assemble full operators
+            L_12 = spdiags(a12, 0, m_tot, m_tot);
+            Duv = Du*L_12*Dv;
+            Dvu = Dv*L_12*Du;
 
             Duu = sparse(m_tot);
             Dvv = sparse(m_tot);
+            ind = grid.funcToMatrix(g, 1:m_tot);
 
             for i = 1:m_v
-                D = D2_u(a11(i,:));
-                p = dof_order(i,:);
+                D = D2_u(a11(ind(:,i)));
+                p = ind(:,i);
                 Duu(p,p) = D;
             end
 
             for i = 1:m_u
-                D = D2_v(a22(:,i));
-                p = dof_order(:,i);
+                D = D2_v(a22(ind(i,:)));
+                p = ind(i,:);
                 Dvv(p,p) = D;
             end
-
-            L_12 = spdiags(a12(:),0,m_tot,m_tot);
-            Du = kr(D1_u,I_v);
-            Dv = kr(I_u,D1_v);
-
-            Duv = Du*L_12*Dv;
-            Dvu = Dv*L_12*Du;
-
-
 
             obj.H = kr(H_u,H_v);
             obj.Hi = kr(Hi_u,Hi_v);
@@ -119,7 +125,6 @@ classdef Wave2dCurve < scheme.Scheme
             obj.Hiu = kr(Hi_u,I_v);
             obj.Hiv = kr(I_u,Hi_v);
 
-            % obj.M = kr(M_u,H_v)+kr(H_u,M_v);
             obj.e_w  = kr(e_l_u,I_v);
             obj.e_e  = kr(e_r_u,I_v);
             obj.e_s  = kr(I_u,e_l_v);
@@ -133,28 +138,30 @@ classdef Wave2dCurve < scheme.Scheme
             obj.du_n = (obj.e_n'*Du)';
             obj.dv_n = kr(I_u,d1_r_v);
 
+            obj.x_u = x_u;
+            obj.x_v = x_v;
+            obj.y_u = y_u;
+            obj.y_v = y_v;
+
             obj.m = m;
             obj.h = [h_u h_v];
             obj.order = order;
-
+            obj.grid = g;
 
             obj.c = c;
-            obj.J = spdiags(J(:),0,m_tot,m_tot);
-            obj.Ji = spdiags(1./J(:),0,m_tot,m_tot);
+            obj.J = spdiags(J, 0, m_tot, m_tot);
+            obj.Ji = spdiags(1./J, 0, m_tot, m_tot);
             obj.a11 = a11;
             obj.a12 = a12;
             obj.a22 = a22;
             obj.D = obj.Ji*c^2*(Duu + Duv + Dvu + Dvv);
-            obj.u = u;
-            obj.v = v;
-            obj.X = X;
-            obj.Y = Y;
-            obj.x = X(:);
-            obj.y = Y(:);
             obj.lambda = lambda;
 
-            obj.gamm_u = h_u*ops_u.borrowing.M.S;
-            obj.gamm_v = h_v*ops_v.borrowing.M.S;
+            obj.Dx = spdiag( y_v./J)*Du + spdiag(-y_u./J)*Dv;
+            obj.Dy = spdiag(-x_v./J)*Du + spdiag( x_u./J)*Dv;
+
+            obj.gamm_u = h_u*ops_u.borrowing.M.d1;
+            obj.gamm_v = h_v*ops_v.borrowing.M.d1;
         end
 
 
@@ -165,12 +172,11 @@ classdef Wave2dCurve < scheme.Scheme
         %       data                is a function returning the data that should be applied at the boundary.
         %       neighbour_scheme    is an instance of Scheme that should be interfaced to.
         %       neighbour_boundary  is a string specifying which boundary to interface to.
-        function [closure, penalty] = boundary_condition(obj,boundary,type,data)
+        function [closure, penalty] = boundary_condition(obj, boundary, type, parameter)
             default_arg('type','neumann');
-            default_arg('data',0);
+            default_arg('parameter', []);
 
-            [e, d_n, d_t, coeff_n, coeff_t, s, gamm, halfnorm_inv] = obj.get_boundary_ops(boundary);
-
+            [e, d_n, d_t, coeff_n, coeff_t, s, gamm, halfnorm_inv  ,              ~,          ~, ~, scale_factor] = obj.get_boundary_ops(boundary);
             switch type
                 % Dirichlet boundary condition
                 case {'D','d','dirichlet'}
@@ -190,27 +196,18 @@ classdef Wave2dCurve < scheme.Scheme
                     b2 = gamm*u.lambda./u.a22.^2;
 
                     tau  = -1./b1 - 1./b2;
-                    tau = tuning * spdiag(tau(:));
-                    sig1 = 1/2;
+                    tau = tuning * spdiag(tau);
+                    sig1 = 1;
 
                     penalty_parameter_1 = halfnorm_inv_n*(tau + sig1*halfnorm_inv_t*F*e'*halfnorm_t)*e;
 
                     closure = obj.Ji*obj.c^2 * penalty_parameter_1*e';
-                    pp = -obj.Ji*obj.c^2 * penalty_parameter_1;
-                    switch class(data)
-                        case 'double'
-                            penalty = pp*data;
-                        case 'function_handle'
-                            penalty = @(t)pp*data(t);
-                        otherwise
-                            error('Weird data argument!')
-                    end
+                    penalty = -obj.Ji*obj.c^2 * penalty_parameter_1;
 
 
                 % Neumann boundary condition
                 case {'N','n','neumann'}
                     c = obj.c;
-
 
                     a_n = spdiags(coeff_n,0,length(coeff_n),length(coeff_n));
                     a_t = spdiags(coeff_t,0,length(coeff_t),length(coeff_t));
@@ -221,16 +218,24 @@ classdef Wave2dCurve < scheme.Scheme
                     tau = c.^2 * obj.Ji*(tau1*e + tau2*d);
 
                     closure = halfnorm_inv*tau*d';
+                    penalty = -halfnorm_inv*tau;
 
-                    pp = halfnorm_inv*tau;
-                    switch class(data)
-                        case 'double'
-                            penalty = pp*data;
-                        case 'function_handle'
-                            penalty = @(t)pp*data(t);
-                        otherwise
-                            error('Weird data argument!')
-                    end
+                % Characteristic boundary condition
+                case {'characteristic', 'char', 'c'}
+                    default_arg('parameter', 1);
+                    beta = parameter;
+                    c = obj.c;
+
+                    a_n = spdiags(coeff_n,0,length(coeff_n),length(coeff_n));
+                    a_t = spdiags(coeff_t,0,length(coeff_t),length(coeff_t));
+                    d = s*(a_n * d_n' + a_t*d_t')'; % outward facing normal derivative
+
+                    tau = -c.^2 * 1/beta*obj.Ji*e;
+
+                    warning('is this right?! /c?')
+                    closure{1} = halfnorm_inv*tau/c*spdiag(scale_factor)*e';
+                    closure{2} = halfnorm_inv*tau*beta*d';
+                    penalty = -halfnorm_inv*tau;
 
                 % Unknown, boundary condition
                 otherwise
@@ -263,7 +268,7 @@ classdef Wave2dCurve < scheme.Scheme
             b2_v = gamm_v*v.lambda(I_v)./v.a22(I_v).^2;
 
             tau = -1./(4*b1_u) -1./(4*b1_v) -1./(4*b2_u) -1./(4*b2_v);
-            tau = tuning * spdiag(tau(:));
+            tau = tuning * spdiag(tau);
             sig1 = 1/2;
             sig2 = -1/2;
 
@@ -279,10 +284,12 @@ classdef Wave2dCurve < scheme.Scheme
         % The right boundary is considered the positive boundary
         %
         %  I -- the indecies of the boundary points in the grid matrix
-        function [e, d_n, d_t, coeff_n, coeff_t, s, gamm, halfnorm_inv_n, halfnorm_inv_t, halfnorm_t, I] = get_boundary_ops(obj,boundary)
+        function [e, d_n, d_t, coeff_n, coeff_t, s, gamm, halfnorm_inv_n, halfnorm_inv_t, halfnorm_t, I, scale_factor] = get_boundary_ops(obj, boundary)
 
-            gridMatrix = zeros(obj.m(2),obj.m(1));
-            gridMatrix(:) = 1:numel(gridMatrix);
+            % gridMatrix = zeros(obj.m(2),obj.m(1));
+            % gridMatrix(:) = 1:numel(gridMatrix);
+
+            ind = grid.funcToMatrix(obj.grid, 1:prod(obj.m));
 
             switch boundary
                 case 'w'
@@ -291,36 +298,40 @@ classdef Wave2dCurve < scheme.Scheme
                     d_t = obj.dv_w;
                     s = -1;
 
-                    I = gridMatrix(:,1);
+                    I = ind(1,:);
                     coeff_n = obj.a11(I);
                     coeff_t = obj.a12(I);
+                    scale_factor = sqrt(obj.x_v(I).^2 + obj.y_v(I).^2);
                 case 'e'
                     e = obj.e_e;
                     d_n = obj.du_e;
                     d_t = obj.dv_e;
                     s = 1;
 
-                    I = gridMatrix(:,end);
+                    I = ind(end,:);
                     coeff_n = obj.a11(I);
                     coeff_t = obj.a12(I);
+                    scale_factor = sqrt(obj.x_v(I).^2 + obj.y_v(I).^2);
                 case 's'
                     e = obj.e_s;
                     d_n = obj.dv_s;
                     d_t = obj.du_s;
                     s = -1;
 
-                    I = gridMatrix(1,:)';
+                    I = ind(:,1)';
                     coeff_n = obj.a22(I);
                     coeff_t = obj.a12(I);
+                    scale_factor = sqrt(obj.x_u(I).^2 + obj.y_u(I).^2);
                 case 'n'
                     e = obj.e_n;
                     d_n = obj.dv_n;
                     d_t = obj.du_n;
                     s = 1;
 
-                    I = gridMatrix(end,:)';
+                    I = ind(:,end)';
                     coeff_n = obj.a22(I);
                     coeff_t = obj.a12(I);
+                    scale_factor = sqrt(obj.x_u(I).^2 + obj.y_u(I).^2);
                 otherwise
                     error('No such boundary: boundary = %s',boundary);
             end
@@ -343,15 +354,6 @@ classdef Wave2dCurve < scheme.Scheme
             N = prod(obj.m);
         end
 
-    end
 
-    methods(Static)
-        % Calculates the matrcis need for the inteface coupling between boundary bound_u of scheme schm_u
-        % and bound_v of scheme schm_v.
-        %   [uu, uv, vv, vu] = inteface_couplong(A,'r',B,'l')
-        function [uu, uv, vv, vu] = interface_coupling(schm_u,bound_u,schm_v,bound_v)
-            [uu,uv] = schm_u.interface(bound_u,schm_v,bound_v);
-            [vv,vu] = schm_v.interface(bound_v,schm_u,bound_u);
-        end
     end
 end

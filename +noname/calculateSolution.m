@@ -13,7 +13,7 @@ function [] = calculateSolution(filename, name, discrHand, m, T_in, order, tsOpt
         fprintf('File ''%s'' already exist.',filename);
         do_append = yesnoQuestion('Do you want to append to it?');
         if ~do_append
-            fprintf('Exiting...\n');
+            fprintf('Exiting. No Solutions calculated.\n');
             return
         end
     end

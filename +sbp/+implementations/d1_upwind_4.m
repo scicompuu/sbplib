@@ -23,7 +23,7 @@ function [H, HI, Dp, Dm, e_1, e_m] = d1_upwind_4(m,h)
     ];
 
     Qp(1:4,1:4)=Q_U;
-    Qp(m-3:m,m-3:m)=rot90(Q_U,2)'; %%% This is different from standard SBP
+    Qp(m-3:m,m-3:m)=rot90(Q_U, 2)'; %%% This is different from standard SBP
 
     Qm=-Qp';
 

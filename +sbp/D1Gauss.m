@@ -37,5 +37,9 @@ classdef D1Gauss < sbp.OpSet
 
             obj.borrowing = [];
         end
+
+        function str = string(obj)
+            str = [class(obj) '_' num2str(obj.order)];
+        end
     end
 end

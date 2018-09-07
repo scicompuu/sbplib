@@ -5,6 +5,6 @@ function A = spdiag(a,i)
         a = a';
     end
 
-    n = length(a)-abs(i);
+    n = length(a)+abs(i);
     A = spdiags(a,i,n,n);
 end

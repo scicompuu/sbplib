@@ -22,8 +22,8 @@ function [C,h] = prompt_bezier(s,varargin)
     p.Color = Color.yellow;
     p.MarkerSize = 16;
 
-    C = grid.Curve.bezier(a,c1,c2,b);
-    fprintf('C = grid.Curve.bezier([%.3g; %.3g],[%.3g; %.3g],[%.3g; %.3g],[%.3g; %.3g]);\n',a,c1,c2,b)
+    C = parametrization.Curve.bezier(a,c1,c2,b);
+    fprintf('C = parametrization.Curve.bezier([%.3g; %.3g],[%.3g; %.3g],[%.3g; %.3g],[%.3g; %.3g]);\n',a,c1,c2,b)
     h = C.plot();
     uistack(h,'bottom');
 

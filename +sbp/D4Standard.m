@@ -28,7 +28,7 @@ classdef D4Standard < sbp.OpSet
 
     methods
         function obj = D4Standard(m,lim,order)
-            
+
             x_l = lim{1};
             x_r = lim{2};
             L = x_r-x_l;
@@ -55,6 +55,10 @@ classdef D4Standard < sbp.OpSet
 
             obj.m = m;
 
+        end
+
+        function str = string(obj)
+            str = [class(obj) '_' num2str(obj.order)];
         end
     end
 

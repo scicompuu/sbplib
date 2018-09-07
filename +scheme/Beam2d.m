@@ -1,10 +1,6 @@
 classdef Beam2d < scheme.Scheme
     properties
-        m % Number of points in each direction, possibly a vector
-        N % Number of points total
-        h % Grid spacing
-        u,v % Grid
-        x,y % Values of x and y for each grid point
+        grid
         order % Order accuracy for the approximation
 
         D % non-stabalized scheme operator
@@ -27,30 +23,29 @@ classdef Beam2d < scheme.Scheme
 
     methods
         function obj = Beam2d(m,lim,order,alpha,opsGen)
+            default_arg('alpha',1);
             default_arg('opsGen',@sbp.Higher);
-            default_arg('a',1);
 
-            if length(m) == 1
-                m = [m m];
+            if ~isa(grid, 'grid.Cartesian') || grid.D() ~= 2
+                error('Grid must be 2d cartesian');
             end
 
-            m_x = m(1);
-            m_y = m(2);
+            obj.grid = grid;
+            obj.alpha = alpha;
+            obj.order = order;
 
-            xlim = lim{1};
-            ylim = lim{2};
+            m_x = grid.m(1);
+            m_y = grid.m(2);
 
-            [x, h_x] = util.get_grid(xlim{:},m_x);
-            [y, h_y] = util.get_grid(ylim{:},m_y);
+            h = grid.scaling();
+            h_x = h(1);
+            h_y = h(2);
 
             ops_x = opsGen(m_x,h_x,order);
             ops_y = opsGen(m_y,h_y,order);
 
             I_x = speye(m_x);
             I_y = speye(m_y);
-
-
-
 
             D4_x = sparse(ops_x.derivatives.D4);
             H_x =  sparse(ops_x.norms.H);
@@ -105,16 +100,7 @@ classdef Beam2d < scheme.Scheme
             obj.d3_s = kr(I_x,d3_l_y);
             obj.d3_n = kr(I_x,d3_r_y);
 
-            obj.m = m;
-            obj.h = [h_x h_y];
-            obj.order = order;
-
-            obj.alpha = alpha;
             obj.D = alpha*D4;
-            obj.u = x;
-            obj.v = y;
-            obj.x = kr(x,ones(m_y,1));
-            obj.y = kr(ones(m_x,1),y);
 
             obj.gamm_x = h_x*ops_x.borrowing.N.S2/2;
             obj.delt_x = h_x^3*ops_x.borrowing.N.S3/2;

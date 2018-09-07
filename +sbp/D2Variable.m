@@ -18,7 +18,7 @@ classdef D2Variable < sbp.OpSet
 
     methods
         function obj = D2Variable(m,lim,order)
-            
+
             x_l = lim{1};
             x_r = lim{2};
             L = x_r-x_l;
@@ -26,27 +26,47 @@ classdef D2Variable < sbp.OpSet
             obj.x = linspace(x_l,x_r,m)';
 
             switch order
+
+                case 6
+
+                    [obj.H, obj.HI, obj.D1, obj.D2, ...
+                    ~, obj.e_l, obj.e_r, ~, ~, ~, ~, ~,...
+                     obj.d1_l, obj.d1_r] = ...
+                        sbp.implementations.d4_variable_6(m, obj.h);
+                    obj.borrowing.M.d1 = 0.1878;
+                    obj.borrowing.R.delta_D = 0.3696;
+                    % Borrowing e^T*D1 - d1 from R
+
                 case 4
                     [obj.H, obj.HI, obj.D1, obj.D2, obj.e_l,...
                         obj.e_r, obj.d1_l, obj.d1_r] = ...
                         sbp.implementations.d2_variable_4(m,obj.h);
-                    obj.borrowing.M.S = 0.2505765857;
+                    obj.borrowing.M.d1 = 0.2505765857;
+
+                    obj.borrowing.R.delta_D = 0.577587500088313;
+                    % Borrowing e^T*D1 - d1 from R
                 case 2
                     [obj.H, obj.HI, obj.D1, obj.D2, obj.e_l,...
                         obj.e_r, obj.d1_l, obj.d1_r] = ...
                         sbp.implementations.d2_variable_2(m,obj.h);
-                    obj.borrowing.M.S = 0.3636363636; 
+                    obj.borrowing.M.d1 = 0.3636363636; 
                     % Borrowing const taken from Virta 2014
+
+                    obj.borrowing.R.delta_D = 1.000000538455350;
+                    % Borrowing e^T*D1 - d1 from R
                     
                 otherwise
                     error('Invalid operator order %d.',order);
             end
-
+            obj.borrowing.H11 = obj.H(1,1)/obj.h; % First element in H/h,
             obj.m = m;
             obj.M = [];
-
+        end
+        function str = string(obj)
+            str = [class(obj) '_' num2str(obj.order)];
         end
     end
+
 
 end
 

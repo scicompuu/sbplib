@@ -12,22 +12,20 @@ classdef Cdiff < time.Timestepper
 
 
     methods
+        % Solves u_tt = Du + Eu_t + S
+        % D, E, S can either all be constants or all be function handles,
+        % They can also be omitted by setting them equal to the empty matrix.
+        % Cdiff(D, E, S, k, t0, n0, v, v_prev)
         function obj = Cdiff(D, E, S, k, t0, n0, v, v_prev)
-            % Cdiff(D, E, S, k, t0, n0, v, v_prev)
-            m = size(D,1);
+            m = length(v);
             default_arg('E',sparse(m,m));
             default_arg('S',sparse(m,1));
-
-            if ~(issparse(D) && issparse(E) && issparse(S))
-                warning('One of the matrices D, E, S is not sparse!')
-                print_issparse(D)
-                print_issparse(E)
-                print_issparse(S)
-            end
 
             obj.D = D;
             obj.E = E;
             obj.S = S;
+
+
             obj.k = k;
             obj.t = t0;
             obj.n = n0;
