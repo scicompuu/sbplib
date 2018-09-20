@@ -53,7 +53,11 @@ classdef DiffOp < scheme.Scheme
 
 
             % Build the differentiation matrix
-            obj.blockmatrixDiv = {g.Ns, g.Ns};
+            Ns = zeros(nBlocks,1);
+            for i = 1:nBlocks
+                Ns(i) = length(obj.diffOps{i}.D);
+            end
+            obj.blockmatrixDiv = {Ns, Ns};
             D = blockmatrix.zero(obj.blockmatrixDiv);
             for i = 1:nBlocks
                 D{i,i} = obj.diffOps{i}.D;
@@ -117,7 +121,7 @@ classdef DiffOp < scheme.Scheme
 
         function ops = splitOp(obj, op)
             % Splits a matrix operator into a cell-matrix of matrix operators for
-            % each g.
+            % each grid.
             ops = sparse2cell(op, obj.NNN);
         end
 
