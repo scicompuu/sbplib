@@ -28,14 +28,14 @@ function [closure, S] = bcSetup(diffOp, bcs, S_sign)
         [localClosure, penalty] = diffOp.boundary_condition(bcs{i}.boundary, bcs{i}.type);
         closure = closure + localClosure;
 
-        [ok, isSym, data] = parseData(bcs{i}, penalty, diffOp.grid);
+        [ok, isSymbolic, data] = parseData(bcs{i}, penalty, diffOp.grid);
 
         if ~ok
             % There was no data
             continue
         end
 
-        if isSym
+        if isSymbolic
             symbolicData{end+1} = data;
         else
             gridData{end+1} = data;
@@ -85,8 +85,10 @@ function verifyBcFormat(bcs, diffOp)
     end
 end
 
-function [ok, isSym, dataStruct] = parseData(bc, penalty, grid)
+function [ok, isSymbolic, dataStruct] = parseData(bc, penalty, grid)
     if ~isfield(bc,'data') || isempty(bc.data)
+        isSymbolic = [];
+        dataStruct = struct();
         ok = false;
         return
     end
@@ -96,14 +98,14 @@ function [ok, isSym, dataStruct] = parseData(bc, penalty, grid)
 
     if nArg > 1
         % Symbolic data
-        isSym = true;
+        isSymbolic = true;
         coord = grid.getBoundary(bc.boundary);
         dataStruct.penalty = penalty;
         dataStruct.func = bc.data;
         dataStruct.coords = num2cell(coord, 1);
     else
         % Grid data
-        isSym = false;
+        isSymbolic = false;
         dataStruct.penalty = penalty;
         dataStruct.func = bcs{i}.data;
     end
