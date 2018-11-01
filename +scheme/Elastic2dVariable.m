@@ -1,7 +1,7 @@
 classdef Elastic2dVariable < scheme.Scheme
 
 % Discretizes the elastic wave equation:
-% rho u_{i,tt} = di lambda dj u_j + dj mu di u_j + dj mu dj u_i 
+% rho u_{i,tt} = di lambda dj u_j + dj mu di u_j + dj mu dj u_i
 % opSet should be cell array of opSets, one per dimension. This
 % is useful if we have periodic BC in one direction.
 
@@ -31,13 +31,20 @@ classdef Elastic2dVariable < scheme.Scheme
         tau_l, tau_r
 
         H, Hi % Inner products
+
         phi % Borrowing constant for (d1 - e^T*D1) from R
         gamma % Borrowing constant for d1 from M
         H11 % First element of H
+
+        % Borrowing from H, M, and R
+        thH
+        thM
+        thR
+
         e_l, e_r
         d1_l, d1_r % Normal derivatives at the boundary
         E % E{i}^T picks out component i
-        
+
         H_boundary % Boundary inner products
 
         % Kroneckered norms and coefficients
@@ -84,6 +91,11 @@ classdef Elastic2dVariable < scheme.Scheme
                 obj.H11{i} = ops{i}.borrowing.H11;
                 obj.phi{i} = beta/obj.H11{i};
                 obj.gamma{i} = ops{i}.borrowing.M.d1;
+
+                % Better names
+                obj.thR{i} = ops{i}.borrowing.R.delta_D;
+                obj.thM{i} = ops{i}.borrowing.M.d1;
+                obj.thH{i} = ops{i}.borrowing.H11;
             end
 
             I = cell(dim,1);
@@ -230,14 +242,14 @@ classdef Elastic2dVariable < scheme.Scheme
                     tau_l{j}{i} = sparse(m_tot,dim*m_tot);
                     tau_r{j}{i} = sparse(m_tot,dim*m_tot);
                     for k = 1:dim
-                        T_l{j}{i,k} = ... 
+                        T_l{j}{i,k} = ...
                         -d(i,j)*LAMBDA*(d(i,k)*e_l{k}*d1_l{k}' + db(i,k)*D1{k})...
-                        -d(j,k)*MU*(d(i,j)*e_l{i}*d1_l{i}' + db(i,j)*D1{i})... 
+                        -d(j,k)*MU*(d(i,j)*e_l{i}*d1_l{i}' + db(i,j)*D1{i})...
                         -d(i,k)*MU*e_l{j}*d1_l{j}';
 
-                        T_r{j}{i,k} = ... 
+                        T_r{j}{i,k} = ...
                         d(i,j)*LAMBDA*(d(i,k)*e_r{k}*d1_r{k}' + db(i,k)*D1{k})...
-                        +d(j,k)*MU*(d(i,j)*e_r{i}*d1_r{i}' + db(i,j)*D1{i})... 
+                        +d(j,k)*MU*(d(i,j)*e_r{i}*d1_r{i}' + db(i,j)*D1{i})...
                         +d(i,k)*MU*e_r{j}*d1_r{j}';
 
                         tau_l{j}{i} = tau_l{j}{i} + T_l{j}{i,k}*E{k}';
@@ -270,7 +282,7 @@ classdef Elastic2dVariable < scheme.Scheme
         % Penalty functions return the operators to force the solution. In the case of an interface it returns the operator applied to the other doamin.
         %       boundary            is a string specifying the boundary e.g. 'l','r' or 'e','w','n','s'.
         %       bc                  is a cell array of component and bc type, e.g. {1, 'd'} for Dirichlet condition
-        %                           on the first component.               
+        %                           on the first component.
         %       data                is a function returning the data that should be applied at the boundary.
         %       neighbour_scheme    is an instance of Scheme that should be interfaced to.
         %       neighbour_boundary  is a string specifying which boundary to interface to.
@@ -317,20 +329,20 @@ classdef Elastic2dVariable < scheme.Scheme
                 db = @(i,j) 1-d(i,j); % Logical not of Kronecker delta
                 alpha = @(i,j) tuning*( d(i,j)* a_lambda*LAMBDA ...
                                       + d(i,j)* a_mu_i*MU ...
-                                      + db(i,j)*a_mu_ij*MU ); 
+                                      + db(i,j)*a_mu_ij*MU );
 
                 % Loop over components that Dirichlet penalties end up on
                 for i = 1:dim
                     C = T{k,i};
                     A = -d(i,k)*alpha(i,j);
                     B = A + C;
-                    closure = closure + E{i}*RHOi*Hi*B'*e*H_gamma*(e'*E{k}' ); 
+                    closure = closure + E{i}*RHOi*Hi*B'*e*H_gamma*(e'*E{k}' );
                     penalty = penalty - E{i}*RHOi*Hi*B'*e*H_gamma;
-                end 
+                end
 
             % Free boundary condition
             case {'F','f','Free','free','traction','Traction','t','T'}
-                    closure = closure - E{k}*RHOi*Hi*e*H_gamma* (e'*tau{k} ); 
+                    closure = closure - E{k}*RHOi*Hi*e*H_gamma* (e'*tau{k} );
                     penalty = penalty + E{k}*RHOi*Hi*e*H_gamma;
 
             % Unknown boundary condition
@@ -357,7 +369,7 @@ classdef Elastic2dVariable < scheme.Scheme
             Hi = obj.Hi;
             RHOi = obj.RHOi;
             dim = obj.dim;
-        
+
             %--- Other operators ----
             m_tot_u = obj.grid.N();
             E = obj.E;
@@ -373,38 +385,29 @@ classdef Elastic2dVariable < scheme.Scheme
             lambda_v = e_v'*LAMBDA_v*e_v;
             mu_v = e_v'*MU_v*e_v;
             %-------------------------
-            
+
             % Borrowing constants
-            phi_u = obj.phi{j};
             h_u = obj.h(j);
-            h11_u = obj.H11{j}*h_u;
-            gamma_u = obj.gamma{j};
+            thR_u = obj.thR{j}*h_u;
+            thM_u = obj.thM{j}*h_u;
+            thH_u = obj.thH{j}*h_u;
 
-            phi_v = neighbour_scheme.phi{j_v};
             h_v = neighbour_scheme.h(j_v);
-            h11_v = neighbour_scheme.H11{j_v}*h_v;
-            gamma_v = neighbour_scheme.gamma{j_v};
+            thR_v = neighbour_scheme.thR{j_v}*h_v;
+            thH_v = neighbour_scheme.thH{j_v}*h_v;
+            thM_v = neighbour_scheme.thM{j_v}*h_v;
 
-            % E > sum_i 1/(2*alpha_ij)*(tau_i)^2
-            function [alpha_ii, alpha_ij] = computeAlpha(phi,h,h11,gamma,lambda,mu) 
-                th1 = h11/(2*dim);
-                th2 = h11*phi/2;
-                th3 = h*gamma;
-                a1 = ( (th1 + th2)*th3*lambda + 4*th1*th2*mu ) / (2*th1*th2*th3);
-                a2 = ( 16*(th1 + th2)*lambda*mu ) / (th1*th2*th3);
-                alpha_ii = a1 + sqrt(a2 + a1^2);
-
-                alpha_ij = mu*(2/h11 + 1/(phi*h11));
-            end
-
-            [alpha_ii_u, alpha_ij_u] = computeAlpha(phi_u,h_u,h11_u,gamma_u,lambda_u,mu_u);
-            [alpha_ii_v, alpha_ij_v] = computeAlpha(phi_v,h_v,h11_v,gamma_v,lambda_v,mu_v);  
-            sigma_ii = tuning*(alpha_ii_u + alpha_ii_v)/4;
-            sigma_ij = tuning*(alpha_ij_u + alpha_ij_v)/4;
+            % alpha = penalty strength for normal component, beta for tangential
+            alpha_u = dim*lambda_u/(4*thH_u) + lambda_u/(4*thR_u) + mu_u/(2*thM_u);
+            alpha_v = dim*lambda_v/(4*thH_v) + lambda_v/(4*thR_v) + mu_v/(2*thM_v);
+            beta_u = mu_u/(2*thH_u) + mu_u/(4*thR_u);
+            beta_v = mu_v/(2*thH_v) + mu_v/(4*thR_v);
+            alpha = alpha_u + alpha_v;
+            beta = beta_u + beta_v;
 
             d = @kroneckerDelta;  % Kronecker delta
             db = @(i,j) 1-d(i,j); % Logical not of Kronecker delta
-            sigma = @(i,j) tuning*(d(i,j)*sigma_ii + db(i,j)*sigma_ij);
+            strength = @(i,j) tuning*(d(i,j)*alpha + db(i,j)*beta);
 
             % Preallocate
             closure = sparse(dim*m_tot_u, dim*m_tot_u);
@@ -412,17 +415,17 @@ classdef Elastic2dVariable < scheme.Scheme
 
             % Loop over components that penalties end up on
             for i = 1:dim
-                closure = closure - E{i}*RHOi*Hi*e*sigma(i,j)*H_gamma*e'*E{i}';
-                penalty = penalty + E{i}*RHOi*Hi*e*sigma(i,j)*H_gamma*e_v'*E_v{i}';
+                closure = closure - E{i}*RHOi*Hi*e*strength(i,j)*H_gamma*e'*E{i}';
+                penalty = penalty + E{i}*RHOi*Hi*e*strength(i,j)*H_gamma*e_v'*E_v{i}';
 
                 closure = closure - 1/2*E{i}*RHOi*Hi*e*H_gamma*e'*tau{i};
                 penalty = penalty - 1/2*E{i}*RHOi*Hi*e*H_gamma*e_v'*tau_v{i};
 
                 % Loop over components that we have interface conditions on
                 for k = 1:dim
-                    closure = closure + 1/2*E{i}*RHOi*Hi*T{k,i}'*e*H_gamma*e'*E{k}'; 
-                    penalty = penalty - 1/2*E{i}*RHOi*Hi*T{k,i}'*e*H_gamma*e_v'*E_v{k}'; 
-                end 
+                    closure = closure + 1/2*E{i}*RHOi*Hi*T{k,i}'*e*H_gamma*e'*E{k}';
+                    penalty = penalty - 1/2*E{i}*RHOi*Hi*T{k,i}'*e*H_gamma*e_v'*E_v{k}';
+                end
             end
         end
 
@@ -494,7 +497,7 @@ classdef Elastic2dVariable < scheme.Scheme
                                 varargout{i} = obj.tau_l{j};
                             case {'e', 'E', 'east', 'East','n', 'N', 'north', 'North'}
                                 varargout{i} = obj.tau_r{j};
-                        end                        
+                        end
                     otherwise
                         error(['No such operator: operator = ' op{i}]);
                 end
