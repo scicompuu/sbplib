@@ -1,5 +1,6 @@
+% Setup closure and penalty matrices for several boundary conditions at once.
 function [closure, penalties] = closureSetup(diffOp, bcs)
-    assertType(bcs, 'cell');
+    scheme.bc.verifyFormat(bcs, diffOp);
 
     % Setup storage arrays
     closure = spzeros(size(diffOp));
