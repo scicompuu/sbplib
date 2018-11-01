@@ -1,10 +1,10 @@
-function S = bcForcingSetup(diffOp, penalties, bcs, S_sign) %% SETUP in the name!!
+function S = forcingSetup(diffOp, penalties, bcs, S_sign)
     default_arg('S_sign', 1);
 
     assertType(bcs, 'cell');
     assertIsMember(S_sign, [1, -1]);
 
-    verifyBcFormat(bcs, diffOp);
+    scheme.bc.verifyFormat(bcs, diffOp);
 
     % % Setup storage arrays
     % closure = spzeros(size(diffOp));

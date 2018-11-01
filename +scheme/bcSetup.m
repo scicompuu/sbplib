@@ -16,8 +16,8 @@ function [closure, S] = bcSetup(diffOp, bcs, S_sign)
     assertType(bcs, 'cell');
     assert(S_sign == 1 || S_sign == -1, 'S_sign must be either 1 or -1');
 
-    [closure, penalties] = bcClosureSetup(diffOp, bcs);
-    S = bcForcingSetup(diffOp, penalties, bcs, S_sign);
+    [closure, penalties] = scheme.bc.closureSetup(diffOp, bcs);
+    S = scheme.bc.forcingSetup(diffOp, penalties, bcs, S_sign);
 end
 
 %%% NOTES

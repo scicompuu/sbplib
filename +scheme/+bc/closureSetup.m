@@ -1,4 +1,4 @@
-function [closure, penalties] = bcClosureSetup(diffOp, bcs)
+function [closure, penalties] = closureSetup(diffOp, bcs)
     assertType(bcs, 'cell');
 
     % Setup storage arrays
