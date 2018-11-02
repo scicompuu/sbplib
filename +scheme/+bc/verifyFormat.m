@@ -25,7 +25,7 @@ function verifyBcFormat(bcs, diffOp)
         if nargin(bcs{i}.data) == 1
             % Grid data (only function of time)
             % Assert that the data has the correct dimension
-            assertSize(bcs{i}.data(0), 1, size(b));
+            assertSize(bcs{i}.data(0), 1, size(b,1));
         end
     end
 end

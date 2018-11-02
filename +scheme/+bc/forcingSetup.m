@@ -31,17 +31,19 @@ end
 % Go through a cell array of boundary condition specifications and return cell arrays
 % of structs for grid and symbolic data.
 function [gridData, symbolicData] = parseAndSortData(bcs, penalties, diffOp)
+    gridData = {};
+    symbolicData = {};
     for i = 1:length(bcs)
-        [ok, isSymbolic, data] = parseData(bcs{i}, penalties{i}, diffOp.grid)
+        [ok, isSymbolic, data] = parseData(bcs{i}, penalties{i}, diffOp.grid);
 
         if ~ok
             continue % There was no data
         end
 
         if isSymbolic
-            gridData{end+1} = data;
-        else
             symbolicData{end+1} = data;
+        else
+            gridData{end+1} = data;
         end
     end
 end
@@ -68,6 +70,6 @@ function [ok, isSymbolic, dataStruct] = parseData(bc, penalty, grid)
         % Grid data
         isSymbolic = false;
         dataStruct.penalty = penalty;
-        dataStruct.func = bcs{i}.data;
+        dataStruct.func = bc.data;
     end
 end
