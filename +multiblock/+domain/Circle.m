@@ -65,10 +65,10 @@ classdef Circle < multiblock.DefCurvilinear
             conn{5,2} = {'n','s'};
 
             boundaryGroups = struct();
-            boundaryGroups.E = multiblock.BoundaryGroup({2,'e'});
-            boundaryGroups.N = multiblock.BoundaryGroup({3,'n'});
-            boundaryGroups.W = multiblock.BoundaryGroup({4,'n'});
-            boundaryGroups.S = multiblock.BoundaryGroup({5,'e'});
+            boundaryGroups.E = multiblock.BoundaryGroup({{2,'e'}});
+            boundaryGroups.N = multiblock.BoundaryGroup({{3,'n'}});
+            boundaryGroups.W = multiblock.BoundaryGroup({{4,'n'}});
+            boundaryGroups.S = multiblock.BoundaryGroup({{5,'e'}});
             boundaryGroups.all = multiblock.BoundaryGroup({{2,'e'},{3,'n'},{4,'n'},{5,'e'}});
 
             obj = obj@multiblock.DefCurvilinear(blocks, conn, boundaryGroups, blocksNames);
