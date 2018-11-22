@@ -1,30 +1,29 @@
-classdef Wave < scheme.Scheme
+classdef Laplace1D < scheme.Scheme
     properties
-        m % Number of points in each direction, possibly a vector
-        h % Grid spacing
-        x % Grid
+        g
         order % Order accuracy for the approximation
 
         D % non-stabalized scheme operator
         H % Discrete norm
         M % Derivative norm
-        alpha
+        a
 
         D2
         Hi
         e_l
         e_r
-        d1_l
-        d1_r
+        d_l
+        d_r
         gamm
     end
 
     methods
-        function obj = Wave(m,xlim,order,alpha)
-            default_arg('a',1);
-            [x, h] = util.get_grid(xlim{:},m);
+        function obj = Laplace1D(g, order, a)
+            default_arg('a', 1);
 
-            ops = sbp.Ordinary(m,h,order);
+            assertType(g, 'grid.Cartesian');
+
+            ops = sbp.Ordinary(g.size(), g.h, order);
 
             obj.D2 = sparse(ops.derivatives.D2);
             obj.H =  sparse(ops.norms.H);
@@ -32,20 +31,17 @@ classdef Wave < scheme.Scheme
             obj.M =  sparse(ops.norms.M);
             obj.e_l = sparse(ops.boundary.e_1);
             obj.e_r = sparse(ops.boundary.e_m);
-            obj.d1_l = sparse(ops.boundary.S_1);
-            obj.d1_r = sparse(ops.boundary.S_m);
+            obj.d_l = sparse(ops.boundary.S_1);
+            obj.d_r = sparse(ops.boundary.S_m);
 
 
-            obj.m = m;
-            obj.h = h;
+            obj.g = g;
             obj.order = order;
 
-            obj.alpha = alpha;
-            obj.D = alpha*obj.D2;
-            obj.x = x;
+            obj.a = a;
+            obj.D = a*obj.D2;
 
             obj.gamm = h*ops.borrowing.M.S;
-
         end
 
 
@@ -146,11 +142,11 @@ classdef Wave < scheme.Scheme
             switch boundary
                 case 'l'
                     e = obj.e_l;
-                    d = obj.d1_l;
+                    d = obj.d_l;
                     s = -1;
                 case 'r'
                     e = obj.e_r;
-                    d = obj.d1_r;
+                    d = obj.d_r;
                     s = 1;
                 otherwise
                     error('No such boundary: boundary = %s',boundary);
