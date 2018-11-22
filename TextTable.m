@@ -41,6 +41,14 @@ classdef TextTable < handle
             obj.fmtArray{i,j} = fmt;
         end
 
+        function formatGrid(obj, I, J, fmt)
+            for i = I
+                for j = J
+                    obj.fmtArray{i,j} = fmt;
+                end
+            end
+        end
+
         function formatRow(obj, i, fmt)
             obj.fmtArray(i,:) = {fmt};
         end

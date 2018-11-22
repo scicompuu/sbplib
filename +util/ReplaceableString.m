@@ -58,3 +58,5 @@ end
 function b = padStr(a, n)
     b = sprintf('%-*s', n, a);
 end
+
+% TODO: Add a debug mode which prints without replacing?
