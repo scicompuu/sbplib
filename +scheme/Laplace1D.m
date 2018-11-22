@@ -1,6 +1,6 @@
 classdef Laplace1D < scheme.Scheme
     properties
-        g
+        grid
         order % Order accuracy for the approximation
 
         D % non-stabalized scheme operator
@@ -18,30 +18,30 @@ classdef Laplace1D < scheme.Scheme
     end
 
     methods
-        function obj = Laplace1D(g, order, a)
+        function obj = Laplace1D(grid, order, a)
             default_arg('a', 1);
 
-            assertType(g, 'grid.Cartesian');
+            assertType(grid, 'grid.Cartesian');
 
-            ops = sbp.Ordinary(g.size(), g.h, order);
+            ops = sbp.D2Standard(grid.size(), grid.lim{1}, order);
 
-            obj.D2 = sparse(ops.derivatives.D2);
-            obj.H =  sparse(ops.norms.H);
-            obj.Hi = sparse(ops.norms.HI);
-            obj.M =  sparse(ops.norms.M);
-            obj.e_l = sparse(ops.boundary.e_1);
-            obj.e_r = sparse(ops.boundary.e_m);
-            obj.d_l = sparse(ops.boundary.S_1);
-            obj.d_r = sparse(ops.boundary.S_m);
+            obj.D2 = sparse(ops.D2);
+            obj.H =  sparse(ops.H);
+            obj.Hi = sparse(ops.HI);
+            obj.M =  sparse(ops.M);
+            obj.e_l = sparse(ops.e_l);
+            obj.e_r = sparse(ops.e_r);
+            obj.d_l = -sparse(ops.d1_l);
+            obj.d_r = sparse(ops.d1_r);
 
 
-            obj.g = g;
+            obj.grid = grid;
             obj.order = order;
 
             obj.a = a;
             obj.D = a*obj.D2;
 
-            obj.gamm = h*ops.borrowing.M.S;
+            obj.gamm = grid.h*ops.borrowing.M.S;
         end
 
 
@@ -61,46 +61,21 @@ classdef Laplace1D < scheme.Scheme
             switch type
                 % Dirichlet boundary condition
                 case {'D','dirichlet'}
-                    alpha = obj.alpha;
-
-                    % tau1 < -alpha^2/gamma
                     tuning = 1.1;
-                    tau1 = -tuning*alpha/obj.gamm;
-                    tau2 =  s*alpha;
+                    tau1 = -tuning/obj.gamm;
+                    tau2 =  1;
 
-                    p = tau1*e + tau2*d;
+                    tau = tau1*e + tau2*d;
 
-                    closure = obj.Hi*p*e';
-
-                    pp = obj.Hi*p;
-                    switch class(data)
-                        case 'double'
-                            penalty = pp*data;
-                        case 'function_handle'
-                            penalty = @(t)pp*data(t);
-                        otherwise
-                            error('Wierd data argument!')
-                    end
-
+                    closure = obj.a*obj.Hi*tau*e';
+                    penalty = obj.a*obj.Hi*tau;
 
                 % Neumann boundary condition
                 case {'N','neumann'}
-                    alpha = obj.alpha;
-                    tau1 = -s*alpha;
-                    tau2 = 0;
-                    tau = tau1*e + tau2*d;
+                    tau = -e;
 
-                    closure = obj.Hi*tau*d';
-
-                    pp = obj.Hi*tau;
-                    switch class(data)
-                        case 'double'
-                            penalty = pp*data;
-                        case 'function_handle'
-                            penalty = @(t)pp*data(t);
-                        otherwise
-                            error('Wierd data argument!')
-                    end
+                    closure = obj.a*obj.Hi*tau*d';
+                    penalty = -obj.a*obj.Hi*tau;
 
                 % Unknown, boundary condition
                 otherwise
@@ -111,29 +86,29 @@ classdef Laplace1D < scheme.Scheme
         function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
+
             [e_u,d_u,s_u] = obj.get_boundary_ops(boundary);
             [e_v,d_v,s_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
 
-            tuning = 1.1;
 
-            alpha_u = obj.alpha;
-            alpha_v = neighbour_scheme.alpha;
+            a_u = obj.a;
+            a_v = neighbour_scheme.a;
 
             gamm_u = obj.gamm;
             gamm_v = neighbour_scheme.gamm;
 
-            % tau1 < -(alpha_u/gamm_u + alpha_v/gamm_v)
-
-            tau1 = -(alpha_u/gamm_u + alpha_v/gamm_v) * tuning;
-            tau2 = s_u*1/2*alpha_u;
-            sig1 = s_u*(-1/2);
+            tuning = 1.1;
+            
+            tau1 = -(a_u/gamm_u + a_v/gamm_v) * tuning;
+            tau2 = 1/2*a_u;
+            sig1 = -1/2;
             sig2 = 0;
 
             tau = tau1*e_u + tau2*d_u;
             sig = sig1*e_u + sig2*d_u;
 
-            closure = obj.Hi*( tau*e_u' + sig*alpha_u*d_u');
-            penalty = obj.Hi*(-tau*e_v' - sig*alpha_v*d_v');
+            closure = obj.Hi*( tau*e_u' + sig*a_u*d_u');
+            penalty = obj.Hi*(-tau*e_v' + sig*a_v*d_v');
         end
 
         % Ruturns the boundary ops and sign for the boundary specified by the string boundary.
@@ -154,7 +129,7 @@ classdef Laplace1D < scheme.Scheme
         end
 
         function N = size(obj)
-            N = obj.m;
+            N = obj.grid.size();
         end
 
     end
