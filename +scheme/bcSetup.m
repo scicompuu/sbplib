@@ -78,7 +78,7 @@ function verifyBcFormat(bcs, diffOp)
 
         if nargin(bcs{i}.data) == 1
             % Grid data (only function of time)
-            assertSize(bcs{i}.data(0), 1, size(b));
+            assertSize(bcs{i}.data(0), 1, size(b,1));
         elseif nargin(bcs{i}.data) ~= 1+dim
            error('sbplib:scheme:bcSetup:DataWrongNumberOfArguments', 'bcs{%d}.data has the wrong number of input arguments. Must be either only time or time and space.', i);
         end
@@ -107,6 +107,6 @@ function [ok, isSymbolic, dataStruct] = parseData(bc, penalty, grid)
         % Grid data
         isSymbolic = false;
         dataStruct.penalty = penalty;
-        dataStruct.func = bcs{i}.data;
+        dataStruct.func = bc.data;
     end
 end
