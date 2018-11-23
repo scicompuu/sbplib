@@ -1,9 +1,9 @@
 classdef Heat2dVariable < scheme.Scheme
 
 % Discretizes the Laplacian with variable coefficent,
-% In the Heat equation way (i.e., the discretization matrix is not necessarily 
+% In the Heat equation way (i.e., the discretization matrix is not necessarily
 % symmetric)
-% u_t = div * (kappa * grad u ) 
+% u_t = div * (kappa * grad u )
 % opSet should be cell array of opSets, one per dimension. This
 % is useful if we have periodic BC in one direction.
 
@@ -28,7 +28,7 @@ classdef Heat2dVariable < scheme.Scheme
         H, Hi % Inner products
         e_l, e_r
         d1_l, d1_r % Normal derivatives at the boundary
-        
+
         H_boundary % Boundary inner products
 
     end
@@ -160,7 +160,7 @@ classdef Heat2dVariable < scheme.Scheme
             default_arg('parameter', []);
 
             % j is the coordinate direction of the boundary
-            % nj: outward unit normal component. 
+            % nj: outward unit normal component.
             % nj = -1 for west, south, bottom boundaries
             % nj = 1  for east, north, top boundaries
             [j, nj] = obj.get_boundary_number(boundary);
@@ -176,19 +176,19 @@ classdef Heat2dVariable < scheme.Scheme
             Hi = obj.Hi;
             H_gamma = obj.H_boundary{j};
             KAPPA = obj.KAPPA;
-            kappa_gamma = e{j}'*KAPPA*e{j}; 
+            kappa_gamma = e{j}'*KAPPA*e{j};
 
             switch type
 
             % Dirichlet boundary condition
             case {'D','d','dirichlet','Dirichlet'}
-                    closure = -nj*Hi*d{j}*kappa_gamma*H_gamma*(e{j}' ); 
+                    closure = -nj*Hi*d{j}*kappa_gamma*H_gamma*(e{j}' );
                     penalty =  nj*Hi*d{j}*kappa_gamma*H_gamma;
 
             % Free boundary condition
             case {'N','n','neumann','Neumann'}
-                    closure = -nj*Hi*e{j}*kappa_gamma*H_gamma*(d{j}' ); 
-                    penalty =  nj*Hi*e{j}*kappa_gamma*H_gamma; 
+                    closure = -nj*Hi*e{j}*kappa_gamma*H_gamma*(d{j}' );
+                    penalty =  nj*Hi*e{j}*kappa_gamma*H_gamma;
 
             % Unknown boundary condition
             otherwise
@@ -196,7 +196,7 @@ classdef Heat2dVariable < scheme.Scheme
             end
         end
 
-        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
+        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,type)
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
             error('Interface not implemented');

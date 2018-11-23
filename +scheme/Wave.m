@@ -112,7 +112,7 @@ classdef Wave < scheme.Scheme
             end
         end
 
-        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
+        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,type)
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
             [e_u,d_u,s_u] = obj.get_boundary_ops(boundary);

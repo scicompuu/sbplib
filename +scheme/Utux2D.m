@@ -5,7 +5,7 @@ classdef Utux2D < scheme.Scheme
         grid % Grid
         order % Order accuracy for the approximation
         v0 % Initial data
-        
+
         a % Wave speed a = [a1, a2];
           % Can either be a constant vector or a cell array of function handles.
 
@@ -15,36 +15,36 @@ classdef Utux2D < scheme.Scheme
 
         % Derivatives
         Dx, Dy
-        
+
         % Boundary operators
         e_w, e_e, e_s, e_n
-        
+
         D % Total discrete operator
 
         % String, type of interface coupling
         % Default: 'upwind'
         % Other:   'centered'
-        coupling_type 
+        coupling_type
 
         % String, type of interpolation operators
         % Default: 'AWW' (Almquist Wang Werpers)
         % Other:   'MC' (Mattsson Carpenter)
         interpolation_type
 
-        
+
         % Cell array, damping on upwstream and downstream sides.
         interpolation_damping
 
     end
 
 
-    methods 
+    methods
          function obj = Utux2D(g ,order, opSet, a, coupling_type, interpolation_type, interpolation_damping)
-            
+
             default_arg('interpolation_damping',{0,0});
-            default_arg('interpolation_type','AWW'); 
-            default_arg('coupling_type','upwind'); 
-            default_arg('a',1/sqrt(2)*[1, 1]); 
+            default_arg('interpolation_type','AWW');
+            default_arg('coupling_type','upwind');
+            default_arg('a',1/sqrt(2)*[1, 1]);
             default_arg('opSet',@sbp.D2Standard);
 
             assert(isa(g, 'grid.Cartesian'))
@@ -55,7 +55,7 @@ classdef Utux2D < scheme.Scheme
             else
                 a = {a(1), a(2)};
             end
-             
+
             m = g.size();
             m_x = m(1);
             m_y = m(2);
@@ -70,13 +70,13 @@ classdef Utux2D < scheme.Scheme
             ops_y = opSet(m_y, ylim, order);
             Ix = speye(m_x);
             Iy = speye(m_y);
-            
+
             % Norms
             Hx = ops_x.H;
             Hy = ops_y.H;
             Hxi = ops_x.HI;
             Hyi = ops_y.HI;
-            
+
             obj.H_x = Hx;
             obj.H_y = Hy;
             obj.H = kron(Hx,Hy);
@@ -85,13 +85,13 @@ classdef Utux2D < scheme.Scheme
             obj.Hy = kron(Ix,Hy);
             obj.Hxi = kron(Hxi,Iy);
             obj.Hyi = kron(Ix,Hyi);
-            
+
             % Derivatives
             Dx = ops_x.D1;
             Dy = ops_y.D1;
             obj.Dx = kron(Dx,Iy);
             obj.Dy = kron(Ix,Dy);
-           
+
             % Boundary operators
             obj.e_w = kr(ops_x.e_l, Iy);
             obj.e_e = kr(ops_x.e_r, Iy);
@@ -117,23 +117,23 @@ classdef Utux2D < scheme.Scheme
         %       neighbour_boundary  is a string specifying which boundary to interface to.
         function [closure, penalty] = boundary_condition(obj,boundary,type)
             default_arg('type','dirichlet');
-            
+
             sigma = -1; % Scalar penalty parameter
             switch boundary
                 case {'w','W','west','West'}
                     tau = sigma*obj.a{1}*obj.e_w*obj.H_y;
                     closure = obj.Hi*tau*obj.e_w';
-                    
+
                 case {'s','S','south','South'}
                     tau = sigma*obj.a{2}*obj.e_s*obj.H_x;
                     closure = obj.Hi*tau*obj.e_s';
-            end  
+            end
             penalty = -obj.Hi*tau;
-                
+
          end
-          
-         function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
-             
+
+         function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,type)
+
              % Get neighbour boundary operator
              switch neighbour_boundary
                  case {'e','E','east','East'}
@@ -149,9 +149,9 @@ classdef Utux2D < scheme.Scheme
                      e_neighbour = neighbour_scheme.e_s;
                      m_neighbour = neighbour_scheme.m(1);
              end
-             
+
              switch obj.coupling_type
-             
+
              % Upwind coupling (energy dissipation)
              case 'upwind'
                  sigma_ds = -1; %"Downstream" penalty
@@ -169,7 +169,7 @@ classdef Utux2D < scheme.Scheme
              % Check grid ratio for interpolation
              switch boundary
                  case {'w','W','west','West','e','E','east','East'}
-                     m = obj.m(2);       
+                     m = obj.m(2);
                  case {'s','S','south','South','n','N','north','North'}
                      m = obj.m(1);
              end
@@ -197,15 +197,15 @@ classdef Utux2D < scheme.Scheme
                 case 'AWW'
                     %String 'C2F' indicates that ICF2 is more accurate.
                     interpOpSetF2C = sbp.InterpAWW(ms(1),ms(2),orders(1),orders(2),'F2C');
-                    interpOpSetC2F = sbp.InterpAWW(ms(1),ms(2),orders(1),orders(2),'C2F'); 
-                    if grid_ratio < 1 
+                    interpOpSetC2F = sbp.InterpAWW(ms(1),ms(2),orders(1),orders(2),'C2F');
+                    if grid_ratio < 1
                         % Local is coarser than neighbour
                         I_neighbour2local_us = interpOpSetC2F.IF2C;
                         I_neighbour2local_ds = interpOpSetF2C.IF2C;
                         I_local2neighbour_us = interpOpSetC2F.IC2F;
                         I_local2neighbour_ds = interpOpSetF2C.IC2F;
                     elseif grid_ratio > 1
-                        % Local is finer than neighbour 
+                        % Local is finer than neighbour
                         I_neighbour2local_us = interpOpSetF2C.IC2F;
                         I_neighbour2local_ds = interpOpSetC2F.IC2F;
                         I_local2neighbour_us = interpOpSetF2C.IF2C;
@@ -216,12 +216,12 @@ classdef Utux2D < scheme.Scheme
                          ' is not available.' ]);
                 end
 
-             else 
+             else
                 % No interpolation required
                 I_neighbour2local_us = speye(m,m);
                 I_neighbour2local_ds = speye(m,m);
-            end    
-             
+            end
+
              int_damp_us = obj.interpolation_damping{1};
              int_damp_ds = obj.interpolation_damping{2};
 
@@ -238,7 +238,7 @@ classdef Utux2D < scheme.Scheme
 
                      beta = int_damp_ds*obj.a{1}...
                             *obj.e_w*obj.H_y;
-                     closure = closure + obj.Hi*beta*(I_back_forth_ds - I)*obj.e_w';     
+                     closure = closure + obj.Hi*beta*(I_back_forth_ds - I)*obj.e_w';
                  case {'e','E','east','East'}
                      tau = sigma_us*obj.a{1}*obj.e_e*obj.H_y;
                      closure = obj.Hi*tau*obj.e_e';
@@ -246,10 +246,10 @@ classdef Utux2D < scheme.Scheme
 
                      beta = int_damp_us*obj.a{1}...
                             *obj.e_e*obj.H_y;
-                     closure = closure + obj.Hi*beta*(I_back_forth_us - I)*obj.e_e'; 
+                     closure = closure + obj.Hi*beta*(I_back_forth_us - I)*obj.e_e';
                  case {'s','S','south','South'}
                      tau = sigma_ds*obj.a{2}*obj.e_s*obj.H_x;
-                     closure = obj.Hi*tau*obj.e_s'; 
+                     closure = obj.Hi*tau*obj.e_s';
                      penalty = -obj.Hi*tau*I_neighbour2local_ds*e_neighbour';
 
                      beta = int_damp_ds*obj.a{2}...
@@ -262,12 +262,12 @@ classdef Utux2D < scheme.Scheme
 
                      beta = int_damp_us*obj.a{2}...
                             *obj.e_n*obj.H_x;
-                     closure = closure + obj.Hi*beta*(I_back_forth_us - I)*obj.e_n'; 
+                     closure = closure + obj.Hi*beta*(I_back_forth_us - I)*obj.e_n';
              end
-             
-                 
+
+
          end
-      
+
         function N = size(obj)
             N = obj.m;
         end

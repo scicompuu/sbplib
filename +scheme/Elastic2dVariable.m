@@ -1,7 +1,7 @@
 classdef Elastic2dVariable < scheme.Scheme
 
 % Discretizes the elastic wave equation:
-% rho u_{i,tt} = di lambda dj u_j + dj mu di u_j + dj mu dj u_i 
+% rho u_{i,tt} = di lambda dj u_j + dj mu di u_j + dj mu dj u_i
 % opSet should be cell array of opSets, one per dimension. This
 % is useful if we have periodic BC in one direction.
 
@@ -37,7 +37,7 @@ classdef Elastic2dVariable < scheme.Scheme
         e_l, e_r
         d1_l, d1_r % Normal derivatives at the boundary
         E % E{i}^T picks out component i
-        
+
         H_boundary % Boundary inner products
 
         % Kroneckered norms and coefficients
@@ -223,14 +223,14 @@ classdef Elastic2dVariable < scheme.Scheme
                     tau_l{j}{i} = sparse(m_tot,dim*m_tot);
                     tau_r{j}{i} = sparse(m_tot,dim*m_tot);
                     for k = 1:dim
-                        T_l{j}{i,k} = ... 
+                        T_l{j}{i,k} = ...
                         -d(i,j)*LAMBDA*(d(i,k)*e_l{k}*d1_l{k}' + db(i,k)*D1{k})...
-                        -d(j,k)*MU*(d(i,j)*e_l{i}*d1_l{i}' + db(i,j)*D1{i})... 
+                        -d(j,k)*MU*(d(i,j)*e_l{i}*d1_l{i}' + db(i,j)*D1{i})...
                         -d(i,k)*MU*e_l{j}*d1_l{j}';
 
-                        T_r{j}{i,k} = ... 
+                        T_r{j}{i,k} = ...
                         d(i,j)*LAMBDA*(d(i,k)*e_r{k}*d1_r{k}' + db(i,k)*D1{k})...
-                        +d(j,k)*MU*(d(i,j)*e_r{i}*d1_r{i}' + db(i,j)*D1{i})... 
+                        +d(j,k)*MU*(d(i,j)*e_r{i}*d1_r{i}' + db(i,j)*D1{i})...
                         +d(i,k)*MU*e_r{j}*d1_r{j}';
 
                         tau_l{j}{i} = tau_l{j}{i} + T_l{j}{i,k}*E{k}';
@@ -271,7 +271,7 @@ classdef Elastic2dVariable < scheme.Scheme
             default_arg('parameter', []);
 
             % j is the coordinate direction of the boundary
-            % nj: outward unit normal component. 
+            % nj: outward unit normal component.
             % nj = -1 for west, south, bottom boundaries
             % nj = 1  for east, north, top boundaries
             [j, nj] = obj.get_boundary_number(boundary);
@@ -329,20 +329,20 @@ classdef Elastic2dVariable < scheme.Scheme
                     db = @(i,j) 1-d(i,j); % Logical not of Kronecker delta
                     alpha = @(i,j) tuning*( d(i,j)* a_lambda*LAMBDA ...
                                           + d(i,j)* a_mu_i*MU ...
-                                          + db(i,j)*a_mu_ij*MU ); 
+                                          + db(i,j)*a_mu_ij*MU );
 
                     % Loop over components that Dirichlet penalties end up on
                     for i = 1:dim
                         C = T{k,i};
                         A = -d(i,k)*alpha(i,j);
                         B = A + C;
-                        closure = closure + E{i}*RHOi*Hi*B'*e{j}*H_gamma*(e{j}'*E{k}' ); 
+                        closure = closure + E{i}*RHOi*Hi*B'*e{j}*H_gamma*(e{j}'*E{k}' );
                         penalty{k} = penalty{k} - E{i}*RHOi*Hi*B'*e{j}*H_gamma;
-                    end 
+                    end
 
                 % Free boundary condition
                 case {'F','f','Free','free','traction','Traction','t','T'}
-                        closure = closure - E{k}*RHOi*Hi*e{j}*H_gamma* (e{j}'*tau{k} ); 
+                        closure = closure - E{k}*RHOi*Hi*e{j}*H_gamma* (e{j}'*tau{k} );
                         penalty{k} = penalty{k} + E{k}*RHOi*Hi*e{j}*H_gamma;
 
                 % Unknown boundary condition
@@ -352,7 +352,7 @@ classdef Elastic2dVariable < scheme.Scheme
             end
         end
 
-        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
+        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,type)
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
             tuning = 1.2;

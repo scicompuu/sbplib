@@ -1,9 +1,9 @@
 classdef Schrodinger2d < scheme.Scheme
 
 % Discretizes the Laplacian with constant coefficent,
-% in the Schrödinger equation way (i.e., the discretization matrix is not necessarily 
+% in the Schrödinger equation way (i.e., the discretization matrix is not necessarily
 % definite)
-% u_t = a*i*Laplace u 
+% u_t = a*i*Laplace u
 % opSet should be cell array of opSets, one per dimension. This
 % is useful if we have periodic BC in one direction.
 
@@ -30,7 +30,7 @@ classdef Schrodinger2d < scheme.Scheme
         d1_l, d1_r % Normal derivatives at the boundary
         e_w, e_e, e_s, e_n
         d_w, d_e, d_s, d_n
-        
+
         H_boundary % Boundary inner products
 
         interpolation_type % MC or AWW
@@ -167,7 +167,7 @@ classdef Schrodinger2d < scheme.Scheme
             default_arg('parameter', []);
 
             % j is the coordinate direction of the boundary
-            % nj: outward unit normal component. 
+            % nj: outward unit normal component.
             % nj = -1 for west, south, bottom boundaries
             % nj = 1  for east, north, top boundaries
             [j, nj] = obj.get_boundary_number(boundary);
@@ -188,13 +188,13 @@ classdef Schrodinger2d < scheme.Scheme
 
             % Dirichlet boundary condition
             case {'D','d','dirichlet','Dirichlet'}
-                    closure =  nj*Hi*d{j}*a*1i*H_gamma*(e{j}' ); 
+                    closure =  nj*Hi*d{j}*a*1i*H_gamma*(e{j}' );
                     penalty = -nj*Hi*d{j}*a*1i*H_gamma;
 
             % Free boundary condition
             case {'N','n','neumann','Neumann'}
-                    closure = -nj*Hi*e{j}*a*1i*H_gamma*(d{j}' ); 
-                    penalty =  nj*Hi*e{j}*a*1i*H_gamma; 
+                    closure = -nj*Hi*e{j}*a*1i*H_gamma*(d{j}' );
+                    penalty =  nj*Hi*e{j}*a*1i*H_gamma;
 
             % Unknown boundary condition
             otherwise
@@ -202,7 +202,7 @@ classdef Schrodinger2d < scheme.Scheme
             end
         end
 
-        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
+        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,type)
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
             % Get neighbour boundary operator
@@ -251,7 +251,7 @@ classdef Schrodinger2d < scheme.Scheme
                 d = obj.d1_l;
             end
             e = e{coord};
-            d = d{coord}; 
+            d = d{coord};
 
             Hi = obj.Hi;
             sigma = -n*1i*a/2;
@@ -281,15 +281,15 @@ classdef Schrodinger2d < scheme.Scheme
                 case 'AWW'
                     %String 'C2F' indicates that ICF2 is more accurate.
                     interpOpSetF2C = sbp.InterpAWW(ms(1),ms(2),orders(1),orders(2),'F2C');
-                    interpOpSetC2F = sbp.InterpAWW(ms(1),ms(2),orders(1),orders(2),'C2F'); 
-                    if grid_ratio < 1 
+                    interpOpSetC2F = sbp.InterpAWW(ms(1),ms(2),orders(1),orders(2),'C2F');
+                    if grid_ratio < 1
                         % Local is coarser than neighbour
                         I_neighbour2local_e = interpOpSetF2C.IF2C;
                         I_neighbour2local_d = interpOpSetC2F.IF2C;
                         I_local2neighbour_e = interpOpSetC2F.IC2F;
                         I_local2neighbour_d = interpOpSetF2C.IC2F;
                     elseif grid_ratio > 1
-                        % Local is finer than neighbour 
+                        % Local is finer than neighbour
                         I_neighbour2local_e = interpOpSetC2F.IC2F;
                         I_neighbour2local_d = interpOpSetF2C.IC2F;
                         I_local2neighbour_e = interpOpSetF2C.IF2C;
@@ -300,7 +300,7 @@ classdef Schrodinger2d < scheme.Scheme
                          ' is not available.' ]);
                 end
 
-             else 
+             else
                 % No interpolation required
                 I_neighbour2local_e = speye(m,m);
                 I_neighbour2local_d = speye(m,m);
@@ -310,8 +310,8 @@ classdef Schrodinger2d < scheme.Scheme
 
             closure = tau*Hi*d*H_gamma*e' + sigma*Hi*e*H_gamma*d';
             penalty = -tau*Hi*d*H_gamma*I_neighbour2local_e*e_neighbour' ...
-                      -sigma*Hi*e*H_gamma*I_neighbour2local_d*d_neighbour'; 
-             
+                      -sigma*Hi*e*H_gamma*I_neighbour2local_d*d_neighbour';
+
         end
 
         % Returns the coordinate number and outward normal component for the boundary specified by the string boundary.

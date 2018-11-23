@@ -16,15 +16,15 @@ classdef Utux < scheme.Scheme
     end
 
 
-    methods 
+    methods
          function obj = Utux(g ,order, operator)
              default_arg('operator','Standard');
-             
+
              m = g.size();
              xl = g.getBoundary('l');
              xr = g.getBoundary('r');
              xlim = {xl, xr};
-             
+
            switch operator
 %                case 'NonEquidistant'
 %               ops = sbp.D1Nonequidistant(m,xlim,order);
@@ -38,12 +38,12 @@ classdef Utux < scheme.Scheme
                otherwise
                    error('Unvalid operator')
            end
-           
+
             obj.grid = g;
 
             obj.H =  ops.H;
             obj.Hi = ops.HI;
-        
+
             obj.e_l = ops.e_l;
             obj.e_r = ops.e_r;
             obj.D = -obj.D1;
@@ -62,27 +62,27 @@ classdef Utux < scheme.Scheme
         %       neighbour_boundary  is a string specifying which boundary to interface to.
         function [closure, penalty] = boundary_condition(obj,boundary,type)
             default_arg('type','dirichlet');
-            tau =-1*obj.e_l;  
-            closure = obj.Hi*tau*obj.e_l';       
+            tau =-1*obj.e_l;
+            closure = obj.Hi*tau*obj.e_l';
             penalty = -obj.Hi*tau;
-                
+
          end
-          
-         function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
+
+         function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,type)
              switch boundary
                  % Upwind coupling
                  case {'l','left'}
                      tau = -1*obj.e_l;
-                     closure = obj.Hi*tau*obj.e_l';       
+                     closure = obj.Hi*tau*obj.e_l';
                      penalty = -obj.Hi*tau*neighbour_scheme.e_r';
                  case {'r','right'}
                      tau = 0*obj.e_r;
-                     closure = obj.Hi*tau*obj.e_r';       
+                     closure = obj.Hi*tau*obj.e_r';
                      penalty = -obj.Hi*tau*neighbour_scheme.e_l';
              end
-                 
+
          end
-      
+
         function N = size(obj)
             N = obj.m;
         end
