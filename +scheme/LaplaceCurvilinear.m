@@ -276,66 +276,70 @@ classdef LaplaceCurvilinear < scheme.Scheme
             end
         end
 
-        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
+        % type     Struct that specifies the interface coupling.
+        %          Fields:
+        %          -- tuning:           penalty strength, defaults to 1.2
+        %          -- interpolation:    struct of interpolation operators (empty for conforming grids)
+        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,type)
+            if isempty(type)
+                [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary);
+            else
+                assertType(type, 'struct');
+                if isfield(type, 'I_local2neighbor')
+                    [closure, penalty] = interfaceNonConforming(obj,boundary,neighbour_scheme,neighbour_boundary,type);
+                else
+                    [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary,type);
+                end
+            end
+        end
+
+        function [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary,type)
+            % u denotes the solution in the own domain
+            % v denotes the solution in the neighbour domain
+
+            default_arg('type', struct);
+            default_field(type, 'tuning', 1.2);
+            tuning = type.tuning;
+
+            [e_u, d_u, gamm_u, H_b_u, I_u] = obj.get_boundary_ops(boundary);
+            [e_v, d_v, gamm_v, H_b_v, I_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
+
+            u = obj;
+            v = neighbour_scheme;
+
+            b1_u = gamm_u*u.lambda(I_u)./u.a11(I_u).^2;
+            b2_u = gamm_u*u.lambda(I_u)./u.a22(I_u).^2;
+            b1_v = gamm_v*v.lambda(I_v)./v.a11(I_v).^2;
+            b2_v = gamm_v*v.lambda(I_v)./v.a22(I_v).^2;
+
+            tau1 = -1./(4*b1_u) -1./(4*b1_v) -1./(4*b2_u) -1./(4*b2_v);
+            tau1 = tuning * spdiag(tau1);
+            tau2 = 1/2;
+
+            sig1 = -1/2;
+            sig2 = 0;
+
+            tau = (e_u*tau1 + tau2*d_u)*H_b_u;
+            sig = (sig1*e_u + sig2*d_u)*H_b_u;
+
+            closure = obj.a*obj.Hi*( tau*e_u' + sig*d_u');
+            penalty = obj.a*obj.Hi*(-tau*e_v' + sig*d_v');
+        end
+
+        function [closure, penalty] = interfaceNonConforming(obj,boundary,neighbour_scheme,neighbour_boundary,type)
+
+            default_field(type, 'tuning', 1.2);
+            tuning = type.tuning;
+
+            I_u2v_good = type.I_local2neighbor.good;
+            I_u2v_bad = type.I_local2neighbor.bad;
+            I_v2u_good = type.I_neighbor2local.good;
+            I_v2u_bad = type.I_neighbor2local.bad;
 
             [e_u, d_u, gamm_u, H_b_u, I_u] = obj.get_boundary_ops(boundary);
             [e_v, d_v, gamm_v, H_b_v, I_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
             Hi = obj.Hi;
             a = obj.a;
-
-            m_u = length(H_b_u);
-            m_v = length(H_b_v);
-
-            grid_ratio = m_u/m_v;
-             if grid_ratio ~= 1
-
-                [ms, index] = sort([m_u, m_v]);
-                orders = [obj.order, neighbour_scheme.order];
-                orders = orders(index);
-
-                switch obj.interpolation_type
-                case 'MC'
-                    interpOpSet = sbp.InterpMC(ms(1),ms(2),orders(1),orders(2));
-                    if grid_ratio < 1
-                        I_v2u_good = interpOpSet.IF2C;
-                        I_v2u_bad = interpOpSet.IF2C;
-                        I_u2v_good = interpOpSet.IC2F;
-                        I_u2v_bad = interpOpSet.IC2F;
-                    elseif grid_ratio > 1
-                        I_v2u_good = interpOpSet.IC2F;
-                        I_v2u_bad = interpOpSet.IC2F;
-                        I_u2v_good = interpOpSet.IF2C;
-                        I_u2v_bad = interpOpSet.IF2C;
-                    end
-                case 'AWW'
-                    %String 'C2F' indicates that ICF2 is more accurate.
-                    interpOpSetF2C = sbp.InterpAWW(ms(1),ms(2),orders(1),orders(2),'F2C');
-                    interpOpSetC2F = sbp.InterpAWW(ms(1),ms(2),orders(1),orders(2),'C2F'); 
-                    if grid_ratio < 1 
-                        % Local is coarser than neighbour
-                        I_v2u_good = interpOpSetF2C.IF2C;
-                        I_v2u_bad = interpOpSetC2F.IF2C;
-                        I_u2v_good = interpOpSetC2F.IC2F;
-                        I_u2v_bad = interpOpSetF2C.IC2F;
-                    elseif grid_ratio > 1
-                        % Local is finer than neighbour 
-                        I_v2u_good = interpOpSetC2F.IC2F;
-                        I_v2u_bad = interpOpSetF2C.IC2F;
-                        I_u2v_good = interpOpSetF2C.IF2C;
-                        I_u2v_bad = interpOpSetC2F.IF2C;
-                    end
-                otherwise
-                    error(['Interpolation type ' obj.interpolation_type ...
-                         ' is not available.' ]);
-                end
-
-             else 
-                % No interpolation required
-                I_v2u_good = speye(m_u,m_u);
-                I_v2u_bad = speye(m_u,m_u);
-                I_u2v_good = speye(m_u,m_u);
-                I_u2v_bad = speye(m_u,m_u);
-            end
 
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
@@ -365,7 +369,7 @@ classdef LaplaceCurvilinear < scheme.Scheme
                       -a*Hi*e_u*H_b_u*I_v2u_bad*beta_u*e_v' + ...
                       -a*1/2*Hi*d_u*H_b_u*I_v2u_good*e_v' + ...
                       -a*1/2*Hi*e_u*H_b_u*I_v2u_bad*d_v';
-            
+
 
         end
 
