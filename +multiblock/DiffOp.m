@@ -10,7 +10,7 @@ classdef DiffOp < scheme.Scheme
     end
 
     methods
-        function obj = DiffOp(doHand, grid, order, doParam)
+        function obj = DiffOp(doHand, grid, order, doParam, interfaceType)
             %  doHand -- may either be a function handle or a cell array of
             %            function handles for each grid. The function handle(s)
             %            should be on the form do = doHand(grid, order, ...)
@@ -24,11 +24,17 @@ classdef DiffOp < scheme.Scheme
             %            corresponding function handle as extra parameters:
             %            doHand(..., doParam{i}{:}) Otherwise doParam is sent as
             %            extra parameters to all doHand: doHand(..., doParam{:})
+            %
+            % interfaceType -- nBlocks x nBlocks cell array of types that specify
+            %                  that particular block-coupling is handled. (Could
+            %                  be non-conforming interface, etc.)
+            %                  Default: empty cell array.
             default_arg('doParam', [])
 
             [getHand, getParam] = parseInput(doHand, grid, doParam);
 
             nBlocks = grid.nBlocks();
+            default_arg('interfaceType', cell(nBlocks, nBlocks));
 
             obj.order = order;
 
@@ -66,12 +72,11 @@ classdef DiffOp < scheme.Scheme
                         continue
                     end
 
-
-                    [ii, ij] = obj.diffOps{i}.interface(intf{1}, obj.diffOps{j}, intf{2});
+                    [ii, ij] = obj.diffOps{i}.interface(intf{1}, obj.diffOps{j}, intf{2}, interfaceType{i,j});
                     D{i,i} = D{i,i} + ii;
                     D{i,j} = D{i,j} + ij;
 
-                    [jj, ji] = obj.diffOps{j}.interface(intf{2}, obj.diffOps{i}, intf{1});
+                    [jj, ji] = obj.diffOps{j}.interface(intf{2}, obj.diffOps{i}, intf{1}, interfaceType{j,i});
                     D{j,j} = D{j,j} + jj;
                     D{j,i} = D{j,i} + ji;
                 end
