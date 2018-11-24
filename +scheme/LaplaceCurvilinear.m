@@ -39,18 +39,16 @@ classdef LaplaceCurvilinear < scheme.Scheme
         gamm_u, gamm_v
         lambda
 
-        interpolation_type
     end
 
     methods
         % Implements  a*div(b*grad(u)) as a SBP scheme
         % TODO: Implement proper H, it should be the real physical quadrature, the logic quadrature may be but in a separate variable (H_logic?)
 
-        function obj = LaplaceCurvilinear(g ,order, a, b, opSet, interpolation_type)
+        function obj = LaplaceCurvilinear(g ,order, a, b, opSet)
             default_arg('opSet',@sbp.D2Variable);
             default_arg('a', 1);
             default_arg('b', 1);
-            default_arg('interpolation_type','AWW');
 
             if b ~=1
                 error('Not implemented yet')
@@ -216,7 +214,6 @@ classdef LaplaceCurvilinear < scheme.Scheme
             obj.h = [h_u h_v];
             obj.order = order;
             obj.grid = g;
-            obj.interpolation_type = interpolation_type;
 
             obj.a = a;
             obj.b = b;
@@ -294,13 +291,13 @@ classdef LaplaceCurvilinear < scheme.Scheme
         end
 
         function [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary,type)
-            % u denotes the solution in the own domain
-            % v denotes the solution in the neighbour domain
 
             default_arg('type', struct);
             default_field(type, 'tuning', 1.2);
             tuning = type.tuning;
 
+            % u denotes the solution in the own domain
+            % v denotes the solution in the neighbour domain
             [e_u, d_u, gamm_u, H_b_u, I_u] = obj.get_boundary_ops(boundary);
             [e_v, d_v, gamm_v, H_b_v, I_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
 
@@ -331,6 +328,8 @@ classdef LaplaceCurvilinear < scheme.Scheme
             default_field(type, 'tuning', 1.2);
             tuning = type.tuning;
 
+            % u denotes the solution in the own domain
+            % v denotes the solution in the neighbour domain
             I_u2v_good = type.I_local2neighbor.good;
             I_u2v_bad = type.I_local2neighbor.bad;
             I_v2u_good = type.I_neighbor2local.good;
@@ -341,10 +340,6 @@ classdef LaplaceCurvilinear < scheme.Scheme
             Hi = obj.Hi;
             a = obj.a;
 
-            % u denotes the solution in the own domain
-            % v denotes the solution in the neighbour domain
-            tuning = 1.2;
-            % tuning = 20.2;
             u = obj;
             v = neighbour_scheme;
 
@@ -373,10 +368,10 @@ classdef LaplaceCurvilinear < scheme.Scheme
 
         end
 
-        % Ruturns the boundary ops and sign for the boundary specified by the string boundary.
+        % Returns the boundary ops and sign for the boundary specified by the string boundary.
         % The right boundary is considered the positive boundary
         %
-        %  I -- the indecies of the boundary points in the grid matrix
+        %  I -- the indices of the boundary points in the grid matrix
         function [e, d, gamm, H_b, I] = get_boundary_ops(obj, boundary)
 
             % gridMatrix = zeros(obj.m(2),obj.m(1));
