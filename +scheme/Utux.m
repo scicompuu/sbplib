@@ -68,7 +68,7 @@ classdef Utux < scheme.Scheme
 
          end
 
-         function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,type)
+         function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,opts)
              switch boundary
                  % Upwind coupling
                  case {'l','left'}

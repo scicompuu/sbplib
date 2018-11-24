@@ -132,7 +132,7 @@ classdef Utux2D < scheme.Scheme
 
          end
 
-         function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,type)
+         function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,opts)
 
              % Get neighbour boundary operator
              switch neighbour_boundary

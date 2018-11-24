@@ -93,7 +93,7 @@ classdef Hypsyst2d < scheme.Scheme
             end
         end
 
-        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,type)
+        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,opts)
             error('An interface function does not exist yet');
         end
 

@@ -27,11 +27,12 @@ classdef Scheme < handle
         %       penalty  may be a cell array if there are several penalties with different weights
         [closure, penalty] = boundary_condition(obj,boundary,type) % TODO: Change name to boundaryCondition
 
-        % type                  Specifies the type of interface coupling.
-        %                       The format of type is different for every scheme.
-        %                       Some schemes may only have one type implemented, in which case
-        %                       the input argument is a dummy.
-        [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,type)
+        % opts                  multiblock.InterfaceOptions object that specifies
+        %                       the details of the interface coupling.
+        %                       The format of opts is different for every scheme.
+        %                       Some schemes may only have one interface treatment
+        %                       implemented, in which case opts is a dummy.
+        [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,opts)
 
         % TODO: op = getBoundaryOperator()??
         %   makes sense to have it available through a method instead of random properties

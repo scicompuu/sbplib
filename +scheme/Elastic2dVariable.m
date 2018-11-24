@@ -352,7 +352,7 @@ classdef Elastic2dVariable < scheme.Scheme
             end
         end
 
-        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,type)
+        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,opts)
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
             tuning = 1.2;

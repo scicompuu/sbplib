@@ -202,7 +202,7 @@ classdef Schrodinger2d < scheme.Scheme
             end
         end
 
-        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,type)
+        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,opts)
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
             % Get neighbour boundary operator

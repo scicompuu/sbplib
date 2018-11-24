@@ -273,28 +273,28 @@ classdef LaplaceCurvilinear < scheme.Scheme
             end
         end
 
-        % type     Struct that specifies the interface coupling.
+        % opts     Struct that specifies the interface coupling.
         %          Fields:
         %          -- tuning:           penalty strength, defaults to 1.2
         %          -- interpolation:    struct of interpolation operators (empty for conforming grids)
-        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,type)
-            if isempty(type)
+        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,opts)
+            if isempty(opts)
                 [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary);
             else
-                assertType(type, 'struct');
-                if isfield(type, 'I_local2neighbor')
-                    [closure, penalty] = interfaceNonConforming(obj,boundary,neighbour_scheme,neighbour_boundary,type);
+                assertType(opts, 'struct');
+                if isfield(opts, 'I_local2neighbor')
+                    [closure, penalty] = interfaceNonConforming(obj,boundary,neighbour_scheme,neighbour_boundary,opts);
                 else
-                    [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary,type);
+                    [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary,opts);
                 end
             end
         end
 
-        function [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary,type)
+        function [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary,opts)
 
-            default_arg('type', struct);
-            default_field(type, 'tuning', 1.2);
-            tuning = type.tuning;
+            default_arg('opts', struct);
+            default_field(opts, 'tuning', 1.2);
+            tuning = opts.tuning;
 
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
@@ -323,17 +323,17 @@ classdef LaplaceCurvilinear < scheme.Scheme
             penalty = obj.a*obj.Hi*(-tau*e_v' + sig*d_v');
         end
 
-        function [closure, penalty] = interfaceNonConforming(obj,boundary,neighbour_scheme,neighbour_boundary,type)
+        function [closure, penalty] = interfaceNonConforming(obj,boundary,neighbour_scheme,neighbour_boundary,opts)
 
-            default_field(type, 'tuning', 1.2);
-            tuning = type.tuning;
+            default_field(opts, 'tuning', 1.2);
+            tuning = opts.tuning;
 
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
-            I_u2v_good = type.I_local2neighbor.good;
-            I_u2v_bad = type.I_local2neighbor.bad;
-            I_v2u_good = type.I_neighbor2local.good;
-            I_v2u_bad = type.I_neighbor2local.bad;
+            I_u2v_good = opts.I_local2neighbor.good;
+            I_u2v_bad = opts.I_local2neighbor.bad;
+            I_v2u_good = opts.I_neighbor2local.good;
+            I_v2u_bad = opts.I_neighbor2local.bad;
 
             [e_u, d_u, gamm_u, H_b_u, I_u] = obj.get_boundary_ops(boundary);
             [e_v, d_v, gamm_v, H_b_v, I_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
