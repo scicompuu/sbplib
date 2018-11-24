@@ -1,5 +1,4 @@
-
-% Takes the local closure for ice or water and turns it into a closure for the whole system
+% Takes the block-local closures and turns it into a global closure
 %   local -- The local closure
 %   div   -- block matrix division for the diffOp
 %   I     -- Index of blockmatrix block

@@ -1,10 +1,9 @@
-% function [closure, S] = bcSetup(diffOp, bc)
 % Takes a diffOp and a cell array of boundary condition definitions.
 % Each bc is a struct with the fields
 %  * type     -- Type of boundary condition
 %  * boundary -- Boundary identifier
 %  * data     -- A function_handle for a function which provides boundary data.(see below)
-% Also takes S_sign which modifies the sign of S, [-1,1]
+% Also takes S_sign which modifies the sign of the penalty function, [-1,1]
 % Returns a closure matrix and a forcing function S.
 %
 % The boundary data function can either be a function of time or a function of time and space coordinates.

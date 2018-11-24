@@ -1,4 +1,4 @@
-% Takes the local penalty for ice or water and turns it into a penalty for the whole system
+% Takes the block-local penalty and turns it into a global penalty
 %   local -- The local penalty
 %   div   -- block matrix division for the diffOp
 %   I     -- Index of blockmatrix block
