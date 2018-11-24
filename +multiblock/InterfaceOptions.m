@@ -78,8 +78,15 @@ classdef InterfaceOptions < handle
 
             % Both i and j are nonempty, set property only for that interface
             else
-                opts{i,j}{1} = setfield(opts{i,j}{1}, optStr, val);
-                opts{i,j}{2} = setfield(opts{i,j}{2}, optStr, val);
+                if ~isempty(opts{i,j})
+                    opts{i,j}{1} = setfield(opts{i,j}{1}, optStr, val);
+                    opts{i,j}{2} = setfield(opts{i,j}{2}, optStr, val);
+                elseif ~isempty(opts{j,i})
+                    opts{j,i}{1} = setfield(opts{j,i}{1}, optStr, val);
+                    opts{j,i}{2} = setfield(opts{j,i}{2}, optStr, val);
+                else
+                    error(sprintf('Blocks %d and %d do not seem to be coupled',i,j) );
+                end
             end
 
             obj.optsCell = opts;
