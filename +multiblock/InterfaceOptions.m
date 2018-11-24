@@ -54,7 +54,7 @@ classdef InterfaceOptions < handle
         %
         % optStr  -- string
         % val     -- anything
-        % i,j     -- integers
+        % i,j     -- integers (or empty)
         function setOption(obj, optStr, val, i ,j)
             default_arg('i',[]);
             default_arg('j',[]);
@@ -93,10 +93,12 @@ classdef InterfaceOptions < handle
         end
 
 
-        % Constructs the union of two InterfaceOptions
-        function union(obj, obj2)
-            localOpts = obj.optsCell;
-            remoteOpts = obj2.optsCell;
+        % Merges with another InterfaceOptions-object.
+        % Errors if there are merge conflicts.
+        % TODO: merge with preference?
+        function merge(obj, obj2)
+            localOpts = obj.getOptions();
+            remoteOpts = obj2.getOptions();
 
             assert( numel(localOpts) == numel(remoteOpts), ...
                     'multiblock.InterfaceOptions: The two InterfaceOptions do not have the same dimension.');
