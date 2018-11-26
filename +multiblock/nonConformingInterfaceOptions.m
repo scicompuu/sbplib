@@ -37,15 +37,15 @@ for i = 1:nBlocks
 
 			switch interpOpSet
 			case 'MC'
-				interpOpSet = sbp.InterpMC(mi, mj, orders{i}, orders{j});
+				interpOpSet = sbp.InterpMC(mj+1, mi+1, orders{j}, orders{i});
 				I_i2j_good = interpOpSet.IF2C;
                 I_i2j_bad = interpOpSet.IF2C;
                 I_j2i_good = interpOpSet.IC2F;
                 I_j2i_bad = interpOpSet.IC2F;
 
             case 'AWW'
-            	interpOpSetF2C = sbp.InterpAWW(mi+1, mj+1, orders{i}, orders{j}, 'F2C');
-            	interpOpSetC2F = sbp.InterpAWW(mi+1, mj+1, orders{i}, orders{j}, 'C2F');
+            	interpOpSetF2C = sbp.InterpAWW(mj+1, mi+1, orders{j}, orders{i}, 'F2C');
+            	interpOpSetC2F = sbp.InterpAWW(mj+1, mi+1, orders{j}, orders{i}, 'C2F');
 				I_i2j_good = interpOpSetF2C.IF2C;
                 I_i2j_bad = interpOpSetC2F.IF2C;
                 I_j2i_good = interpOpSetC2F.IC2F;
