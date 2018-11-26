@@ -33,14 +33,11 @@ classdef Schrodinger2d < scheme.Scheme
 
         H_boundary % Boundary inner products
 
-        interpolation_type % MC or AWW
-
     end
 
     methods
 
-        function obj = Schrodinger2d(g ,order, a, opSet, interpolation_type)
-            default_arg('interpolation_type','AWW');
+        function obj = Schrodinger2d(g ,order, a, opSet)
             default_arg('opSet',{@sbp.D2Variable, @sbp.D2Variable});
             default_arg('a',1);
             dim = 2;
@@ -150,7 +147,6 @@ classdef Schrodinger2d < scheme.Scheme
             obj.d_e = obj.d1_r{1};
             obj.d_s = obj.d1_l{2};
             obj.d_n = obj.d1_r{2};
-            obj.interpolation_type = interpolation_type;
 
         end
 
@@ -202,115 +198,70 @@ classdef Schrodinger2d < scheme.Scheme
             end
         end
 
+        % opts     Struct that specifies the interface coupling.
+        %          Fields:
+        %          -- interpolation:    struct of interpolation operators (empty for conforming grids)
         function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,opts)
+            if isempty(opts)
+                [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary);
+            else
+                assertType(opts, 'struct');
+                if isfield(opts, 'I_local2neighbor')
+                    [closure, penalty] = interfaceNonConforming(obj,boundary,neighbour_scheme,neighbour_boundary,opts);
+                else
+                    [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary,opts);
+                end
+            end
+        end
+
+        function [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary,opts)
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
-            % Get neighbour boundary operator
 
-            [coord_nei, n_nei] = get_boundary_number(obj, neighbour_boundary);
-            [coord, n] = get_boundary_number(obj, boundary);
-            switch n_nei
-            case 1
-                % North or east boundary
-                e_neighbour = neighbour_scheme.e_r;
-                d_neighbour = neighbour_scheme.d1_r;
-            case -1
-                % South or west boundary
-                e_neighbour = neighbour_scheme.e_l;
-                d_neighbour = neighbour_scheme.d1_l;
-            end
-
-            e_neighbour = e_neighbour{coord_nei};
-            d_neighbour = d_neighbour{coord_nei};
-            H_gamma = obj.H_boundary{coord};
+            % Get boundary operators
+            [e_neighbour, d_neighbour] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
+            [e, d, H_gamma] = obj.get_boundary_ops(boundary);
             Hi = obj.Hi;
             a = obj.a;
 
-            switch coord_nei
-            case 1
-                m_neighbour = neighbour_scheme.m(2);
-            case 2
-                m_neighbour = neighbour_scheme.m(1);
-            end
-
-            switch coord
-            case 1
-                m = obj.m(2);
-            case 2
-                m = obj.m(1);
-            end
-
-           switch n
-            case 1
-                % North or east boundary
-                e = obj.e_r;
-                d = obj.d1_r;
-            case -1
-                % South or west boundary
-                e = obj.e_l;
-                d = obj.d1_l;
-            end
-            e = e{coord};
-            d = d{coord};
+            % Get outward unit normal component
+            [~, n] = obj.get_boundary_number(boundary);
 
             Hi = obj.Hi;
             sigma = -n*1i*a/2;
             tau = -n*(1i*a)'/2;
 
-            grid_ratio = m/m_neighbour;
-             if grid_ratio ~= 1
+            closure = tau*Hi*d*H_gamma*e' + sigma*Hi*e*H_gamma*d';
+            penalty = -tau*Hi*d*H_gamma*e_neighbour' ...
+                      -sigma*Hi*e*H_gamma*d_neighbour';
 
-                [ms, index] = sort([m, m_neighbour]);
-                orders = [obj.order, neighbour_scheme.order];
-                orders = orders(index);
+        end
 
-                switch obj.interpolation_type
-                case 'MC'
-                    interpOpSet = sbp.InterpMC(ms(1),ms(2),orders(1),orders(2));
-                    if grid_ratio < 1
-                        I_neighbour2local_e = interpOpSet.IF2C;
-                        I_neighbour2local_d = interpOpSet.IF2C;
-                        I_local2neighbour_e = interpOpSet.IC2F;
-                        I_local2neighbour_d = interpOpSet.IC2F;
-                    elseif grid_ratio > 1
-                        I_neighbour2local_e = interpOpSet.IC2F;
-                        I_neighbour2local_d = interpOpSet.IC2F;
-                        I_local2neighbour_e = interpOpSet.IF2C;
-                        I_local2neighbour_d = interpOpSet.IF2C;
-                    end
-                case 'AWW'
-                    %String 'C2F' indicates that ICF2 is more accurate.
-                    interpOpSetF2C = sbp.InterpAWW(ms(1),ms(2),orders(1),orders(2),'F2C');
-                    interpOpSetC2F = sbp.InterpAWW(ms(1),ms(2),orders(1),orders(2),'C2F');
-                    if grid_ratio < 1
-                        % Local is coarser than neighbour
-                        I_neighbour2local_e = interpOpSetF2C.IF2C;
-                        I_neighbour2local_d = interpOpSetC2F.IF2C;
-                        I_local2neighbour_e = interpOpSetC2F.IC2F;
-                        I_local2neighbour_d = interpOpSetF2C.IC2F;
-                    elseif grid_ratio > 1
-                        % Local is finer than neighbour
-                        I_neighbour2local_e = interpOpSetC2F.IC2F;
-                        I_neighbour2local_d = interpOpSetF2C.IC2F;
-                        I_local2neighbour_e = interpOpSetF2C.IF2C;
-                        I_local2neighbour_d = interpOpSetC2F.IF2C;
-                    end
-                otherwise
-                    error(['Interpolation type ' obj.interpolation_type ...
-                         ' is not available.' ]);
-                end
+        function [closure, penalty] = interfaceNonConforming(obj,boundary,neighbour_scheme,neighbour_boundary,opts)
+            % u denotes the solution in the own domain
+            % v denotes the solution in the neighbour domain
 
-             else
-                % No interpolation required
-                I_neighbour2local_e = speye(m,m);
-                I_neighbour2local_d = speye(m,m);
-                I_local2neighbour_e = speye(m,m);
-                I_local2neighbour_d = speye(m,m);
-            end
+            % Get boundary operators
+            [e_neighbour, d_neighbour] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
+            [e, d, H_gamma] = obj.get_boundary_ops(boundary);
+            Hi = obj.Hi;
+            a = obj.a;
+
+            % Get outward unit normal component
+            [~, n] = obj.get_boundary_number(boundary);
+
+            % Get interpolation operators from opts
+            I_u2v_good = opts.I_local2neighbor.good;
+            I_u2v_bad = opts.I_local2neighbor.bad;
+            I_v2u_good = opts.I_neighbor2local.good;
+            I_v2u_bad = opts.I_neighbor2local.bad;
+
+            sigma = -n*1i*a/2;
+            tau = -n*(1i*a)'/2;
 
             closure = tau*Hi*d*H_gamma*e' + sigma*Hi*e*H_gamma*d';
-            penalty = -tau*Hi*d*H_gamma*I_neighbour2local_e*e_neighbour' ...
-                      -sigma*Hi*e*H_gamma*I_neighbour2local_d*d_neighbour';
+            penalty = -tau*Hi*d*H_gamma*I_v2u_good*e_neighbour' ...
+                      -sigma*Hi*e*H_gamma*I_v2u_bad*d_neighbour';
 
         end
 
@@ -334,37 +285,30 @@ classdef Schrodinger2d < scheme.Scheme
             end
         end
 
-        % Returns the coordinate number and outward normal component for the boundary specified by the string boundary.
-        function [return_op] = get_boundary_operator(obj, op, boundary)
+        % Returns the boundary ops and sign for the boundary specified by the string boundary.
+        % The right boundary is considered the positive boundary
+        function [e, d, H_b] = get_boundary_ops(obj, boundary)
 
             switch boundary
-                case {'w','W','west','West', 'e', 'E', 'east', 'East'}
-                    j = 1;
-                case {'s','S','south','South', 'n', 'N', 'north', 'North'}
-                    j = 2;
+                case 'w'
+                    e = obj.e_w;
+                    d = obj.d_w;
+                    H_b = obj.H_boundary{1};
+                case 'e'
+                    e = obj.e_e;
+                    d = obj.d_e;
+                    H_b = obj.H_boundary{1};
+                case 's'
+                    e = obj.e_s;
+                    d = obj.d_s;
+                    H_b = obj.H_boundary{2};
+                case 'n'
+                    e = obj.e_n;
+                    d = obj.d_n;
+                    H_b = obj.H_boundary{2};
                 otherwise
                     error('No such boundary: boundary = %s',boundary);
             end
-
-            switch op
-                case 'e'
-                    switch boundary
-                        case {'w','W','west','West','s','S','south','South'}
-                            return_op = obj.e_l{j};
-                        case {'e', 'E', 'east', 'East','n', 'N', 'north', 'North'}
-                            return_op = obj.e_r{j};
-                    end
-                case 'd'
-                    switch boundary
-                        case {'w','W','west','West','s','S','south','South'}
-                            return_op = obj.d1_l{j};
-                        case {'e', 'E', 'east', 'East','n', 'N', 'north', 'North'}
-                            return_op = obj.d1_r{j};
-                    end
-                otherwise
-                    error(['No such operator: operator = ' op]);
-            end
-
         end
 
         function N = size(obj)
