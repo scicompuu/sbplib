@@ -20,30 +20,12 @@ classdef Utux2D < scheme.Scheme
         e_w, e_e, e_s, e_n
 
         D % Total discrete operator
-
-        % String, type of interface coupling
-        % Default: 'upwind'
-        % Other:   'centered'
-        coupling_type
-
-        % String, type of interpolation operators
-        % Default: 'AWW' (Almquist Wang Werpers)
-        % Other:   'MC' (Mattsson Carpenter)
-        interpolation_type
-
-
-        % Cell array, damping on upwstream and downstream sides.
-        interpolation_damping
-
     end
 
 
     methods
-         function obj = Utux2D(g ,order, opSet, a, coupling_type, interpolation_type, interpolation_damping)
+         function obj = Utux2D(g ,order, opSet, a)
 
-            default_arg('interpolation_damping',{0,0});
-            default_arg('interpolation_type','AWW');
-            default_arg('coupling_type','upwind');
             default_arg('a',1/sqrt(2)*[1, 1]);
             default_arg('opSet',@sbp.D2Standard);
 
@@ -102,9 +84,6 @@ classdef Utux2D < scheme.Scheme
             obj.h = [ops_x.h ops_y.h];
             obj.order = order;
             obj.a = a;
-            obj.coupling_type = coupling_type;
-            obj.interpolation_type = interpolation_type;
-            obj.interpolation_damping = interpolation_damping;
             obj.D = -(a{1}*obj.Dx + a{2}*obj.Dy);
 
         end
@@ -130,104 +109,128 @@ classdef Utux2D < scheme.Scheme
             end
             penalty = -obj.Hi*tau;
 
-         end
+        end
 
-         function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,opts)
+        % opts     Struct that specifies the interface coupling.
+        %          Fields:
+        %          -- couplingType             String, type of interface coupling
+        %                                       % Default: 'upwind'. Other: 'centered'
+        %          -- interpolation:            struct of interpolation operators (empty for conforming grids)
+        %          -- interpolationDamping:    damping on upstream and downstream sides.
+        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,opts)
+            if isempty(opts)
+                [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary);
+            else
+                assertType(opts, 'struct');
+                if isfield(opts, 'I_local2neighbor')
+                    [closure, penalty] = interfaceNonConforming(obj,boundary,neighbour_scheme,neighbour_boundary,opts);
+                else
+                    [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary,opts);
+                end
+            end
+        end
 
-             % Get neighbour boundary operator
-             switch neighbour_boundary
-                 case {'e','E','east','East'}
-                     e_neighbour = neighbour_scheme.e_e;
-                     m_neighbour = neighbour_scheme.m(2);
-                 case {'w','W','west','West'}
-                     e_neighbour = neighbour_scheme.e_w;
-                     m_neighbour = neighbour_scheme.m(2);
-                 case {'n','N','north','North'}
-                     e_neighbour = neighbour_scheme.e_n;
-                     m_neighbour = neighbour_scheme.m(1);
-                 case {'s','S','south','South'}
-                     e_neighbour = neighbour_scheme.e_s;
-                     m_neighbour = neighbour_scheme.m(1);
-             end
+        function [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary,opts)
+            default_arg('opts', struct);
+            default_field(opts, 'couplingType', 'upwind');
+            couplingType = opts.couplingType;
 
-             switch obj.coupling_type
+            % Get neighbour boundary operator
+            switch neighbour_boundary
+             case {'e','E','east','East'}
+                 e_neighbour = neighbour_scheme.e_e;
+             case {'w','W','west','West'}
+                 e_neighbour = neighbour_scheme.e_w;
+             case {'n','N','north','North'}
+                 e_neighbour = neighbour_scheme.e_n;
+             case {'s','S','south','South'}
+                 e_neighbour = neighbour_scheme.e_s;
+            end
 
-             % Upwind coupling (energy dissipation)
-             case 'upwind'
+            switch couplingType
+
+            % Upwind coupling (energy dissipation)
+            case 'upwind'
                  sigma_ds = -1; %"Downstream" penalty
                  sigma_us = 0; %"Upstream" penalty
 
-             % Energy-preserving coupling (no energy dissipation)
-             case 'centered'
+            % Energy-preserving coupling (no energy dissipation)
+            case 'centered'
                  sigma_ds = -1/2; %"Downstream" penalty
                  sigma_us = 1/2; %"Upstream" penalty
 
-             otherwise
-                error(['Interface coupling type ' coupling_type ' is not available.'])
-             end
-
-             % Check grid ratio for interpolation
-             switch boundary
-                 case {'w','W','west','West','e','E','east','East'}
-                     m = obj.m(2);
-                 case {'s','S','south','South','n','N','north','North'}
-                     m = obj.m(1);
-             end
-             grid_ratio = m/m_neighbour;
-             if grid_ratio ~= 1
-
-                [ms, index] = sort([m, m_neighbour]);
-                orders = [obj.order, neighbour_scheme.order];
-                orders = orders(index);
-
-                switch obj.interpolation_type
-                case 'MC'
-                    interpOpSet = sbp.InterpMC(ms(1),ms(2),orders(1),orders(2));
-                    if grid_ratio < 1
-                        I_neighbour2local_us = interpOpSet.IF2C;
-                        I_neighbour2local_ds = interpOpSet.IF2C;
-                        I_local2neighbour_us = interpOpSet.IC2F;
-                        I_local2neighbour_ds = interpOpSet.IC2F;
-                    elseif grid_ratio > 1
-                        I_neighbour2local_us = interpOpSet.IC2F;
-                        I_neighbour2local_ds = interpOpSet.IC2F;
-                        I_local2neighbour_us = interpOpSet.IF2C;
-                        I_local2neighbour_ds = interpOpSet.IF2C;
-                    end
-                case 'AWW'
-                    %String 'C2F' indicates that ICF2 is more accurate.
-                    interpOpSetF2C = sbp.InterpAWW(ms(1),ms(2),orders(1),orders(2),'F2C');
-                    interpOpSetC2F = sbp.InterpAWW(ms(1),ms(2),orders(1),orders(2),'C2F');
-                    if grid_ratio < 1
-                        % Local is coarser than neighbour
-                        I_neighbour2local_us = interpOpSetC2F.IF2C;
-                        I_neighbour2local_ds = interpOpSetF2C.IF2C;
-                        I_local2neighbour_us = interpOpSetC2F.IC2F;
-                        I_local2neighbour_ds = interpOpSetF2C.IC2F;
-                    elseif grid_ratio > 1
-                        % Local is finer than neighbour
-                        I_neighbour2local_us = interpOpSetF2C.IC2F;
-                        I_neighbour2local_ds = interpOpSetC2F.IC2F;
-                        I_local2neighbour_us = interpOpSetF2C.IF2C;
-                        I_local2neighbour_ds = interpOpSetC2F.IF2C;
-                    end
-                otherwise
-                    error(['Interpolation type ' obj.interpolation_type ...
-                         ' is not available.' ]);
-                end
-
-             else
-                % No interpolation required
-                I_neighbour2local_us = speye(m,m);
-                I_neighbour2local_ds = speye(m,m);
+            otherwise
+            error(['Interface coupling type ' couplingType ' is not available.'])
             end
 
-             int_damp_us = obj.interpolation_damping{1};
-             int_damp_ds = obj.interpolation_damping{2};
+            switch boundary
+                case {'w','W','west','West'}
+                    tau = sigma_ds*obj.a{1}*obj.e_w*obj.H_y;
+                    closure = obj.Hi*tau*obj.e_w';
+                    penalty = -obj.Hi*tau*e_neighbour';
+                case {'e','E','east','East'}
+                    tau = sigma_us*obj.a{1}*obj.e_e*obj.H_y;
+                    closure = obj.Hi*tau*obj.e_e';
+                    penalty = -obj.Hi*tau*e_neighbour';
+                case {'s','S','south','South'}
+                    tau = sigma_ds*obj.a{2}*obj.e_s*obj.H_x;
+                    closure = obj.Hi*tau*obj.e_s';
+                    penalty = -obj.Hi*tau*e_neighbour';
+                case {'n','N','north','North'}
+                    tau = sigma_us*obj.a{2}*obj.e_n*obj.H_x;
+                    closure = obj.Hi*tau*obj.e_n';
+                    penalty = -obj.Hi*tau*e_neighbour';
+             end
 
-             I = speye(m,m);
-             I_back_forth_us = I_neighbour2local_us*I_local2neighbour_us;
-             I_back_forth_ds = I_neighbour2local_ds*I_local2neighbour_ds;
+         end
+
+         function [closure, penalty] = interfaceNonConforming(obj,boundary,neighbour_scheme,neighbour_boundary,opts)
+            default_arg('opts', struct);
+            default_field(opts, 'couplingType', 'upwind');
+            default_field(opts, 'interpolationDamping', {0,0});
+            couplingType = opts.couplingType;
+            interpolationDamping = opts.interpolationDamping;
+
+            % Get neighbour boundary operator
+            switch neighbour_boundary
+             case {'e','E','east','East'}
+                 e_neighbour = neighbour_scheme.e_e;
+             case {'w','W','west','West'}
+                 e_neighbour = neighbour_scheme.e_w;
+             case {'n','N','north','North'}
+                 e_neighbour = neighbour_scheme.e_n;
+             case {'s','S','south','South'}
+                 e_neighbour = neighbour_scheme.e_s;
+            end
+
+            switch couplingType
+
+            % Upwind coupling (energy dissipation)
+            case 'upwind'
+                 sigma_ds = -1; %"Downstream" penalty
+                 sigma_us = 0; %"Upstream" penalty
+
+            % Energy-preserving coupling (no energy dissipation)
+            case 'centered'
+                 sigma_ds = -1/2; %"Downstream" penalty
+                 sigma_us = 1/2; %"Upstream" penalty
+
+            otherwise
+            error(['Interface coupling type ' couplingType ' is not available.'])
+            end
+
+            int_damp_us = interpolationDamping{1};
+            int_damp_ds = interpolationDamping{2};
+
+            % u denotes the solution in the own domain
+            % v denotes the solution in the neighbour domain
+            I_local2neighbour_ds = opts.I_local2neighbor.bad;
+            I_local2neighbour_us = opts.I_local2neighbor.good;
+            I_neighbour2local_ds = opts.I_neighbor2local.good;
+            I_neighbour2local_us = opts.I_neighbor2local.bad;
+
+            I_back_forth_us = I_neighbour2local_us*I_local2neighbour_us;
+            I_back_forth_ds = I_neighbour2local_ds*I_local2neighbour_ds;
 
 
              switch boundary
@@ -238,7 +241,7 @@ classdef Utux2D < scheme.Scheme
 
                      beta = int_damp_ds*obj.a{1}...
                             *obj.e_w*obj.H_y;
-                     closure = closure + obj.Hi*beta*(I_back_forth_ds - I)*obj.e_w';
+                     closure = closure + obj.Hi*beta*I_back_forth_ds*obj.e_w' - obj.Hi*beta*obj.e_w';
                  case {'e','E','east','East'}
                      tau = sigma_us*obj.a{1}*obj.e_e*obj.H_y;
                      closure = obj.Hi*tau*obj.e_e';
@@ -246,7 +249,7 @@ classdef Utux2D < scheme.Scheme
 
                      beta = int_damp_us*obj.a{1}...
                             *obj.e_e*obj.H_y;
-                     closure = closure + obj.Hi*beta*(I_back_forth_us - I)*obj.e_e';
+                     closure = closure + obj.Hi*beta*I_back_forth_us*obj.e_e' - obj.Hi*beta*obj.e_e';
                  case {'s','S','south','South'}
                      tau = sigma_ds*obj.a{2}*obj.e_s*obj.H_x;
                      closure = obj.Hi*tau*obj.e_s';
@@ -254,7 +257,7 @@ classdef Utux2D < scheme.Scheme
 
                      beta = int_damp_ds*obj.a{2}...
                             *obj.e_s*obj.H_x;
-                     closure = closure + obj.Hi*beta*(I_back_forth_ds - I)*obj.e_s';
+                     closure = closure + obj.Hi*beta*I_back_forth_ds*obj.e_s' - obj.Hi*beta*obj.e_s';
                  case {'n','N','north','North'}
                      tau = sigma_us*obj.a{2}*obj.e_n*obj.H_x;
                      closure = obj.Hi*tau*obj.e_n';
@@ -262,7 +265,7 @@ classdef Utux2D < scheme.Scheme
 
                      beta = int_damp_us*obj.a{2}...
                             *obj.e_n*obj.H_x;
-                     closure = closure + obj.Hi*beta*(I_back_forth_us - I)*obj.e_n';
+                     closure = closure + obj.Hi*beta*I_back_forth_us*obj.e_n' - obj.Hi*beta*obj.e_n';
              end
 
 
