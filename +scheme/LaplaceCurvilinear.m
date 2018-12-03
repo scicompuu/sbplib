@@ -273,31 +273,31 @@ classdef LaplaceCurvilinear < scheme.Scheme
             end
         end
 
-        % opts     Struct that specifies the interface coupling.
+        % type     Struct that specifies the interface coupling.
         %          Fields:
         %          -- tuning:           penalty strength, defaults to 1.2
         %          -- interpolation:    struct of interpolation operators (empty for conforming grids)
-        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,opts)
+        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,type)
 
             defaultType.tuning = 1.2;
             defaultType.interpolation = 'none';
-            default_struct('opts', defaultType);
+            default_struct('type', defaultType);
 
-            switch opts.interpolation
+            switch type.interpolation
             case {'none', ''}
                 [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary);
             case {'op','OP'}
-                [closure, penalty] = interfaceNonConforming(obj,boundary,neighbour_scheme,neighbour_boundary,opts);
+                [closure, penalty] = interfaceNonConforming(obj,boundary,neighbour_scheme,neighbour_boundary,type);
             otherwise
                 error('Unknown type of interpolation: %s ', type.interpolation);
             end
         end
 
-        function [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary,opts)
+        function [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary,type)
 
-            default_arg('opts', struct);
-            default_field(opts, 'tuning', 1.2);
-            tuning = opts.tuning;
+            default_arg('type', struct);
+            default_field(type, 'tuning', 1.2);
+            tuning = type.tuning;
 
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
@@ -326,15 +326,15 @@ classdef LaplaceCurvilinear < scheme.Scheme
             penalty = obj.a*obj.Hi*(-tau*e_v' + sig*d_v');
         end
 
-        function [closure, penalty] = interfaceNonConforming(obj,boundary,neighbour_scheme,neighbour_boundary,opts)
+        function [closure, penalty] = interfaceNonConforming(obj,boundary,neighbour_scheme,neighbour_boundary,type)
 
             % TODO: Make this work for curvilinear grids
             warning('LaplaceCurvilinear: Non-conforming grid interpolation only works for Cartesian grids.');
 
             % User can request special interpolation operators by specifying type.interpOpSet
-            default_field(opts, 'interpOpSet', @sbp.InterpOpsOP);
-            interpOpSet = opts.interpOpSet;
-            tuning = opts.tuning;
+            default_field(type, 'interpOpSet', @sbp.InterpOpsOP);
+            interpOpSet = type.interpOpSet;
+            tuning = type.tuning;
 
 
             % u denotes the solution in the own domain
