@@ -325,6 +325,9 @@ classdef LaplaceCurvilinear < scheme.Scheme
 
         function [closure, penalty] = interfaceNonConforming(obj,boundary,neighbour_scheme,neighbour_boundary,opts)
 
+            % TODO: Make this work for curvilinear grids
+            warning('LaplaceCurvilinear: Non-conforming grid interpolation only works for Cartesian grids.');
+
             default_field(opts, 'tuning', 1.2);
             tuning = opts.tuning;
 
