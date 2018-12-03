@@ -282,7 +282,7 @@ classdef LaplaceCurvilinear < scheme.Scheme
                 [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary);
             else
                 assertType(opts, 'struct');
-                if isfield(opts, 'I_local2neighbor')
+                if isfield(opts, 'interpolation')
                     [closure, penalty] = interfaceNonConforming(obj,boundary,neighbour_scheme,neighbour_boundary,opts);
                 else
                     [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary,opts);
@@ -329,17 +329,29 @@ classdef LaplaceCurvilinear < scheme.Scheme
             warning('LaplaceCurvilinear: Non-conforming grid interpolation only works for Cartesian grids.');
 
             default_field(opts, 'tuning', 1.2);
+            default_field(opts, 'interpolation', 'OP');
             tuning = opts.tuning;
 
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
-            I_u2v_good = opts.I_local2neighbor.good;
-            I_u2v_bad = opts.I_local2neighbor.bad;
-            I_v2u_good = opts.I_neighbor2local.good;
-            I_v2u_bad = opts.I_neighbor2local.bad;
+            [e_u, d_u, gamm_u, H_b_u, I_u, ~, X_u] = obj.get_boundary_ops(boundary);
+            [e_v, d_v, gamm_v, H_b_v, I_v, ~, X_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
 
-            [e_u, d_u, gamm_u, H_b_u, I_u] = obj.get_boundary_ops(boundary);
-            [e_v, d_v, gamm_v, H_b_v, I_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
+            % Extract the coordinate that varies along the interface
+            switch boundary
+            case {'e','w'}
+                x_u = X_u(:,2);
+            case {'s', 'n'}
+                x_u = X_u(:,1);
+            end
+
+            switch neighbour_boundary
+            case {'e','w'}
+                x_v = X_v(:,2);
+            case {'s', 'n'}
+                x_v = X_v(:,1);
+            end
+
             Hi = obj.Hi;
             a = obj.a;
 
@@ -358,6 +370,10 @@ classdef LaplaceCurvilinear < scheme.Scheme
             tau_v = tuning * spdiag(tau_v);
             beta_u = tau_v;
 
+            % Build interpolation operators
+            [I_u2v_good, I_u2v_bad, I_v2u_good, I_v2u_bad] = ...
+                                obj.InterpolationOperators(x_u, x_v, obj.order, opts.interpolation);
+
             closure = a*Hi*e_u*tau_u*H_b_u*e_u' + ...
                       a*Hi*e_u*H_b_u*I_v2u_bad*beta_u*I_u2v_good*e_u' + ...
                       a*1/2*Hi*d_u*H_b_u*e_u' + ...
@@ -375,7 +391,8 @@ classdef LaplaceCurvilinear < scheme.Scheme
         % The right boundary is considered the positive boundary
         %
         %  I -- the indices of the boundary points in the grid matrix
-        function [e, d, gamm, H_b, I] = get_boundary_ops(obj, boundary)
+        %  X -- coordinates along the boundary;
+        function [e, d, gamm, H_b, I, X, X_logic] = get_boundary_ops(obj, boundary)
 
             % gridMatrix = zeros(obj.m(2),obj.m(1));
             % gridMatrix(:) = 1:numel(gridMatrix);
@@ -407,12 +424,78 @@ classdef LaplaceCurvilinear < scheme.Scheme
                     error('No such boundary: boundary = %s',boundary);
             end
 
+            X = obj.grid.getBoundary(boundary);
+            if isa(obg.grid, 'grid.Curvilinear'))
+                X_logic = obj.grid.logic.getBoundary(boundary);
+            else
+                % Cartesian physical coordinates are also logical coordinates
+                X_logic = X;
+            end
+
             switch boundary
                 case {'w','e'}
                     gamm = obj.gamm_u;
                 case {'s','n'}
                     gamm = obj.gamm_v;
             end
+
+        end
+
+        % x_u, x_v   --   vectors of the coordinate that varies along the boundary
+        % interpOpSet --  string, e.g 'MC' or 'OP'.
+        % TODO: Allow for general x_u, x_v. Currently only works for 2:1 ratio.
+        function [I_u2v_good, I_u2v_bad, I_v2u_good, I_v2u_bad] = interpolationOperators(obj, x_u, x_v, order, interpOpSet)
+            default_arg(interpOpSet, 'OP');
+
+            m_u = length(x_u) - 1;
+            m_v = length(x_v) - 1;
+
+            if m_u == m_v
+                % Matching grids, no interpolation required (presumably)
+                error('LaplaceCurvilinear.interpolationOperators: m_u equals m_v, this interface should not need interpolation.')
+            elseif m_u/m_v == 2
+                % Block u is finer
+
+                switch interpOpSet
+                case 'MC'
+                    interpOps = sbp.InterpMC(m_v+1, m_u+1, order, order);
+                    I_u2v_good = interpOps.IF2C;
+                    I_u2v_bad = interpOps.IF2C;
+                    I_v2u_good = interpOps.IC2F;
+                    I_v2u_bad = interpOps.IC2F;
+
+                case {'OP', 'AWW'}
+                    interpOpsF2C = sbp.InterpAWW(m_v+1, m_u+1, order, order, 'F2C');
+                    interpOpsC2F = sbp.InterpAWW(m_v+1, m_u+1, order, order, 'C2F');
+                    I_u2v_good = interpOpsF2C.IF2C;
+                    I_u2v_bad = interpOpsC2F.IF2C;
+                    I_v2u_good = interpOpsC2F.IC2F;
+                    I_v2u_bad = interpOpsF2C.IC2F;
+                end
+
+            elseif m_v/m_u == 2
+                % Block v is finer
+
+                switch interpOpSet
+                case 'MC'
+                    interpOps = sbp.InterpMC(m_u+1, m_v+1, order, order);
+                    I_u2v_good = interpOps.IC2F;
+                    I_u2v_bad = interpOps.IC2F;
+                    I_v2u_good = interpOps.IF2C;
+                    I_v2u_bad = interpOps.IF2C;
+
+                case {'OP', 'AWW'}
+                    interpOpsF2C = sbp.InterpAWW(m_u+1, m_v+1, order, order, 'F2C');
+                    interpOpsC2F = sbp.InterpAWW(m_u+1, m_v+1, order, order, 'C2F');
+                    I_u2v_good = interpOpsC2F.IC2F;
+                    I_u2v_bad = interpOpsF2C.IC2F;
+                    I_v2u_good = interpOpsF2C.IF2C;
+                    I_v2u_bad = interpOpsC2F.IF2C;
+                end
+            else
+                error(sprintf('Interpolation operators for grid ratio %f have not yet been constructed', m_u/m_v));
+            end
+
         end
 
         function N = size(obj)
