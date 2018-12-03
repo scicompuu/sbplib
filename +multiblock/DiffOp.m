@@ -10,7 +10,7 @@ classdef DiffOp < scheme.Scheme
     end
 
     methods
-        function obj = DiffOp(doHand, grid, order, doParam, interfaceOptions)
+        function obj = DiffOp(doHand, grid, order, doParam, intfOpts)
             %  doHand -- may either be a function handle or a cell array of
             %            function handles for each grid. The function handle(s)
             %            should be on the form do = doHand(grid, order, ...)
@@ -25,15 +25,10 @@ classdef DiffOp < scheme.Scheme
             %            doHand(..., doParam{i}{:}) Otherwise doParam is sent as
             %            extra parameters to all doHand: doHand(..., doParam{:})
             %
-            % interfaceOptions (optional) -- An instance of class multiblock.InterfaceOptions
-            %                                               OR
-            %                                 nBlocks x nBlocks cell array of opts for
+            % intfOpts (optional) -- nBlocks x nBlocks cell array of options for
             %                                 every interface.
             default_arg('doParam', [])
-            default_arg('interfaceOptions', multiblock.InterfaceOptions(grid) ); % Empty options
-            if isa(interfaceOptions, 'multiblock.InterfaceOptions');
-                interfaceOptions = interfaceOptions.getOptions;
-            end
+            default_arg('intfOpts', cell(grid.nBlocks(), grid.nBlocks()) );
 
             [getHand, getParam] = parseInput(doHand, grid, doParam);
 
@@ -74,13 +69,11 @@ classdef DiffOp < scheme.Scheme
                         continue
                     end
 
-                    intfOpts = interfaceOptions{i,j};
-
-                    [ii, ij] = obj.diffOps{i}.interface(intf{1}, obj.diffOps{j}, intf{2}, intfOpts{1});
+                    [ii, ij] = obj.diffOps{i}.interface(intf{1}, obj.diffOps{j}, intf{2}, intfOpts{i,j});
                     D{i,i} = D{i,i} + ii;
                     D{i,j} = D{i,j} + ij;
 
-                    [jj, ji] = obj.diffOps{j}.interface(intf{2}, obj.diffOps{i}, intf{1}, intfOpts{2});
+                    [jj, ji] = obj.diffOps{j}.interface(intf{2}, obj.diffOps{i}, intf{1}, intfOpts{i,j});
                     D{j,j} = D{j,j} + jj;
                     D{j,i} = D{j,i} + ji;
                 end
