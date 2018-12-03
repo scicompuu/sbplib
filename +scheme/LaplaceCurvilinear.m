@@ -278,15 +278,18 @@ classdef LaplaceCurvilinear < scheme.Scheme
         %          -- tuning:           penalty strength, defaults to 1.2
         %          -- interpolation:    struct of interpolation operators (empty for conforming grids)
         function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,opts)
-            if isempty(opts)
+
+            defaultType.tuning = 1.2;
+            defaultType.interpolation = 'none';
+            default_struct('opts', defaultType);
+
+            switch opts.interpolation
+            case {'none', ''}
                 [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary);
-            else
-                assertType(opts, 'struct');
-                if isfield(opts, 'interpolation')
-                    [closure, penalty] = interfaceNonConforming(obj,boundary,neighbour_scheme,neighbour_boundary,opts);
-                else
-                    [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary,opts);
-                end
+            case {'op','OP'}
+                [closure, penalty] = interfaceNonConforming(obj,boundary,neighbour_scheme,neighbour_boundary,opts);
+            otherwise
+                error('Unknown type of interpolation: %s ', type.interpolation);
             end
         end
 
@@ -328,9 +331,11 @@ classdef LaplaceCurvilinear < scheme.Scheme
             % TODO: Make this work for curvilinear grids
             warning('LaplaceCurvilinear: Non-conforming grid interpolation only works for Cartesian grids.');
 
-            default_field(opts, 'tuning', 1.2);
-            default_field(opts, 'interpolation', 'OP');
+            % User can request special interpolation operators by specifying type.interpOpSet
+            default_field(opts, 'interpOpSet', @sbp.InterpOpsOP);
+            interpOpSet = opts.interpOpSet;
             tuning = opts.tuning;
+
 
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
@@ -371,19 +376,19 @@ classdef LaplaceCurvilinear < scheme.Scheme
             beta_u = tau_v;
 
             % Build interpolation operators
-            [I_u2v_good, I_u2v_bad, I_v2u_good, I_v2u_bad] = ...
-                                obj.interpolationOperators(x_u, x_v, obj.order, opts.interpolation);
+            intOps = interpOpSet(x_u, x_v, obj.order, neighbour_scheme.order);
+            Iu2v = intOps.Iu2v;
+            Iv2u = intOps.Iv2u;
 
             closure = a*Hi*e_u*tau_u*H_b_u*e_u' + ...
-                      a*Hi*e_u*H_b_u*I_v2u_bad*beta_u*I_u2v_good*e_u' + ...
+                      a*Hi*e_u*H_b_u*Iv2u.bad*beta_u*Iu2v.good*e_u' + ...
                       a*1/2*Hi*d_u*H_b_u*e_u' + ...
                       -a*1/2*Hi*e_u*H_b_u*d_u';
 
-            penalty = -a*Hi*e_u*tau_u*H_b_u*I_v2u_good*e_v' + ...
-                      -a*Hi*e_u*H_b_u*I_v2u_bad*beta_u*e_v' + ...
-                      -a*1/2*Hi*d_u*H_b_u*I_v2u_good*e_v' + ...
-                      -a*1/2*Hi*e_u*H_b_u*I_v2u_bad*d_v';
-
+            penalty = -a*Hi*e_u*tau_u*H_b_u*Iv2u.good*e_v' + ...
+                      -a*Hi*e_u*H_b_u*Iv2u.bad*beta_u*e_v' + ...
+                      -a*1/2*Hi*d_u*H_b_u*Iv2u.good*e_v' + ...
+                      -a*1/2*Hi*e_u*H_b_u*Iv2u.bad*d_v';
 
         end
 
@@ -437,63 +442,6 @@ classdef LaplaceCurvilinear < scheme.Scheme
                     gamm = obj.gamm_u;
                 case {'s','n'}
                     gamm = obj.gamm_v;
-            end
-
-        end
-
-        % x_u, x_v   --   vectors of the coordinate that varies along the boundary
-        % interpOpSet --  string, e.g 'MC' or 'OP'.
-        % TODO: Allow for general x_u, x_v. Currently only works for 2:1 ratio.
-        function [I_u2v_good, I_u2v_bad, I_v2u_good, I_v2u_bad] = interpolationOperators(obj, x_u, x_v, order, interpOpSet)
-            default_arg(interpOpSet, 'OP');
-
-            m_u = length(x_u) - 1;
-            m_v = length(x_v) - 1;
-
-            if m_u == m_v
-                % Matching grids, no interpolation required (presumably)
-                error('LaplaceCurvilinear.interpolationOperators: m_u equals m_v, this interface should not need interpolation.')
-            elseif m_u/m_v == 2
-                % Block u is finer
-
-                switch interpOpSet
-                case 'MC'
-                    interpOps = sbp.InterpMC(m_v+1, m_u+1, order, order);
-                    I_u2v_good = interpOps.IF2C;
-                    I_u2v_bad = interpOps.IF2C;
-                    I_v2u_good = interpOps.IC2F;
-                    I_v2u_bad = interpOps.IC2F;
-
-                case {'OP', 'AWW'}
-                    interpOpsF2C = sbp.InterpAWW(m_v+1, m_u+1, order, order, 'F2C');
-                    interpOpsC2F = sbp.InterpAWW(m_v+1, m_u+1, order, order, 'C2F');
-                    I_u2v_good = interpOpsF2C.IF2C;
-                    I_u2v_bad = interpOpsC2F.IF2C;
-                    I_v2u_good = interpOpsC2F.IC2F;
-                    I_v2u_bad = interpOpsF2C.IC2F;
-                end
-
-            elseif m_v/m_u == 2
-                % Block v is finer
-
-                switch interpOpSet
-                case 'MC'
-                    interpOps = sbp.InterpMC(m_u+1, m_v+1, order, order);
-                    I_u2v_good = interpOps.IC2F;
-                    I_u2v_bad = interpOps.IC2F;
-                    I_v2u_good = interpOps.IF2C;
-                    I_v2u_bad = interpOps.IF2C;
-
-                case {'OP', 'AWW'}
-                    interpOpsF2C = sbp.InterpAWW(m_u+1, m_v+1, order, order, 'F2C');
-                    interpOpsC2F = sbp.InterpAWW(m_u+1, m_v+1, order, order, 'C2F');
-                    I_u2v_good = interpOpsC2F.IC2F;
-                    I_u2v_bad = interpOpsF2C.IC2F;
-                    I_v2u_good = interpOpsF2C.IF2C;
-                    I_v2u_bad = interpOpsC2F.IF2C;
-                end
-            else
-                error(sprintf('Interpolation operators for grid ratio %f have not yet been constructed', m_u/m_v));
             end
 
         end

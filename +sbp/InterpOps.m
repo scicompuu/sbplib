@@ -1,9 +1,7 @@
 classdef (Abstract) InterpOps
     properties (Abstract)
-        % C and F may refer to coarse and fine, but it's not a must.
-        IC2F % Interpolation operator from "C" to "F"
-        IF2C % Interpolation operator from "F" to "C"
-
+        Iu2v % Interpolation operator(s) from "u" to "v"
+        Iv2u % Interpolation operator(s) from "v" to "u"
     end
 
     methods (Abstract)

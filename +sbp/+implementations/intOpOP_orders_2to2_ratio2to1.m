@@ -1,19 +1,19 @@
-function [IC2F,IF2C,Hc,Hf] = IntOp_orders_6to6_ratio2to1(mc,hc,ACC)
+function [IC2F,IF2C,Hc,Hf] = IntOpOP_orders_2to2_ratio2to1(mc,hc,ACC)
 
 % ACC is a string.
 % ACC = 'C2F' creates IC2F with one order of accuracy higher than IF2C.
 % ACC = 'F2C' creates IF2C with one order of accuracy higher than IC2F.
 ratio = 2;
-mf = ratio*mc-1; 
+mf = ratio*mc-1;
 hf = hc/ratio;
 
 switch ACC
     case 'F2C'
         [stencil_F2C,BC_F2C,HcU,HfU] = ...
-        sbp.implementations.intOpAWW_orders_6to6_ratio_2to1_accC2F3_accF2C4;
+        sbp.implementations.intOpOP_orders_2to2_ratio_2to1_accC2F1_accF2C2;
     case 'C2F'
         [stencil_F2C,BC_F2C,HcU,HfU] = ...
-        sbp.implementations.intOpAWW_orders_6to6_ratio_2to1_accC2F4_accF2C3;
+        sbp.implementations.intOpOP_orders_2to2_ratio_2to1_accC2F2_accF2C1;
 end
 
 stencil_width = length(stencil_F2C);
@@ -22,7 +22,7 @@ stencil_hw = (stencil_width-1)/2;
 
 %%% Norm matrices %%%
 Hc = speye(mc,mc);
-HcUm = length(HcU); 
+HcUm = length(HcU);
 Hc(1:HcUm,1:HcUm) = spdiags(HcU',0,HcUm,HcUm);
 Hc(mc-HcUm+1:mc,mc-HcUm+1:mc) = spdiags(rot90(HcU',2),0,HcUm,HcUm);
 Hc = Hc*hc;
