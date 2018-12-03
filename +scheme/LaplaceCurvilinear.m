@@ -372,7 +372,7 @@ classdef LaplaceCurvilinear < scheme.Scheme
 
             % Build interpolation operators
             [I_u2v_good, I_u2v_bad, I_v2u_good, I_v2u_bad] = ...
-                                obj.InterpolationOperators(x_u, x_v, obj.order, opts.interpolation);
+                                obj.interpolationOperators(x_u, x_v, obj.order, opts.interpolation);
 
             closure = a*Hi*e_u*tau_u*H_b_u*e_u' + ...
                       a*Hi*e_u*H_b_u*I_v2u_bad*beta_u*I_u2v_good*e_u' + ...
@@ -425,7 +425,7 @@ classdef LaplaceCurvilinear < scheme.Scheme
             end
 
             X = obj.grid.getBoundary(boundary);
-            if isa(obg.grid, 'grid.Curvilinear'))
+            if isa(obj.grid, 'grid.Curvilinear')
                 X_logic = obj.grid.logic.getBoundary(boundary);
             else
                 % Cartesian physical coordinates are also logical coordinates
