@@ -336,23 +336,12 @@ classdef LaplaceCurvilinear < scheme.Scheme
 
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
-            [e_u, d_u, gamm_u, H_b_u, I_u, ~, X_u] = obj.get_boundary_ops(boundary);
-            [e_v, d_v, gamm_v, H_b_v, I_v, ~, X_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
+            [e_u, d_u, gamm_u, H_b_u, I_u] = obj.get_boundary_ops(boundary);
+            [e_v, d_v, gamm_v, H_b_v, I_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
 
-            % Extract the coordinate that varies along the interface
-            switch boundary
-            case {'e','w'}
-                x_u = X_u(:,2);
-            case {'s', 'n'}
-                x_u = X_u(:,1);
-            end
-
-            switch neighbour_boundary
-            case {'e','w'}
-                x_v = X_v(:,2);
-            case {'s', 'n'}
-                x_v = X_v(:,1);
-            end
+            % Find the number of grid points along the interface
+            m_u = size(e_u, 2);
+            m_v = size(e_v, 2);
 
             Hi = obj.Hi;
             a = obj.a;
@@ -373,7 +362,7 @@ classdef LaplaceCurvilinear < scheme.Scheme
             beta_u = tau_v;
 
             % Build interpolation operators
-            intOps = interpOpSet(x_u, x_v, obj.order, neighbour_scheme.order);
+            intOps = interpOpSet(m_u, m_v, obj.order, neighbour_scheme.order);
             Iu2v = intOps.Iu2v;
             Iv2u = intOps.Iv2u;
 
@@ -393,12 +382,10 @@ classdef LaplaceCurvilinear < scheme.Scheme
         % The right boundary is considered the positive boundary
         %
         %  I -- the indices of the boundary points in the grid matrix
-        %  X -- coordinates along the boundary;
-        function [e, d, gamm, H_b, I, X, X_logic] = get_boundary_ops(obj, boundary)
+        function [e, d, gamm, H_b, I] = get_boundary_ops(obj, boundary)
 
             % gridMatrix = zeros(obj.m(2),obj.m(1));
             % gridMatrix(:) = 1:numel(gridMatrix);
-
             ind = grid.funcToMatrix(obj.grid, 1:prod(obj.m));
 
             switch boundary
@@ -424,14 +411,6 @@ classdef LaplaceCurvilinear < scheme.Scheme
                     I = ind(:,end)';
                 otherwise
                     error('No such boundary: boundary = %s',boundary);
-            end
-
-            X = obj.grid.getBoundary(boundary);
-            if isa(obj.grid, 'grid.Curvilinear')
-                X_logic = obj.grid.logic.getBoundary(boundary);
-            else
-                % Cartesian physical coordinates are also logical coordinates
-                X_logic = X;
             end
 
             switch boundary
