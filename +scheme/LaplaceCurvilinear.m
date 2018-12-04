@@ -294,9 +294,6 @@ classdef LaplaceCurvilinear < scheme.Scheme
         end
 
         function [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary,type)
-
-            default_arg('type', struct);
-            default_field(type, 'tuning', 1.2);
             tuning = type.tuning;
 
             % u denotes the solution in the own domain
