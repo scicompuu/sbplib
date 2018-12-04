@@ -129,13 +129,13 @@ classdef Ti
             S = obj.S;
 
             if(nu>2 || nv>2)
-                h_grid = obj.plot(nu,nv);
-                set(h_grid,'Color',[0 0.4470 0.7410]);
+                h.grid = obj.plot(nu,nv);
+                set(h.grid,'Color',[0 0.4470 0.7410]);
             end
 
-            h_bord = obj.plot(2,2);
-            set(h_bord,'Color',[0.8500 0.3250 0.0980]);
-            set(h_bord,'LineWidth',2);
+            h.border = obj.plot(2,2);
+            set(h.border,'Color',[0.8500 0.3250 0.0980]);
+            set(h.border,'LineWidth',2);
         end
 
 

@@ -47,12 +47,12 @@ function [H, HI, D1, D2, e_l, e_r, d1_l, d1_r] = d2_variable_periodic_6(m,h)
 
         vals = [Mm3,Mm2,Mm1,M0,Mp1,Mp2,Mp3];
         diags = -scheme_radius : scheme_radius;
-        M = spdiagsVariablePeriodic(vals,diags); 
+        M = spdiagsPeriodic(vals,diags);
 
         M=M/h;
         D2=HI*(-M );
     end
     D2 = @D2_fun;
 
-    
+
 end

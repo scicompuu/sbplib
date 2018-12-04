@@ -77,7 +77,7 @@ classdef Grid < grid.Grid
             % Collect number of points in each block
             N = zeros(1,nBlocks);
             for i = 1:nBlocks
-                N(i) = obj.grids{i}.N();
+                N(i) = obj.grids{i}.N()*nComponents;
             end
 
             gfs = blockmatrix.fromMatrix(gf, {N,1});
