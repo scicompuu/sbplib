@@ -276,7 +276,7 @@ classdef LaplaceCurvilinear < scheme.Scheme
         % type     Struct that specifies the interface coupling.
         %          Fields:
         %          -- tuning:           penalty strength, defaults to 1.2
-        %          -- interpolation:    struct of interpolation operators (empty for conforming grids)
+        %          -- interpolation:    type of interpolation, default 'none'
         function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,type)
 
             defaultType.tuning = 1.2;
