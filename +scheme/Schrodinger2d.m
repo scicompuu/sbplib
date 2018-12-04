@@ -198,23 +198,25 @@ classdef Schrodinger2d < scheme.Scheme
             end
         end
 
-        % opts     Struct that specifies the interface coupling.
+        % type     Struct that specifies the interface coupling.
         %          Fields:
-        %          -- interpolation:    struct of interpolation operators (empty for conforming grids)
-        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,opts)
-            if isempty(opts)
+        %          -- interpolation:    type of interpolation, default 'none'
+        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,type)
+
+            defaultType.interpolation = 'none';
+            default_struct('type', defaultType);
+
+            switch type.interpolation
+            case {'none', ''}
                 [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary);
-            else
-                assertType(opts, 'struct');
-                if isfield(opts, 'I_local2neighbor')
-                    [closure, penalty] = interfaceNonConforming(obj,boundary,neighbour_scheme,neighbour_boundary,opts);
-                else
-                    [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary,opts);
-                end
+            case {'op','OP'}
+                [closure, penalty] = interfaceNonConforming(obj,boundary,neighbour_scheme,neighbour_boundary,type);
+            otherwise
+                error('Unknown type of interpolation: %s ', type.interpolation);
             end
         end
 
-        function [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary,opts)
+        function [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary,type)
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
 
@@ -237,31 +239,38 @@ classdef Schrodinger2d < scheme.Scheme
 
         end
 
-        function [closure, penalty] = interfaceNonConforming(obj,boundary,neighbour_scheme,neighbour_boundary,opts)
+        function [closure, penalty] = interfaceNonConforming(obj,boundary,neighbour_scheme,neighbour_boundary,type)
+
+            % User can request special interpolation operators by specifying type.interpOpSet
+            default_field(type, 'interpOpSet', @sbp.InterpOpsOP);
+            interpOpSet = type.interpOpSet;
+
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
-
-            % Get boundary operators
-            [e_neighbour, d_neighbour] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
-            [e, d, H_gamma] = obj.get_boundary_ops(boundary);
+            [e_v, d_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
+            [e_u, d_u, H_gamma] = obj.get_boundary_ops(boundary);
             Hi = obj.Hi;
             a = obj.a;
 
             % Get outward unit normal component
             [~, n] = obj.get_boundary_number(boundary);
 
-            % Get interpolation operators from opts
-            I_u2v_good = opts.I_local2neighbor.good;
-            I_u2v_bad = opts.I_local2neighbor.bad;
-            I_v2u_good = opts.I_neighbor2local.good;
-            I_v2u_bad = opts.I_neighbor2local.bad;
+
+            % Find the number of grid points along the interface
+            m_u = size(e_u, 2);
+            m_v = size(e_v, 2);
+
+            % Build interpolation operators
+            intOps = interpOpSet(m_u, m_v, obj.order, neighbour_scheme.order);
+            Iu2v = intOps.Iu2v;
+            Iv2u = intOps.Iv2u;
 
             sigma = -n*1i*a/2;
             tau = -n*(1i*a)'/2;
 
-            closure = tau*Hi*d*H_gamma*e' + sigma*Hi*e*H_gamma*d';
-            penalty = -tau*Hi*d*H_gamma*I_v2u_good*e_neighbour' ...
-                      -sigma*Hi*e*H_gamma*I_v2u_bad*d_neighbour';
+            closure = tau*Hi*d_u*H_gamma*e_u' + sigma*Hi*e_u*H_gamma*d_u';
+            penalty = -tau*Hi*d_u*H_gamma*Iv2u.good*e_v' ...
+                      -sigma*Hi*e_u*H_gamma*Iv2u.bad*d_v';
 
         end
 
