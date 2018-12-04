@@ -208,7 +208,7 @@ classdef Schrodinger2d < scheme.Scheme
 
             switch type.interpolation
             case {'none', ''}
-                [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary);
+                [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary,type);
             case {'op','OP'}
                 [closure, penalty] = interfaceNonConforming(obj,boundary,neighbour_scheme,neighbour_boundary,type);
             otherwise
