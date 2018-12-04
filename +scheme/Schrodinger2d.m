@@ -255,7 +255,6 @@ classdef Schrodinger2d < scheme.Scheme
             % Get outward unit normal component
             [~, n] = obj.get_boundary_number(boundary);
 
-
             % Find the number of grid points along the interface
             m_u = size(e_u, 2);
             m_v = size(e_v, 2);
