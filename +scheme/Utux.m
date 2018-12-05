@@ -17,27 +17,16 @@ classdef Utux < scheme.Scheme
 
 
     methods
-         function obj = Utux(g ,order, operator)
-             default_arg('operator','Standard');
+        function obj = Utux(g, order, opSet)
+            default_arg('opSet',@sbp.D2Standard);
 
-             m = g.size();
-             xl = g.getBoundary('l');
-             xr = g.getBoundary('r');
-             xlim = {xl, xr};
+            m = g.size();
+            xl = g.getBoundary('l');
+            xr = g.getBoundary('r');
+            xlim = {xl, xr};
 
-           switch operator
-%                case 'NonEquidistant'
-%               ops = sbp.D1Nonequidistant(m,xlim,order);
-%               obj.D1 = ops.D1;
-               case 'Standard'
-              ops = sbp.D2Standard(m,xlim,order);
-              obj.D1 = ops.D1;
-%                case 'Upwind'
-%               ops = sbp.D1Upwind(m,xlim,order);
-%               obj.D1 = ops.Dm;
-               otherwise
-                   error('Unvalid operator')
-           end
+            ops = opSet(m, xlim, order);
+            obj.D1 = ops.D1;
 
             obj.grid = g;
 
