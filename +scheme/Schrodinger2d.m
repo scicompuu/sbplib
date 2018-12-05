@@ -42,7 +42,7 @@ classdef Schrodinger2d < scheme.Scheme
             default_arg('a',1);
             dim = 2;
 
-            assert(isa(g, 'grid.Cartesian'))
+            assertType(g, 'grid.Cartesian');
             if isa(a, 'function_handle')
                 a = grid.evalOn(g, a);
                 a = spdiag(a);

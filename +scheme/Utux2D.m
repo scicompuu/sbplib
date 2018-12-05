@@ -29,7 +29,7 @@ classdef Utux2D < scheme.Scheme
             default_arg('a',1/sqrt(2)*[1, 1]);
             default_arg('opSet',@sbp.D2Standard);
 
-            assert(isa(g, 'grid.Cartesian'))
+            assertType(g, 'grid.Cartesian');
             if iscell(a)
                 a1 = grid.evalOn(g, a{1});
                 a2 = grid.evalOn(g, a{2});
