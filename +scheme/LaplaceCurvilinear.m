@@ -383,9 +383,6 @@ classdef LaplaceCurvilinear < scheme.Scheme
         %
         %  I -- the indices of the boundary points in the grid matrix
         function [e, d, gamm, H_b, I] = get_boundary_ops(obj, boundary)
-
-            % gridMatrix = zeros(obj.m(2),obj.m(1));
-            % gridMatrix(:) = 1:numel(gridMatrix);
             ind = grid.funcToMatrix(obj.grid, 1:prod(obj.m));
 
             switch boundary
@@ -419,7 +416,6 @@ classdef LaplaceCurvilinear < scheme.Scheme
                 case {'s','n'}
                     gamm = obj.gamm_v;
             end
-
         end
 
         function N = size(obj)

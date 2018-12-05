@@ -264,8 +264,8 @@ classdef Hypsyst3dCurve < scheme.Scheme
             end
         end
 
-        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,opts)
-            error('An interface function does not exist yet');
+        function [closure, penalty] = interface(obj, boundary, neighbour_scheme, neighbour_boundary, type)
+            error('Not implemented');
         end
 
         function N = size(obj)

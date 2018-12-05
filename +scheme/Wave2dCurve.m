@@ -243,7 +243,7 @@ classdef Wave2dCurve < scheme.Scheme
             end
         end
 
-        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,opts)
+        function [closure, penalty] = interface(obj, boundary, neighbour_scheme, neighbour_boundary, type)
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
             tuning = 1.2;
