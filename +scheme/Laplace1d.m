@@ -1,4 +1,4 @@
-classdef Laplace1D < scheme.Scheme
+classdef Laplace1d < scheme.Scheme
     properties
         grid
         order % Order accuracy for the approximation
@@ -18,7 +18,7 @@ classdef Laplace1D < scheme.Scheme
     end
 
     methods
-        function obj = Laplace1D(grid, order, a)
+        function obj = Laplace1d(grid, order, a)
             default_arg('a', 1);
 
             assertType(grid, 'grid.Cartesian');

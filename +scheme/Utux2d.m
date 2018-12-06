@@ -1,4 +1,4 @@
-classdef Utux2D < scheme.Scheme
+classdef Utux2d < scheme.Scheme
    properties
         m % Number of points in each direction, possibly a vector
         h % Grid spacing
@@ -24,7 +24,7 @@ classdef Utux2D < scheme.Scheme
 
 
     methods
-         function obj = Utux2D(g ,order, opSet, a)
+         function obj = Utux2d(g ,order, opSet, a)
 
             default_arg('a',1/sqrt(2)*[1, 1]);
             default_arg('opSet',@sbp.D2Standard);
