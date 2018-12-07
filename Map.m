@@ -59,6 +59,9 @@ classdef Map < handle
         function v = subsref(obj, S)
             switch S(1).type
                 case '()'
+                    if length(S.subs) > 1
+                        error('sbplib:Map:multipleKeys', 'Multiple dimensions are not supported. Use a cell array as a key instead.');
+                    end
                     k = S.subs{1};
                     try
                         v = get(obj, k);
@@ -81,6 +84,9 @@ classdef Map < handle
         function obj = subsasgn(obj, S, v);
             switch S(1).type
                 case '()'
+                    if length(S.subs) > 1
+                        error('sbplib:Map:multipleKeys', 'Multiple dimensions are not supported. Use a cell array as a key instead.');
+                    end
                     k = S.subs{1};
                     set(obj, k, v);
                 otherwise
