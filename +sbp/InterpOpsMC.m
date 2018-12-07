@@ -1,3 +1,19 @@
+% Interpolation operators by Mattsson and Carpenter (MC), see
+% Mattsson and Carpenter,
+% "Stable and Accurate Interpolatino Operators for High-Order Multiblock Finite DIfference Methods",
+% https://epubs.siam.org/doi/pdf/10.1137/090750068
+%
+% Let ^* denote the adjoint. These operators satsify
+%
+% Iuv2 = Iv2u^*
+%
+% Both Iu2v and Iv2u have p:th order accuracy, if the interior stencil is
+% of order 2p.
+%
+% This approach leads to a reduction of the convergence rate by one order for
+% PDEs with 2nd derivatives in space, as compared to conforming interfaces.
+% To obtain full convergence rate, use the order-preserving (OP) operators in
+% InterpOpsOP.m
 classdef InterpOpsMC < sbp.InterpOps
     properties
 

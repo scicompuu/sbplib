@@ -1,3 +1,21 @@
+% Order-preserving (OP) interpolation operators, see
+% Almquist, Wang, Werpers,
+% "Order-Preserving Interpolation for Summation-by-Parts Operators
+% at Non-Conforming Interfaces", https://arxiv.org/abs/1806.01931
+%
+% Let ^* denote the adjoint. These operators satsify
+%
+% Iuv2.good = Iv2u.bad^*
+% Iv2u.good = Iu2v.bad^*
+%
+% The .bad operators have the same order of accuracy as the operators
+% by Mattsson and Carpenter (MC) in InterpOpsMC, i.e. order p,
+% if the interior stencil is order 2p. The .good operators are
+% one order more accurate, i.e. order p+1.
+%
+% For PDEs of second order in space, the OP operators allow for the same
+% convergence rate as with conforming interfaces, which is an improvement
+% by one order compared what is possible with the MC operators.
 classdef InterpOpsOP < sbp.InterpOps
     properties
 
