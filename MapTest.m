@@ -12,6 +12,21 @@ function kvp = getKeyValuePairs()
     };
 end
 
+function testMultiKey(testCase)
+    map = Map
+
+    function setMultiKey()
+        map(1,2) = 1;
+    end
+
+    function getMultiKey()
+        v = map(1,2);
+    end
+
+    testCase.verifyError(@setMultiKey,'sbplib:Map:multipleKeys')
+    testCase.verifyError(@getMultiKey,'sbplib:Map:multipleKeys')
+end
+
 function testSetAndGet(testCase)
     keyValuePairs = getKeyValuePairs();
 
