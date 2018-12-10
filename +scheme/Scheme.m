@@ -26,7 +26,10 @@ classdef Scheme < handle
         %                           interface to.
         %       penalty  may be a cell array if there are several penalties with different weights
         [closure, penalty] = boundary_condition(obj,boundary,type) % TODO: Change name to boundaryCondition
-        [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
+
+        % type -- sets the type of interface, could be a string or a struct or something else
+        %         depending on the particular scheme implementation
+        [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,type)
 
         % TODO: op = getBoundaryOperator()??
         %   makes sense to have it available through a method instead of random properties

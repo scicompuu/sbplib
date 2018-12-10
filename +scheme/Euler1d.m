@@ -446,7 +446,7 @@ classdef Euler1d < scheme.Scheme
             closure = @closure_fun;
         end
 
-        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
+        function [closure, penalty] = interface(obj, boundary, neighbour_scheme, neighbour_boundary, type)
             error('NOT DONE')
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain

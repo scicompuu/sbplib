@@ -1,4 +1,4 @@
-function [stencil_F2C,BC_F2C,HcU,HfU] = intOpAWW_orders_4to4_ratio_2to1_accC2F3_accF2C2
+function [stencil_F2C,BC_F2C,HcU,HfU] = intOpOP_orders_4to4_ratio_2to1_accC2F3_accF2C2
 %INT_ORDERS_4TO4_RATIO_2TO1_ACCC2F3_ACCF2C2_STENCIL_9_BC_3_11
 %    [STENCIL_F2C,BC_F2C,HCU,HFU] = INT_ORDERS_4TO4_RATIO_2TO1_ACCC2F3_ACCF2C2_STENCIL_9_BC_3_11
 

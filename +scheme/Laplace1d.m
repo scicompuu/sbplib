@@ -1,4 +1,4 @@
-classdef Laplace1D < scheme.Scheme
+classdef Laplace1d < scheme.Scheme
     properties
         grid
         order % Order accuracy for the approximation
@@ -18,7 +18,7 @@ classdef Laplace1D < scheme.Scheme
     end
 
     methods
-        function obj = Laplace1D(grid, order, a)
+        function obj = Laplace1d(grid, order, a)
             default_arg('a', 1);
 
             assertType(grid, 'grid.Cartesian');
@@ -83,7 +83,7 @@ classdef Laplace1D < scheme.Scheme
             end
         end
 
-        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
+        function [closure, penalty] = interface(obj, boundary, neighbour_scheme, neighbour_boundary, type)
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
 
@@ -98,7 +98,7 @@ classdef Laplace1D < scheme.Scheme
             gamm_v = neighbour_scheme.gamm;
 
             tuning = 1.1;
-            
+
             tau1 = -(a_u/gamm_u + a_v/gamm_v) * tuning;
             tau2 = 1/2*a_u;
             sig1 = -1/2;
