@@ -17,6 +17,8 @@ classdef CdiffImplicit < time.Timestepper
         %   u(t0) = f1
         %   u_t(t0) = f2
         % starting at time t0 with timestep k
+
+        % TODO: Fix order of matrices
         function obj = CdiffImplicit(A, B, C, G, f1, f2, k, t0)
             default_arg('A', []);
             default_arg('C', []);
