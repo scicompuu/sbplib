@@ -5,8 +5,7 @@ classdef Cdiff < time.Timestepper
         G
         k
         t
-        v
-        v_prev
+        v, v_prev
         n
     end
 
@@ -32,9 +31,9 @@ classdef Cdiff < time.Timestepper
             obj.G = G;
 
             % Rewrite as AA*v_(n+1) + BB*v_n + CC*v_(n-1) = G(t_n)
-            obj.AA = A/k^2 + B/2/k;
+            obj.AA =    A/k^2 + B/(2*k);
             obj.BB = -2*A/k^2 + C;
-            obj.CC = A/k^2 - B/2/k;
+            obj.CC =    A/k^2 - B/(2*k);
 
             obj.k = k;
             obj.v_prev = v0;
