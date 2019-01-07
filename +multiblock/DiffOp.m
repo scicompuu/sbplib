@@ -129,19 +129,20 @@ classdef DiffOp < scheme.Scheme
 
         % Get a boundary operator specified by opName for the given boundary/BoundaryGroup
         function op = getBoundaryOperator(obj, opName, boundary)
+            blockmatrixDiv = obj.blockmatrixDiv{1};
+
             switch class(boundary)
                 case 'cell'
-                    localOpName = [opName '_' boundary{2}];
                     blockId = boundary{1};
-                    localOp = obj.diffOps{blockId}.(localOpName);
+                    localOp = obj.diffOps{blockId}.getBoundaryOperator(opName, boundary{2});
 
-                    div = {obj.blockmatrixDiv{1}, size(localOp,2)};
+                    div = {blockmatrixDiv, size(localOp,2)};
                     blockOp = blockmatrix.zero(div);
                     blockOp{blockId,1} = localOp;
                     op = blockmatrix.toMatrix(blockOp);
                     return
                 case 'multiblock.BoundaryGroup'
-                    op = sparse(size(obj.D,1),0);
+                    op = sparse(sum(blockmatrixDiv),0);
                     for i = 1:length(boundary)
                         op = [op, obj.getBoundaryOperator(opName, boundary{i})];
                     end
@@ -151,13 +152,10 @@ classdef DiffOp < scheme.Scheme
         end
 
         function op = getBoundaryQuadrature(obj, boundary)
-            opName = 'H';
             switch class(boundary)
                 case 'cell'
-                    localOpName = [opName '_' boundary{2}];
                     blockId = boundary{1};
-                    op = obj.diffOps{blockId}.(localOpName);
-
+                    op = obj.diffOps{blockId}.getBoundaryQuadrature(boundary{2});
                     return
                 case 'multiblock.BoundaryGroup'
                     N = length(boundary);
