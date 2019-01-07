@@ -13,7 +13,7 @@ classdef CdiffImplicit < time.Timestepper
 
     methods
         % Solves
-        %   A*u_tt + B*u + C*v_t = G(t)
+        %   A*u_tt + B*u + C*u_t = G(t)
         %   u(t0) = f1
         %   u_t(t0) = f2
         % starting at time t0 with timestep k
@@ -105,6 +105,15 @@ classdef CdiffImplicit < time.Timestepper
 
             vt = (v_next-obj.v_prev)/(2*obj.k);
             t = obj.t;
+        end
+
+        % Calculate the conserved energy (Dm*v_n)^2_A + Im*v_n^2_B
+        function E = getEnergy(obj)
+            v  = obj.v;
+            vp = obj.v_prev;
+            vt = (obj.v - obj.v_prev)/obj.k;
+
+            E = vt'*obj.A*vt + 1/2*(v'*obj.B*v + vp'*obj.B*vp);
         end
 
         function obj = step(obj)
