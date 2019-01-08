@@ -238,7 +238,9 @@ classdef LaplaceCurvilinear < scheme.Scheme
             default_arg('type','neumann');
             default_arg('parameter', []);
 
-            [e, d, gamm, H_b, ~] = obj.get_boundary_ops(boundary);
+            [e, d] = obj.getBoundaryOperator({'e', 'd'}, boundary);
+            H_b = obj.getBoundaryQuadrature(boundary);
+            gamm = obj.getBoundaryBorrowing(boundary);
             switch type
                 % Dirichlet boundary condition
                 case {'D','d','dirichlet'}
@@ -298,8 +300,15 @@ classdef LaplaceCurvilinear < scheme.Scheme
 
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
-            [e_u, d_u, gamm_u, H_b_u, I_u] = obj.get_boundary_ops(boundary);
-            [e_v, d_v, gamm_v, H_b_v, I_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
+            [e_u, d_u] = obj.getBoundaryOperator({'e', 'd'}, boundary);
+            H_b_u = obj.getBoundaryQuadrature(boundary);
+            I_u = obj.getBoundaryIndices(boundary);
+            gamm_u = obj.getBoundaryBorrowing(boundary);
+
+            [e_v, d_v] = neighbour_scheme.getBoundaryOperator({'e', 'd'}, neighbour_boundary);
+            H_b_v = neighbour_scheme.getBoundaryQuadrature(neighbour_boundary);
+            I_v = neighbour_scheme.getBoundaryIndices(neighbour_boundary);
+            gamm_v = neighbour_scheme.getBoundaryBorrowing(neighbour_boundary);
 
             u = obj;
             v = neighbour_scheme;
@@ -336,8 +345,16 @@ classdef LaplaceCurvilinear < scheme.Scheme
 
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
-            [e_u, d_u, gamm_u, H_b_u, I_u] = obj.get_boundary_ops(boundary);
-            [e_v, d_v, gamm_v, H_b_v, I_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
+            [e_u, d_u] = obj.getBoundaryOperator({'e', 'd'}, boundary);
+            H_b_u = obj.getBoundaryQuadrature(boundary);
+            I_u = obj.getBoundaryIndices(boundary);
+            gamm_u = obj.getBoundaryBorrowing(boundary);
+
+            [e_v, d_v] = neighbour_scheme.getBoundaryOperator({'e', 'd'}, neighbour_boundary);
+            H_b_v = neighbour_scheme.getBoundaryQuadrature(neighbour_boundary);
+            I_v = neighbour_scheme.getBoundaryIndices(neighbour_boundary);
+            gamm_v = neighbour_scheme.getBoundaryBorrowing(neighbour_boundary);
+
 
             % Find the number of grid points along the interface
             m_u = size(e_u, 2);
@@ -378,43 +395,99 @@ classdef LaplaceCurvilinear < scheme.Scheme
 
         end
 
-        % Returns the boundary ops and sign for the boundary specified by the string boundary.
-        % The right boundary is considered the positive boundary
+        % Returns the boundary operator op for the boundary specified by the string boundary.
+        % op        -- string or a cell array of strings
+        % boundary  -- string
+        function varargout = getBoundaryOperator(obj, op, boundary)
+
+            if ~iscell(op)
+                op = {op};
+            end
+
+            for i = 1:numel(op)
+                switch op{i}
+                case 'e'
+                    switch boundary
+                    case 'w'
+                        e = obj.e_w;
+                    case 'e'
+                        e = obj.e_e;
+                    case 's'
+                        e = obj.e_s;
+                    case 'n'
+                        e = obj.e_n;
+                    otherwise
+                        error('No such boundary: boundary = %s',boundary);
+                    end
+                    varargout{i} = e;
+
+                case 'd'
+                    switch boundary
+                    case 'w'
+                        d = obj.d_w;
+                    case 'e'
+                        d = obj.d_e;
+                    case 's'
+                        d = obj.d_s;
+                    case 'n'
+                        d = obj.d_n;
+                    otherwise
+                        error('No such boundary: boundary = %s',boundary);
+                    end
+                    varargout{i} = d;
+                end
+            end
+
+        end
+
+        % Returns square boundary quadrature matrix, of dimension
+        % corresponding to the number of boundary points
         %
-        %  I -- the indices of the boundary points in the grid matrix
-        function [e, d, gamm, H_b, I] = get_boundary_ops(obj, boundary)
-            ind = grid.funcToMatrix(obj.grid, 1:prod(obj.m));
+        % boundary -- string
+        function H_b = getBoundaryQuadrature(obj, boundary)
 
             switch boundary
                 case 'w'
-                    e = obj.e_w;
-                    d = obj.d_w;
                     H_b = obj.H_w;
+                case 'e'
+                    H_b = obj.H_e;
+                case 's'
+                    H_b = obj.H_s;
+                case 'n'
+                    H_b = obj.H_n;
+                otherwise
+                    error('No such boundary: boundary = %s',boundary);
+            end
+        end
+
+        % Returns the indices of the boundary points in the grid matrix
+        % boundary -- string
+        function I = getBoundaryIndices(obj, boundary)
+            ind = grid.funcToMatrix(obj.grid, 1:prod(obj.m));
+            switch boundary
+                case 'w'
                     I = ind(1,:);
                 case 'e'
-                    e = obj.e_e;
-                    d = obj.d_e;
-                    H_b = obj.H_e;
                     I = ind(end,:);
                 case 's'
-                    e = obj.e_s;
-                    d = obj.d_s;
-                    H_b = obj.H_s;
                     I = ind(:,1)';
                 case 'n'
-                    e = obj.e_n;
-                    d = obj.d_n;
-                    H_b = obj.H_n;
                     I = ind(:,end)';
                 otherwise
                     error('No such boundary: boundary = %s',boundary);
             end
+        end
 
+        % Returns borrowing constant gamma
+        % boundary -- string
+        function gamm = getBoundaryBorrowing(obj, boundary)
             switch boundary
                 case {'w','e'}
                     gamm = obj.gamm_u;
                 case {'s','n'}
                     gamm = obj.gamm_v;
+                otherwise
+                    error('No such boundary: boundary = %s',boundary);
             end
         end
 
