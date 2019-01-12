@@ -121,7 +121,10 @@ classdef Beam2d < scheme.Scheme
             default_arg('type','dn');
             default_arg('data',0);
 
-            [e,d1,d2,d3,s,gamm,delt,halfnorm_inv] = obj.get_boundary_ops(boundary);
+            [e, d1, d2, d3] = obj.getBoundaryOperator({'e', 'd1', 'd2', 'd3'}, boundary);
+            s = obj.getBoundarySign(boundary);
+            [gamm, delt] = obj.getBoundaryBorrowing(boundary);
+            halfnorm_inv = obj.getHalfnormInv(boundary);
 
             switch type
                 % Dirichlet-neumann boundary condition
@@ -164,8 +167,14 @@ classdef Beam2d < scheme.Scheme
         function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary, type)
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
-            [e_u,d1_u,d2_u,d3_u,s_u,gamm_u,delt_u, halfnorm_inv] = obj.get_boundary_ops(boundary);
-            [e_v,d1_v,d2_v,d3_v,s_v,gamm_v,delt_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
+            [e_u, d1_u, d2_u, d3_u] = obj.getBoundaryOperator({'e', 'd1', 'd2', 'd3'}, boundary);
+            s_u = obj.getBoundarySign(boundary);
+            [gamm_u, delt_u] = obj.getBoundaryBorrowing(boundary);
+            halfnorm_inv = obj.getHalfnormInv(boundary);
+
+            [e_v, d1_v, d2_v, d3_v] = neighbour_scheme.getBoundaryOperator({'e', 'd1', 'd2', 'd3'}, neighbour_boundary);
+            s_v = neighbour_scheme.getBoundarySign(neighbour_boundary);
+            [gamm_v, delt_v] = neighbour_scheme.getBoundaryBorrowing(neighbour_boundary);
 
             tuning = 2;
 
@@ -192,46 +201,141 @@ classdef Beam2d < scheme.Scheme
             penalty = -halfnorm_inv*(tau*e_v' + sig*d1_v' + phi*alpha_v*d2_v' + psi*alpha_v*d3_v');
         end
 
-        % Ruturns the boundary ops and sign for the boundary specified by the string boundary.
-        % The right boundary is considered the positive boundary
-        function [e,d1,d2,d3,s,gamm, delt, halfnorm_inv] = get_boundary_ops(obj,boundary)
+        % Returns the boundary operator op for the boundary specified by the string boundary.
+        % op        -- string or a cell array of strings
+        % boundary  -- string
+        function varargout = getBoundaryOperator(obj, op, boundary)
+
+            if ~iscell(op)
+                op = {op};
+            end
+
+            for i = 1:numel(op)
+                switch op{i}
+                case 'e'
+                    switch boundary
+                    case 'w'
+                        e = obj.e_w;
+                    case 'e'
+                        e = obj.e_e;
+                    case 's'
+                        e = obj.e_s;
+                    case 'n'
+                        e = obj.e_n;
+                    otherwise
+                        error('No such boundary: boundary = %s',boundary);
+                    end
+                    varargout{i} = e;
+
+                case 'd1'
+                    switch boundary
+                    case 'w'
+                        d1 = obj.d1_w;
+                    case 'e'
+                        d1 = obj.d1_e;
+                    case 's'
+                        d1 = obj.d1_s;
+                    case 'n'
+                        d1 = obj.d1_n;
+                    otherwise
+                        error('No such boundary: boundary = %s',boundary);
+                    end
+                    varargout{i} = d1;
+                end
+
+                case 'd2'
+                    switch boundary
+                    case 'w'
+                        d2 = obj.d2_w;
+                    case 'e'
+                        d2 = obj.d2_e;
+                    case 's'
+                        d2 = obj.d2_s;
+                    case 'n'
+                        d2 = obj.d2_n;
+                    otherwise
+                        error('No such boundary: boundary = %s',boundary);
+                    end
+                    varargout{i} = d2;
+                end
+
+                case 'd3'
+                    switch boundary
+                    case 'w'
+                        d3 = obj.d3_w;
+                    case 'e'
+                        d3 = obj.d3_e;
+                    case 's'
+                        d3 = obj.d3_s;
+                    case 'n'
+                        d3 = obj.d3_n;
+                    otherwise
+                        error('No such boundary: boundary = %s',boundary);
+                    end
+                    varargout{i} = d3;
+                end
+            end
+        end
+
+        % Returns square boundary quadrature matrix, of dimension
+        % corresponding to the number of boundary points
+        %
+        % boundary -- string
+        function H_b = getBoundaryQuadrature(obj, boundary)
+
             switch boundary
                 case 'w'
-                    e  = obj.e_w;
-                    d1 = obj.d1_w;
-                    d2 = obj.d2_w;
-                    d3 = obj.d3_w;
-                    s = -1;
-                    gamm = obj.gamm_x;
-                    delt = obj.delt_x;
-                    halfnorm_inv = obj.Hix;
+                    H_b = obj.H_y;
                 case 'e'
-                    e  = obj.e_e;
-                    d1 = obj.d1_e;
-                    d2 = obj.d2_e;
-                    d3 = obj.d3_e;
+                    H_b = obj.H_y;
+                case 's'
+                    H_b = obj.H_x;
+                case 'n'
+                    H_b = obj.H_x;
+                otherwise
+                    error('No such boundary: boundary = %s',boundary);
+            end
+        end
+
+        % Returns the boundary sign. The right boundary is considered the positive boundary
+        % boundary -- string
+        function s = getBoundarySign(obj, boundary)
+            switch boundary
+                case {'e','n'}
                     s = 1;
+                case {'w','s'}
+                    s = -1;
+                otherwise
+                    error('No such boundary: boundary = %s',boundary);
+            end
+        end
+
+        % Returns the halfnorm_inv used in SATs. TODO: better notation
+        function Hinv = getHalfnormInv(obj, boundary)
+            switch boundary
+                case 'w'
+                    Hinv = obj.Hix;
+                case 'e'
+                    Hinv = obj.Hix;
+                case 's'
+                    Hinv = obj.Hiy;
+                case 'n'
+                    Hinv = obj.Hiy;
+                otherwise
+                    error('No such boundary: boundary = %s',boundary);
+            end
+        end
+
+        % Returns borrowing constant gamma
+        % boundary -- string
+        function [gamm, delt] = getBoundaryBorrowing(obj, boundary)
+            switch boundary
+                case {'w','e'}
                     gamm = obj.gamm_x;
                     delt = obj.delt_x;
-                    halfnorm_inv = obj.Hix;
-                case 's'
-                    e  = obj.e_s;
-                    d1 = obj.d1_s;
-                    d2 = obj.d2_s;
-                    d3 = obj.d3_s;
-                    s = -1;
+                case {'s','n'}
                     gamm = obj.gamm_y;
                     delt = obj.delt_y;
-                    halfnorm_inv = obj.Hiy;
-                case 'n'
-                    e  = obj.e_n;
-                    d1 = obj.d1_n;
-                    d2 = obj.d2_n;
-                    d3 = obj.d3_n;
-                    s = 1;
-                    gamm = obj.gamm_y;
-                    delt = obj.delt_y;
-                    halfnorm_inv = obj.Hiy;
                 otherwise
                     error('No such boundary: boundary = %s',boundary);
             end

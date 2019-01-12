@@ -162,35 +162,26 @@ classdef Schrodinger2d < scheme.Scheme
             default_arg('type','Neumann');
             default_arg('parameter', []);
 
-            % j is the coordinate direction of the boundary
             % nj: outward unit normal component.
             % nj = -1 for west, south, bottom boundaries
             % nj = 1  for east, north, top boundaries
-            [j, nj] = obj.get_boundary_number(boundary);
-            switch nj
-            case 1
-                e = obj.e_r;
-                d = obj.d1_r;
-            case -1
-                e = obj.e_l;
-                d = obj.d1_l;
-            end
-
+            nj = obj.getBoundarySign(boundary);
+            [e, d] = obj.getBoundaryOperator({'e', 'd'}, boundary);
+            H_gamma = obj.getBoundaryQuadrature(boundary);
             Hi = obj.Hi;
-            H_gamma = obj.H_boundary{j};
-            a = e{j}'*obj.a*e{j};
+            a = e'*obj.a*e;
 
             switch type
 
             % Dirichlet boundary condition
             case {'D','d','dirichlet','Dirichlet'}
-                    closure =  nj*Hi*d{j}*a*1i*H_gamma*(e{j}' );
-                    penalty = -nj*Hi*d{j}*a*1i*H_gamma;
+                    closure =  nj*Hi*d*a*1i*H_gamma*(e' );
+                    penalty = -nj*Hi*d*a*1i*H_gamma;
 
             % Free boundary condition
             case {'N','n','neumann','Neumann'}
-                    closure = -nj*Hi*e{j}*a*1i*H_gamma*(d{j}' );
-                    penalty =  nj*Hi*e{j}*a*1i*H_gamma;
+                    closure = -nj*Hi*e*a*1i*H_gamma*(d' );
+                    penalty =  nj*Hi*e*a*1i*H_gamma;
 
             % Unknown boundary condition
             otherwise
@@ -221,13 +212,14 @@ classdef Schrodinger2d < scheme.Scheme
             % v denotes the solution in the neighbour domain
 
             % Get boundary operators
-            [e_neighbour, d_neighbour] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
-            [e, d, H_gamma] = obj.get_boundary_ops(boundary);
+            [e_v, d_v] = neighbour_scheme.getBoundaryOperator({'e', 'd'}, neighbour_boundary);
+            [e_u, d_u] = obj.getBoundaryOperator({'e', 'd'}, boundary);
+            H_gamma = obj.getBoundaryQuadrature(boundary);
             Hi = obj.Hi;
             a = obj.a;
 
             % Get outward unit normal component
-            [~, n] = obj.get_boundary_number(boundary);
+            n = obj.getBoundarySign(boundary);
 
             Hi = obj.Hi;
             sigma = -n*1i*a/2;
@@ -247,13 +239,14 @@ classdef Schrodinger2d < scheme.Scheme
 
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
-            [e_v, d_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
-            [e_u, d_u, H_gamma] = obj.get_boundary_ops(boundary);
+            [e_v, d_v] = neighbour_scheme.getBoundaryOperator({'e', 'd'}, neighbour_boundary);
+            [e_u, d_u] = obj.getBoundaryOperator({'e', 'd'}, boundary);
+            H_gamma = obj.getBoundaryQuadrature(boundary);
             Hi = obj.Hi;
             a = obj.a;
 
             % Get outward unit normal component
-            [~, n] = obj.get_boundary_number(boundary);
+            n = obj.getBoundarySign(boundary);
 
             % Find the number of grid points along the interface
             m_u = size(e_u, 2);
@@ -293,27 +286,78 @@ classdef Schrodinger2d < scheme.Scheme
             end
         end
 
-        % Returns the boundary ops and sign for the boundary specified by the string boundary.
-        % The right boundary is considered the positive boundary
-        function [e, d, H_b] = get_boundary_ops(obj, boundary)
+        % Returns the boundary operator op for the boundary specified by the string boundary.
+        % op        -- string or a cell array of strings
+        % boundary  -- string
+        function varargout = getBoundaryOperator(obj, op, boundary)
+
+            if ~iscell(op)
+                op = {op};
+            end
+
+            for i = 1:numel(op)
+                switch op{i}
+                case 'e'
+                    switch boundary
+                    case 'w'
+                        e = obj.e_w;
+                    case 'e'
+                        e = obj.e_e;
+                    case 's'
+                        e = obj.e_s;
+                    case 'n'
+                        e = obj.e_n;
+                    otherwise
+                        error('No such boundary: boundary = %s',boundary);
+                    end
+                    varargout{i} = e;
+
+                case 'd'
+                    switch boundary
+                    case 'w'
+                        d = obj.d_w;
+                    case 'e'
+                        d = obj.d_e;
+                    case 's'
+                        d = obj.d_s;
+                    case 'n'
+                        d = obj.d_n;
+                    otherwise
+                        error('No such boundary: boundary = %s',boundary);
+                    end
+                    varargout{i} = d;
+                end
+            end
+        end
+
+        % Returns square boundary quadrature matrix, of dimension
+        % corresponding to the number of boundary points
+        %
+        % boundary -- string
+        function H_b = getBoundaryQuadrature(obj, boundary)
 
             switch boundary
                 case 'w'
-                    e = obj.e_w;
-                    d = obj.d_w;
                     H_b = obj.H_boundary{1};
                 case 'e'
-                    e = obj.e_e;
-                    d = obj.d_e;
                     H_b = obj.H_boundary{1};
                 case 's'
-                    e = obj.e_s;
-                    d = obj.d_s;
                     H_b = obj.H_boundary{2};
                 case 'n'
-                    e = obj.e_n;
-                    d = obj.d_n;
                     H_b = obj.H_boundary{2};
+                otherwise
+                    error('No such boundary: boundary = %s',boundary);
+            end
+        end
+
+        % Returns the boundary sign. The right boundary is considered the positive boundary
+        % boundary -- string
+        function s = getBoundarySign(obj, boundary)
+            switch boundary
+                case {'e','n'}
+                    s = 1;
+                case {'w','s'}
+                    s = -1;
                 otherwise
                     error('No such boundary: boundary = %s',boundary);
             end

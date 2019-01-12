@@ -139,16 +139,7 @@ classdef Utux2d < scheme.Scheme
             couplingType = type.couplingType;
 
             % Get neighbour boundary operator
-            switch neighbour_boundary
-             case {'e','E','east','East'}
-                 e_neighbour = neighbour_scheme.e_e;
-             case {'w','W','west','West'}
-                 e_neighbour = neighbour_scheme.e_w;
-             case {'n','N','north','North'}
-                 e_neighbour = neighbour_scheme.e_n;
-             case {'s','S','south','South'}
-                 e_neighbour = neighbour_scheme.e_s;
-            end
+            e_neighbour = neighbour_scheme.getBoundaryOperator('e', neighbour_boundary);
 
             switch couplingType
 
@@ -197,16 +188,7 @@ classdef Utux2d < scheme.Scheme
             interpolationDamping = type.interpolationDamping;
 
             % Get neighbour boundary operator
-            switch neighbour_boundary
-             case {'e','E','east','East'}
-                 e_neighbour = neighbour_scheme.e_e;
-             case {'w','W','west','West'}
-                 e_neighbour = neighbour_scheme.e_w;
-             case {'n','N','north','North'}
-                 e_neighbour = neighbour_scheme.e_n;
-             case {'s','S','south','South'}
-                 e_neighbour = neighbour_scheme.e_s;
-            end
+            e_neighbour = neighbour_scheme.getBoundaryOperator('e', neighbour_boundary);
 
             switch couplingType
 
@@ -289,6 +271,56 @@ classdef Utux2d < scheme.Scheme
 
 
          end
+
+         % Returns the boundary operator op for the boundary specified by the string boundary.
+        % op        -- string or a cell array of strings
+        % boundary  -- string
+        function varargout = getBoundaryOperator(obj, op, boundary)
+
+            if ~iscell(op)
+                op = {op};
+            end
+
+            for i = 1:numel(op)
+                switch op{i}
+                case 'e'
+                    switch boundary
+                    case 'w'
+                        e = obj.e_w;
+                    case 'e'
+                        e = obj.e_e;
+                    case 's'
+                        e = obj.e_s;
+                    case 'n'
+                        e = obj.e_n;
+                    otherwise
+                        error('No such boundary: boundary = %s',boundary);
+                    end
+                    varargout{i} = e;
+                end
+            end
+
+        end
+
+        % Returns square boundary quadrature matrix, of dimension
+        % corresponding to the number of boundary points
+        %
+        % boundary -- string
+        function H_b = getBoundaryQuadrature(obj, boundary)
+
+            switch boundary
+                case 'w'
+                    H_b = obj.H_y;
+                case 'e'
+                    H_b = obj.H_y;
+                case 's'
+                    H_b = obj.H_x;
+                case 'n'
+                    H_b = obj.H_x;
+                otherwise
+                    error('No such boundary: boundary = %s',boundary);
+            end
+        end
 
         function N = size(obj)
             N = obj.m;

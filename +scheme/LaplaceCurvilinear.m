@@ -437,7 +437,6 @@ classdef LaplaceCurvilinear < scheme.Scheme
                     varargout{i} = d;
                 end
             end
-
         end
 
         % Returns square boundary quadrature matrix, of dimension
