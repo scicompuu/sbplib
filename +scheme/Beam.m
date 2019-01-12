@@ -86,7 +86,8 @@ classdef Beam < scheme.Scheme
         function [closure, penalty] = boundary_condition(obj,boundary,type)
             default_arg('type','dn');
 
-            [e, d1, d2, d3, s] = obj.get_boundary_ops(boundary);
+            [e, d1, d2, d3] = obj.getBoundaryOperator({'e', 'd1', 'd2', 'd3'}, boundary);
+            s = obj.getBoundarySign(boundary);
             gamm = obj.gamm;
             delt = obj.delt;
 
@@ -173,13 +174,14 @@ classdef Beam < scheme.Scheme
         function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary, type)
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
-            [e_u,d1_u,d2_u,d3_u,s_u] = obj.get_boundary_ops(boundary);
-            [e_v,d1_v,d2_v,d3_v,s_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
+            [e_u, d1_u, d2_u, d3_u] = obj.getBoundaryOperator({'e', 'd1', 'd2', 'd3'}, boundary);
+            s_u = obj.getBoundarySign(boundary);
 
+            [e_v, d1_v, d2_v, d3_v] = neighbour_scheme.getBoundaryOperator({'e', 'd1', 'd2', 'd3'}, neighbour_boundary);
+            s_v = neighbour_scheme.getBoundarySign(neighbour_boundary);
 
             alpha_u = obj.alpha;
             alpha_v = neighbour_scheme.alpha;
-
 
             switch boundary
                 case 'l'
@@ -234,22 +236,70 @@ classdef Beam < scheme.Scheme
             penalty = -obj.Hi*(tau*e_v' + sig*d1_v' + phi*alpha_v*d2_v' + psi*alpha_v*d3_v');
         end
 
-        % Returns the boundary ops and sign for the boundary specified by the string boundary.
-        % The right boundary is considered the positive boundary
-        function [e, d1, d2, d3, s] = get_boundary_ops(obj,boundary)
+        % Returns the boundary operator op for the boundary specified by the string boundary.
+        % op        -- string or a cell array of strings
+        % boundary  -- string
+        function varargout = getBoundaryOperator(obj, op, boundary)
+
+            if ~ismember(boundary, {'l', 'r'})
+                error('No such boundary: boundary = %s',boundary);
+            end
+
+            if ~iscell(op)
+                op = {op};
+            end
+
+            for i = 1:numel(op)
+                switch op{i}
+                case 'e'
+                    switch boundary
+                    case 'l'
+                        e = obj.e_l;
+                    case 'r'
+                        e = obj.e_r;
+                    end
+                    varargout{i} = e;
+
+                case 'd1'
+                    switch boundary
+                    case 'l'
+                        d1 = obj.d1_l;
+                    case 'r'
+                        d1 = obj.d1_r;
+                    end
+                    varargout{i} = d1;
+                end
+
+                case 'd2'
+                    switch boundary
+                    case 'l'
+                        d2 = obj.d2_l;
+                    case 'r'
+                        d2 = obj.d2_r;
+                    end
+                    varargout{i} = d2;
+                end
+
+                case 'd3'
+                    switch boundary
+                    case 'l'
+                        d3 = obj.d3_l;
+                    case 'r'
+                        d3 = obj.d3_r;
+                    end
+                    varargout{i} = d3;
+                end
+            end
+        end
+
+        % Returns the boundary sign. The right boundary is considered the positive boundary
+        % boundary -- string
+        function s = getBoundarySign(obj, boundary)
             switch boundary
-                case 'l'
-                    e  = obj.e_l;
-                    d1 = obj.d1_l;
-                    d2 = obj.d2_l;
-                    d3 = obj.d3_l;
-                    s = -1;
-                case 'r'
-                    e  = obj.e_r;
-                    d1 = obj.d1_r;
-                    d2 = obj.d2_r;
-                    d3 = obj.d3_r;
+                case {'r'}
                     s = 1;
+                case {'l'}
+                    s = -1;
                 otherwise
                     error('No such boundary: boundary = %s',boundary);
             end

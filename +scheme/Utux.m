@@ -72,6 +72,31 @@ classdef Utux < scheme.Scheme
 
          end
 
+        % Returns the boundary operator op for the boundary specified by the string boundary.
+        % op        -- string or a cell array of strings
+        % boundary  -- string
+        function varargout = getBoundaryOperator(obj, op, boundary)
+
+            if ~iscell(op)
+                op = {op};
+            end
+
+            for i = 1:numel(op)
+                switch op{i}
+                case 'e'
+                    switch boundary
+                    case 'l'
+                        e = obj.e_l;
+                    case 'r'
+                        e = obj.e_r;
+                    otherwise
+                        error('No such boundary: boundary = %s',boundary);
+                    end
+                    varargout{i} = e;
+                end
+            end
+        end
+
         function N = size(obj)
             N = obj.m;
         end
