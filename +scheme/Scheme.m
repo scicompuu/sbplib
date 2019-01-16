@@ -31,8 +31,8 @@ classdef Scheme < handle
         %         depending on the particular scheme implementation
         [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,type)
 
-        % TODO: op = getBoundaryOperator()??
-        %   makes sense to have it available through a method instead of random properties
+        op = getBoundaryOperator(obj, opName, boundary)
+        H_b= getBoundaryQuadrature(obj, boundary)
 
         % Returns the number of degrees of freedom.
         N = size(obj)
