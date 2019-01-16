@@ -1,1 +1,0 @@
-% TODO: Rename package and abstract class to diffOp
