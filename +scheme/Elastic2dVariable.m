@@ -458,155 +458,149 @@ classdef Elastic2dVariable < scheme.Scheme
 
         % Returns the coordinate number and outward normal component for the boundary specified by the string boundary.
         function [j, nj] = get_boundary_number(obj, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
 
             switch boundary
-                case {'w','W','west','West', 'e', 'E', 'east', 'East'}
+                case {'w', 'e'}
                     j = 1;
-                case {'s','S','south','South', 'n', 'N', 'north', 'North'}
+                case {'s', 'n'}
                     j = 2;
-                otherwise
-                    error('No such boundary: boundary = %s',boundary);
             end
 
             switch boundary
-                case {'w','W','west','West','s','S','south','South'}
+                case {'w', 's'}
                     nj = -1;
-                case {'e', 'E', 'east', 'East','n', 'N', 'north', 'North'}
+                case {'e', 'n'}
                     nj = 1;
             end
         end
 
         % Returns the boundary operator op for the boundary specified by the string boundary.
-        % op: may be a cell array of strings
+        % op -- string
         % Only operators with name *_tot can be used with multiblock.DiffOp.getBoundaryOperator()
         function [varargout] = getBoundaryOperator(obj, op, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
+            assertIsMember(op, {'e', 'e_tot', 'd', 'T', 'tau', 'tau_tot', 'H', 'alpha', 'alpha_tot'})
 
             switch boundary
-                case {'w','W','west','West', 'e', 'E', 'east', 'East'}
+                case {'w', 'e'}
                     j = 1;
-                case {'s','S','south','South', 'n', 'N', 'north', 'North'}
+                case {'s', 'n'}
                     j = 2;
-                otherwise
-                    error('No such boundary: boundary = %s',boundary);
             end
 
-            if ~iscell(op)
-                op = {op};
-            end
+            switch op
+                case 'e'
+                    switch boundary
+                        case {'w', 's'}
+                            o = obj.e_l{j};
+                        case {'e', 'n'}
+                            o = obj.e_r{j};
+                    end
 
-            for k = 1:length(op)
-                switch op{k}
-                    case 'e'
-                        switch boundary
-                            case {'w','W','west','West','s','S','south','South'}
-                                varargout{k} = obj.e_l{j};
-                            case {'e', 'E', 'east', 'East','n', 'N', 'north', 'North'}
-                                varargout{k} = obj.e_r{j};
+                case 'e_tot'
+                    e = obj.getBoundaryOperator('e', boundary);
+                    I_dim = speye(obj.dim, obj.dim);
+                    o = kron(e, I_dim);
+
+                case 'd'
+                    switch boundary
+                        case {'w', 's'}
+                            o = obj.d1_l{j};
+                        case {'e', 'n'}
+                            o = obj.d1_r{j};
+                    end
+
+                case 'T'
+                    switch boundary
+                        case {'w', 's'}
+                            o = obj.T_l{j};
+                        case {'e', 'n'}
+                            o = obj.T_r{j};
+                    end
+
+                case 'tau'
+                    switch boundary
+                        case {'w', 's'}
+                            o = obj.tau_l{j};
+                        case {'e', 'n'}
+                            o = obj.tau_r{j};
+                    end
+
+                case 'tau_tot'
+                    [e, tau] = obj.getBoundaryOperator({'e', 'tau'}, boundary);
+
+                    I_dim = speye(obj.dim, obj.dim);
+                    e_tot = kron(e, I_dim);
+                    E = obj.E;
+                    tau_tot = (e_tot'*E{1}*e*tau{1}')';
+                    for i = 2:obj.dim
+                        tau_tot = tau_tot + (e_tot'*E{i}*e*tau{i}')';
+                    end
+                    o = tau_tot;
+
+                case 'H'
+                    o = obj.H_boundary{j};
+
+                case 'alpha'
+                    % alpha = alpha(i,j) is the penalty strength for displacement BC.
+                    e = obj.getBoundaryOperator('e', boundary);
+
+                    LAMBDA = obj.LAMBDA;
+                    MU = obj.MU;
+
+                    dim = obj.dim;
+                    theta_R = obj.theta_R{j};
+                    theta_H = obj.theta_H{j};
+                    theta_M = obj.theta_M{j};
+
+                    a_lambda = dim/theta_H + 1/theta_R;
+                    a_mu_i = 2/theta_M;
+                    a_mu_ij = 2/theta_H + 1/theta_R;
+
+                    d = @kroneckerDelta;  % Kronecker delta
+                    db = @(i,j) 1-d(i,j); % Logical not of Kronecker delta
+                    alpha = cell(obj.dim, obj.dim);
+
+                    alpha_func = @(i,j) d(i,j)* a_lambda*LAMBDA ...
+                                        + d(i,j)* a_mu_i*MU ...
+                                        + db(i,j)*a_mu_ij*MU;
+                    for i = 1:obj.dim
+                        for l = 1:obj.dim
+                            alpha{i,l} = d(i,l)*alpha_func(i,j)*e;
                         end
+                    end
 
-                    case 'e_tot'
-                        e = obj.getBoundaryOperator('e', boundary);
-                        I_dim = speye(obj.dim, obj.dim);
-                        varargout{k} = kron(e, I_dim);
+                    o = alpha;
 
-                    case 'd'
-                        switch boundary
-                            case {'w','W','west','West','s','S','south','South'}
-                                varargout{k} = obj.d1_l{j};
-                            case {'e', 'E', 'east', 'East','n', 'N', 'north', 'North'}
-                                varargout{k} = obj.d1_r{j};
+                case 'alpha_tot'
+                    % alpha = alpha(i,j) is the penalty strength for displacement BC.
+                    [e, e_tot, alpha] = obj.getBoundaryOperator({'e', 'e_tot', 'alpha'}, boundary);
+                    E = obj.E;
+                    [m, n] = size(alpha{1,1});
+                    alpha_tot = sparse(m*obj.dim, n*obj.dim);
+                    for i = 1:obj.dim
+                        for l = 1:obj.dim
+                            alpha_tot = alpha_tot + (e_tot'*E{i}*e*alpha{i,l}'*E{l}')';
                         end
-
-                    case 'T'
-                        switch boundary
-                            case {'w','W','west','West','s','S','south','South'}
-                                varargout{k} = obj.T_l{j};
-                            case {'e', 'E', 'east', 'East','n', 'N', 'north', 'North'}
-                                varargout{k} = obj.T_r{j};
-                        end
-
-                    case 'tau'
-                        switch boundary
-                            case {'w','W','west','West','s','S','south','South'}
-                                varargout{k} = obj.tau_l{j};
-                            case {'e', 'E', 'east', 'East','n', 'N', 'north', 'North'}
-                                varargout{k} = obj.tau_r{j};
-                        end
-
-                    case 'tau_tot'
-                        [e, tau] = obj.getBoundaryOperator({'e', 'tau'}, boundary);
-
-                        I_dim = speye(obj.dim, obj.dim);
-                        e_tot = kron(e, I_dim);
-                        E = obj.E;
-                        tau_tot = (e_tot'*E{1}*e*tau{1}')';
-                        for i = 2:obj.dim
-                            tau_tot = tau_tot + (e_tot'*E{i}*e*tau{i}')';
-                        end
-                        varargout{k} = tau_tot;
-
-                    case 'H'
-                        varargout{k} = obj.H_boundary{j};
-
-                    case 'alpha'
-                        % alpha = alpha(i,j) is the penalty strength for displacement BC.
-                        e = obj.getBoundaryOperator('e', boundary);
-
-                        LAMBDA = obj.LAMBDA;
-                        MU = obj.MU;
-
-                        dim = obj.dim;
-                        theta_R = obj.theta_R{j};
-                        theta_H = obj.theta_H{j};
-                        theta_M = obj.theta_M{j};
-
-                        a_lambda = dim/theta_H + 1/theta_R;
-                        a_mu_i = 2/theta_M;
-                        a_mu_ij = 2/theta_H + 1/theta_R;
-
-                        d = @kroneckerDelta;  % Kronecker delta
-                        db = @(i,j) 1-d(i,j); % Logical not of Kronecker delta
-                        alpha = cell(obj.dim, obj.dim);
-
-                        alpha_func = @(i,j) d(i,j)* a_lambda*LAMBDA ...
-                                            + d(i,j)* a_mu_i*MU ...
-                                            + db(i,j)*a_mu_ij*MU;
-                        for i = 1:obj.dim
-                            for l = 1:obj.dim
-                                alpha{i,l} = d(i,l)*alpha_func(i,j)*e;
-                            end
-                        end
-
-                        varargout{k} = alpha;
-
-                    case 'alpha_tot'
-                        % alpha = alpha(i,j) is the penalty strength for displacement BC.
-                        [e, e_tot, alpha] = obj.getBoundaryOperator({'e', 'e_tot', 'alpha'}, boundary);
-                        E = obj.E;
-                        [m, n] = size(alpha{1,1});
-                        alpha_tot = sparse(m*obj.dim, n*obj.dim);
-                        for i = 1:obj.dim
-                            for l = 1:obj.dim
-                                alpha_tot = alpha_tot + (e_tot'*E{i}*e*alpha{i,l}'*E{l}')';
-                            end
-                        end
-                        varargout{k} = alpha_tot;
-
-                    otherwise
-                        error(['No such operator: operator = ' op{k}]);
-                end
+                    end
+                    o = alpha_tot;
             end
 
         end
 
+        % Returns square boundary quadrature matrix, of dimension
+        % corresponding to the number of boundary points
+        %
+        % boundary -- string
         function H = getBoundaryQuadrature(obj, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
+
             switch boundary
-                case {'w','W','west','West', 'e', 'E', 'east', 'East'}
+                case {'w','e'}
                     j = 1;
-                case {'s','S','south','South', 'n', 'N', 'north', 'North'}
+                case {'s','n'}
                     j = 2;
-                otherwise
-                    error('No such boundary: boundary = %s',boundary);
             end
             H = obj.H_boundary{j};
             I_dim = speye(obj.dim, obj.dim);

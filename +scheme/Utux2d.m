@@ -12,6 +12,7 @@ classdef Utux2d < scheme.Scheme
         H % Discrete norm
         H_x, H_y % Norms in the x and y directions
         Hi, Hx, Hy, Hxi, Hyi % Kroneckered norms
+        H_w, H_e, H_s, H_n % Boundary quadratures
 
         % Derivatives
         Dx, Dy
@@ -59,6 +60,10 @@ classdef Utux2d < scheme.Scheme
             Hxi = ops_x.HI;
             Hyi = ops_y.HI;
 
+            obj.H_w = Hy;
+            obj.H_e = Hy;
+            obj.H_s = Hx;
+            obj.H_n = Hx;
             obj.H_x = Hx;
             obj.H_y = Hy;
             obj.H = kron(Hx,Hy);
@@ -272,33 +277,14 @@ classdef Utux2d < scheme.Scheme
 
          end
 
-         % Returns the boundary operator op for the boundary specified by the string boundary.
-        % op        -- string or a cell array of strings
+        % Returns the boundary operator op for the boundary specified by the string boundary.
+        % op        -- string
         % boundary  -- string
-        function varargout = getBoundaryOperator(obj, op, boundary)
+        function o = getBoundaryOperator(obj, op, boundary)
+            assertIsMember(op, {'e'})
             assertIsMember(boundary, {'w', 'e', 's', 'n'})
 
-            if ~iscell(op)
-                op = {op};
-            end
-
-            for i = 1:numel(op)
-                switch op{i}
-                case 'e'
-                    switch boundary
-                    case 'w'
-                        e = obj.e_w;
-                    case 'e'
-                        e = obj.e_e;
-                    case 's'
-                        e = obj.e_s;
-                    case 'n'
-                        e = obj.e_n;
-                    end
-                    varargout{i} = e;
-                end
-            end
-
+            o = obj.([op, '_', boundary]);
         end
 
         % Returns square boundary quadrature matrix, of dimension
@@ -308,16 +294,7 @@ classdef Utux2d < scheme.Scheme
         function H_b = getBoundaryQuadrature(obj, boundary)
             assertIsMember(boundary, {'w', 'e', 's', 'n'})
 
-            switch boundary
-                case 'w'
-                    H_b = obj.H_y;
-                case 'e'
-                    H_b = obj.H_y;
-                case 's'
-                    H_b = obj.H_x;
-                case 'n'
-                    H_b = obj.H_x;
-            end
+            H_b = obj.('H_', boundary);
         end
 
         function N = size(obj)
