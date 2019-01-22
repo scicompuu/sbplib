@@ -294,7 +294,7 @@ classdef Utux2d < scheme.Scheme
         function H_b = getBoundaryQuadrature(obj, boundary)
             assertIsMember(boundary, {'w', 'e', 's', 'n'})
 
-            H_b = obj.('H_', boundary);
+            H_b = obj.(['H_', boundary]);
         end
 
         function N = size(obj)
