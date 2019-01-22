@@ -345,14 +345,16 @@ classdef LaplaceCurvilinear < scheme.Scheme
 
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
-            [e_u, d_u] = obj.getBoundaryOperator({'e', 'd'}, boundary);
-            H_b_u = obj.getBoundaryQuadrature(boundary);
-            I_u = obj.getBoundaryIndices(boundary);
+            e_u    = obj.getBoundaryOperator('e', boundary);
+            d_u    = obj.getBoundaryOperator('d', boundary);
+            H_b_u  = obj.getBoundaryQuadrature(boundary);
+            I_u    = obj.getBoundaryIndices(boundary);
             gamm_u = obj.getBoundaryBorrowing(boundary);
 
-            [e_v, d_v] = neighbour_scheme.getBoundaryOperator({'e', 'd'}, neighbour_boundary);
-            H_b_v = neighbour_scheme.getBoundaryQuadrature(neighbour_boundary);
-            I_v = neighbour_scheme.getBoundaryIndices(neighbour_boundary);
+            e_v    = neighbour_scheme.getBoundaryOperator('e', neighbour_boundary);
+            d_v    = neighbour_scheme.getBoundaryOperator('d', neighbour_boundary);
+            H_b_v  = neighbour_scheme.getBoundaryQuadrature(neighbour_boundary);
+            I_v    = neighbour_scheme.getBoundaryIndices(neighbour_boundary);
             gamm_v = neighbour_scheme.getBoundaryBorrowing(neighbour_boundary);
 
 
@@ -396,17 +398,12 @@ classdef LaplaceCurvilinear < scheme.Scheme
         end
 
         % Returns the boundary operator op for the boundary specified by the string boundary.
-        % op        -- string or a cell array of strings
+        % op        -- string
         % boundary  -- string
-        function varargout = getBoundaryOperator(obj, op, boundary)
+        function o = getBoundaryOperator(obj, op, boundary)
             assertIsMember(boundary, {'w', 'e', 's', 'n'})
 
-            if ~iscell(op)
-                op = {op};
-            end
-
-            for i = 1:numel(op)
-                switch op{i}
+            switch op
                 case 'e'
                     switch boundary
                     case 'w'
@@ -418,7 +415,7 @@ classdef LaplaceCurvilinear < scheme.Scheme
                     case 'n'
                         e = obj.e_n;
                     end
-                    varargout{i} = e;
+                    o = e;
 
                 case 'd'
                     switch boundary
@@ -431,8 +428,7 @@ classdef LaplaceCurvilinear < scheme.Scheme
                     case 'n'
                         d = obj.d_n;
                     end
-                    varargout{i} = d;
-                end
+                    o = d;
             end
         end
 

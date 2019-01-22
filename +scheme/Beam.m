@@ -86,7 +86,10 @@ classdef Beam < scheme.Scheme
         function [closure, penalty] = boundary_condition(obj,boundary,type)
             default_arg('type','dn');
 
-            [e, d1, d2, d3] = obj.getBoundaryOperator({'e', 'd1', 'd2', 'd3'}, boundary);
+            e  = obj.getBoundaryOperator('e',  boundary);
+            d1 = obj.getBoundaryOperator('d1', boundary);
+            d2 = obj.getBoundaryOperator('d2', boundary);
+            d3 = obj.getBoundaryOperator('d3', boundary);
             s = obj.getBoundarySign(boundary);
             gamm = obj.gamm;
             delt = obj.delt;
@@ -174,10 +177,16 @@ classdef Beam < scheme.Scheme
         function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary, type)
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
-            [e_u, d1_u, d2_u, d3_u] = obj.getBoundaryOperator({'e', 'd1', 'd2', 'd3'}, boundary);
+            e_u  = obj.getBoundaryOperator('e',  boundary);
+            d1_u = obj.getBoundaryOperator('d1', boundary);
+            d2_u = obj.getBoundaryOperator('d2', boundary);
+            d3_u = obj.getBoundaryOperator('d3', boundary);
             s_u = obj.getBoundarySign(boundary);
 
-            [e_v, d1_v, d2_v, d3_v] = neighbour_scheme.getBoundaryOperator({'e', 'd1', 'd2', 'd3'}, neighbour_boundary);
+            e_v  = neighbour_scheme.getBoundaryOperator('e',  neighbour_boundary);
+            d1_v = neighbour_scheme.getBoundaryOperator('d1', neighbour_boundary);
+            d2_v = neighbour_scheme.getBoundaryOperator('d2', neighbour_boundary);
+            d3_v = neighbour_scheme.getBoundaryOperator('d3', neighbour_boundary);
             s_v = neighbour_scheme.getBoundarySign(neighbour_boundary);
 
             alpha_u = obj.alpha;
@@ -237,17 +246,12 @@ classdef Beam < scheme.Scheme
         end
 
         % Returns the boundary operator op for the boundary specified by the string boundary.
-        % op        -- string or a cell array of strings
+        % op        -- string
         % boundary  -- string
-        function varargout = getBoundaryOperator(obj, op, boundary)
+        function o = getBoundaryOperator(obj, op, boundary)
             assertIsMember(boundary, {'l', 'r'})
 
-            if ~iscell(op)
-                op = {op};
-            end
-
-            for i = 1:numel(op)
-                switch op{i}
+            switch op
                 case 'e'
                     switch boundary
                     case 'l'
@@ -255,7 +259,7 @@ classdef Beam < scheme.Scheme
                     case 'r'
                         e = obj.e_r;
                     end
-                    varargout{i} = e;
+                    o = e;
 
                 case 'd1'
                     switch boundary
@@ -264,7 +268,7 @@ classdef Beam < scheme.Scheme
                     case 'r'
                         d1 = obj.d1_r;
                     end
-                    varargout{i} = d1;
+                    o = d1;
                 end
 
                 case 'd2'
@@ -274,7 +278,7 @@ classdef Beam < scheme.Scheme
                     case 'r'
                         d2 = obj.d2_r;
                     end
-                    varargout{i} = d2;
+                    o = d2;
                 end
 
                 case 'd3'
@@ -284,8 +288,7 @@ classdef Beam < scheme.Scheme
                     case 'r'
                         d3 = obj.d3_r;
                     end
-                    varargout{i} = d3;
-                end
+                    o = d3;
             end
         end
 

@@ -56,7 +56,8 @@ classdef Laplace1d < scheme.Scheme
             default_arg('type','neumann');
             default_arg('data',0);
 
-            [e, d] = obj.getBoundaryOperator({'e', 'd'}, boundary);
+            e = obj.getBoundaryOperator('e', boundary);
+            d = obj.getBoundaryOperator('d', boundary);
             s = obj.getBoundarySign(boundary);
 
             switch type
@@ -114,17 +115,12 @@ classdef Laplace1d < scheme.Scheme
         end
 
         % Returns the boundary operator op for the boundary specified by the string boundary.
-        % op        -- string or a cell array of strings
+        % op        -- string
         % boundary  -- string
-        function varargout = getBoundaryOperator(obj, op, boundary)
+        function o = getBoundaryOperator(obj, op, boundary)
             assertIsMember(boundary, {'l', 'r'})
 
-            if ~iscell(op)
-                op = {op};
-            end
-
-            for i = 1:numel(op)
-                switch op{i}
+            switch op
                 case 'e'
                     switch boundary
                     case 'l'
@@ -132,7 +128,7 @@ classdef Laplace1d < scheme.Scheme
                     case 'r'
                         e = obj.e_r;
                     end
-                    varargout{i} = e;
+                    o = e;
 
                 case 'd'
                     switch boundary
@@ -141,8 +137,7 @@ classdef Laplace1d < scheme.Scheme
                     case 'r'
                         d = obj.d_r;
                     end
-                    varargout{i} = d;
-                end
+                    o = d;
             end
         end
 
