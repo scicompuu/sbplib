@@ -124,7 +124,7 @@ classdef Beam < scheme.Scheme
 
                     closure = obj.Hi*(tau*d2' + sig*d3');
                     penalty{1} = -obj.Hi*tau;
-                    penalty{1} = -obj.Hi*sig;
+                    penalty{2} = -obj.Hi*sig;
 
                 case 'e'
                     alpha = obj.alpha;
