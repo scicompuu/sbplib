@@ -238,7 +238,8 @@ classdef LaplaceCurvilinear < scheme.Scheme
             default_arg('type','neumann');
             default_arg('parameter', []);
 
-            [e, d] = obj.getBoundaryOperator({'e', 'd'}, boundary);
+            e = obj.getBoundaryOperator('e', boundary);
+            d = obj.getBoundaryOperator('d', boundary);
             H_b = obj.getBoundaryQuadrature(boundary);
             gamm = obj.getBoundaryBorrowing(boundary);
             switch type
@@ -300,12 +301,14 @@ classdef LaplaceCurvilinear < scheme.Scheme
 
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
-            [e_u, d_u] = obj.getBoundaryOperator({'e', 'd'}, boundary);
+            e_u    = obj.getBoundaryOperator('e', boundary);
+            d_u    = obj.getBoundaryOperator('d', boundary);
             H_b_u = obj.getBoundaryQuadrature(boundary);
             I_u = obj.getBoundaryIndices(boundary);
             gamm_u = obj.getBoundaryBorrowing(boundary);
 
-            [e_v, d_v] = neighbour_scheme.getBoundaryOperator({'e', 'd'}, neighbour_boundary);
+            e_v    = neighbour_scheme.getBoundaryOperator('e', neighbour_boundary);
+            d_v    = neighbour_scheme.getBoundaryOperator('d', neighbour_boundary);
             H_b_v = neighbour_scheme.getBoundaryQuadrature(neighbour_boundary);
             I_v = neighbour_scheme.getBoundaryIndices(neighbour_boundary);
             gamm_v = neighbour_scheme.getBoundaryBorrowing(neighbour_boundary);

@@ -88,10 +88,12 @@ classdef Laplace1d < scheme.Scheme
         function [closure, penalty] = interface(obj, boundary, neighbour_scheme, neighbour_boundary, type)
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
-            [e_u, d_u] = obj.getBoundaryOperator({'e', 'd'}, boundary);
+            e_u = obj.getBoundaryOperator('e', boundary);
+            d_u = obj.getBoundaryOperator('d', boundary);
             s_u = obj.getBoundarySign(boundary);
 
-            [e_v, d_v] = neighbour_scheme.getBoundaryOperator({'e', 'd'}, neighbour_boundary);
+            e_v = neighbour_scheme.getBoundaryOperator('e', neighbour_boundary);
+            d_v = neighbour_scheme.getBoundaryOperator('d', neighbour_boundary);
             s_v = neighbour_scheme.getBoundarySign(neighbour_boundary);
 
             a_u = obj.a;
