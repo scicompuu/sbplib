@@ -429,8 +429,12 @@ classdef Elastic2dVariable < scheme.Scheme
             % Operators without subscripts are from the own domain.
 
             % Get boundary operators
-            [e, tau] = obj.getBoundaryOperator({'e_tot','tau_tot'}, boundary);
-            [e_v, tau_v] = neighbour_scheme.getBoundaryOperator({'e_tot','tau_tot'}, neighbour_boundary);
+            e = obj.getBoundaryOperator('e_tot', boundary);
+            tau = obj.getBoundaryOperator('tau_tot', boundary);
+
+            e_v = neighbour_scheme.getBoundaryOperator('e_tot', neighbour_boundary);
+            tau_v = neighbour_scheme.getBoundaryOperator('tau_tot', neighbour_boundary);
+
             H_gamma = obj.getBoundaryQuadrature(boundary);
 
             % Operators and quantities that correspond to the own domain only
