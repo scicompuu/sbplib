@@ -212,6 +212,7 @@ classdef Heat2dVariable < scheme.Scheme
         % op        -- string or a cell array of strings
         % boundary  -- string
         function varargout = getBoundaryOperator(obj, op, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
 
             if ~iscell(op)
                 op = {op};
@@ -229,8 +230,6 @@ classdef Heat2dVariable < scheme.Scheme
                         e = obj.e_l{2};
                     case 'n'
                         e = obj.e_r{2};
-                    otherwise
-                        error('No such boundary: boundary = %s',boundary);
                     end
                     varargout{i} = e;
 
@@ -244,8 +243,6 @@ classdef Heat2dVariable < scheme.Scheme
                         d = obj.d1_l{2};
                     case 'n'
                         d = obj.d1_r{2};
-                    otherwise
-                        error('No such boundary: boundary = %s',boundary);
                     end
                     varargout{i} = d;
                 end
@@ -257,6 +254,7 @@ classdef Heat2dVariable < scheme.Scheme
         %
         % boundary -- string
         function H_b = getBoundaryQuadrature(obj, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
 
             switch boundary
                 case 'w'
@@ -267,34 +265,32 @@ classdef Heat2dVariable < scheme.Scheme
                     H_b = obj.H_boundary{2};
                 case 'n'
                     H_b = obj.H_boundary{2};
-                otherwise
-                    error('No such boundary: boundary = %s',boundary);
             end
         end
 
         % Returns the boundary sign. The right boundary is considered the positive boundary
         % boundary -- string
         function s = getBoundarySign(obj, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
+
             switch boundary
                 case {'e','n'}
                     s = 1;
                 case {'w','s'}
                     s = -1;
-                otherwise
-                    error('No such boundary: boundary = %s',boundary);
             end
         end
 
         % Returns borrowing constant gamma*h
         % boundary -- string
         function gamm = getBoundaryBorrowing(obj, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
+
             switch boundary
                 case {'w','e'}
                     gamm = obj.h(1)*obj.alpha(1);
                 case {'s','n'}
                     gamm = obj.h(2)*obj.alpha(2);
-                otherwise
-                    error('No such boundary: boundary = %s',boundary);
             end
         end
 

@@ -376,6 +376,7 @@ classdef Hypsyst2dCurve < scheme.Scheme
         % op        -- string or a cell array of strings
         % boundary  -- string
         function varargout = getBoundaryOperator(obj, op, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
 
             if ~iscell(op)
                 op = {op};
@@ -393,8 +394,6 @@ classdef Hypsyst2dCurve < scheme.Scheme
                         e = obj.e_s;
                     case 'n'
                         e = obj.e_n;
-                    otherwise
-                        error('No such boundary: boundary = %s',boundary);
                     end
                     varargout{i} = e;
                 end
@@ -406,6 +405,7 @@ classdef Hypsyst2dCurve < scheme.Scheme
         %
         % boundary -- string
         function H_b = getBoundaryQuadrature(obj, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
 
             e = obj.getBoundaryOperator('e', boundary);
 
@@ -418,8 +418,6 @@ classdef Hypsyst2dCurve < scheme.Scheme
                     H_b = inv(e'*obj.Hxii*e);
                 case 'n'
                     H_b = inv(e'*obj.Hxii*e);
-                otherwise
-                    error('No such boundary: boundary = %s',boundary);
             end
         end
 

@@ -276,6 +276,7 @@ classdef Utux2d < scheme.Scheme
         % op        -- string or a cell array of strings
         % boundary  -- string
         function varargout = getBoundaryOperator(obj, op, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
 
             if ~iscell(op)
                 op = {op};
@@ -293,8 +294,6 @@ classdef Utux2d < scheme.Scheme
                         e = obj.e_s;
                     case 'n'
                         e = obj.e_n;
-                    otherwise
-                        error('No such boundary: boundary = %s',boundary);
                     end
                     varargout{i} = e;
                 end
@@ -307,6 +306,7 @@ classdef Utux2d < scheme.Scheme
         %
         % boundary -- string
         function H_b = getBoundaryQuadrature(obj, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
 
             switch boundary
                 case 'w'
@@ -317,8 +317,6 @@ classdef Utux2d < scheme.Scheme
                     H_b = obj.H_x;
                 case 'n'
                     H_b = obj.H_x;
-                otherwise
-                    error('No such boundary: boundary = %s',boundary);
             end
         end
 

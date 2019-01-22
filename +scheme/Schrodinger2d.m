@@ -290,6 +290,7 @@ classdef Schrodinger2d < scheme.Scheme
         % op        -- string or a cell array of strings
         % boundary  -- string
         function varargout = getBoundaryOperator(obj, op, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
 
             if ~iscell(op)
                 op = {op};
@@ -307,8 +308,6 @@ classdef Schrodinger2d < scheme.Scheme
                         e = obj.e_s;
                     case 'n'
                         e = obj.e_n;
-                    otherwise
-                        error('No such boundary: boundary = %s',boundary);
                     end
                     varargout{i} = e;
 
@@ -322,8 +321,6 @@ classdef Schrodinger2d < scheme.Scheme
                         d = obj.d_s;
                     case 'n'
                         d = obj.d_n;
-                    otherwise
-                        error('No such boundary: boundary = %s',boundary);
                     end
                     varargout{i} = d;
                 end
@@ -335,6 +332,7 @@ classdef Schrodinger2d < scheme.Scheme
         %
         % boundary -- string
         function H_b = getBoundaryQuadrature(obj, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
 
             switch boundary
                 case 'w'
@@ -345,21 +343,19 @@ classdef Schrodinger2d < scheme.Scheme
                     H_b = obj.H_boundary{2};
                 case 'n'
                     H_b = obj.H_boundary{2};
-                otherwise
-                    error('No such boundary: boundary = %s',boundary);
             end
         end
 
         % Returns the boundary sign. The right boundary is considered the positive boundary
         % boundary -- string
         function s = getBoundarySign(obj, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
+
             switch boundary
                 case {'e','n'}
                     s = 1;
                 case {'w','s'}
                     s = -1;
-                otherwise
-                    error('No such boundary: boundary = %s',boundary);
             end
         end
 

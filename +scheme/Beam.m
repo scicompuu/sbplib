@@ -240,10 +240,7 @@ classdef Beam < scheme.Scheme
         % op        -- string or a cell array of strings
         % boundary  -- string
         function varargout = getBoundaryOperator(obj, op, boundary)
-
-            if ~ismember(boundary, {'l', 'r'})
-                error('No such boundary: boundary = %s',boundary);
-            end
+            assertIsMember(boundary, {'l', 'r'})
 
             if ~iscell(op)
                 op = {op};
@@ -295,13 +292,13 @@ classdef Beam < scheme.Scheme
         % Returns the boundary sign. The right boundary is considered the positive boundary
         % boundary -- string
         function s = getBoundarySign(obj, boundary)
+            assertIsMember(boundary, {'l', 'r'})
+
             switch boundary
                 case {'r'}
                     s = 1;
                 case {'l'}
                     s = -1;
-                otherwise
-                    error('No such boundary: boundary = %s',boundary);
             end
         end
 

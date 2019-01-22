@@ -76,6 +76,7 @@ classdef Utux < scheme.Scheme
         % op        -- string or a cell array of strings
         % boundary  -- string
         function varargout = getBoundaryOperator(obj, op, boundary)
+            assertIsMember(boundary, {'l', 'r'})
 
             if ~iscell(op)
                 op = {op};
@@ -89,8 +90,6 @@ classdef Utux < scheme.Scheme
                         e = obj.e_l;
                     case 'r'
                         e = obj.e_r;
-                    otherwise
-                        error('No such boundary: boundary = %s',boundary);
                     end
                     varargout{i} = e;
                 end

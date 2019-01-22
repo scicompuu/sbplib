@@ -117,6 +117,7 @@ classdef Laplace1d < scheme.Scheme
         % op        -- string or a cell array of strings
         % boundary  -- string
         function varargout = getBoundaryOperator(obj, op, boundary)
+            assertIsMember(boundary, {'l', 'r'})
 
             if ~iscell(op)
                 op = {op};
@@ -130,8 +131,6 @@ classdef Laplace1d < scheme.Scheme
                         e = obj.e_l;
                     case 'r'
                         e = obj.e_r;
-                    otherwise
-                        error('No such boundary: boundary = %s',boundary);
                     end
                     varargout{i} = e;
 
@@ -141,8 +140,6 @@ classdef Laplace1d < scheme.Scheme
                         d = obj.d_l;
                     case 'r'
                         d = obj.d_r;
-                    otherwise
-                        error('No such boundary: boundary = %s',boundary);
                     end
                     varargout{i} = d;
                 end
@@ -152,13 +149,13 @@ classdef Laplace1d < scheme.Scheme
         % Returns the boundary sign. The right boundary is considered the positive boundary
         % boundary -- string
         function s = getBoundarySign(obj, boundary)
+            assertIsMember(boundary, {'l', 'r'})
+
             switch boundary
                 case {'r'}
                     s = 1;
                 case {'l'}
                     s = -1;
-                otherwise
-                    error('No such boundary: boundary = %s',boundary);
             end
         end
 

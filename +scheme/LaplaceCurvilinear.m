@@ -399,6 +399,7 @@ classdef LaplaceCurvilinear < scheme.Scheme
         % op        -- string or a cell array of strings
         % boundary  -- string
         function varargout = getBoundaryOperator(obj, op, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
 
             if ~iscell(op)
                 op = {op};
@@ -416,8 +417,6 @@ classdef LaplaceCurvilinear < scheme.Scheme
                         e = obj.e_s;
                     case 'n'
                         e = obj.e_n;
-                    otherwise
-                        error('No such boundary: boundary = %s',boundary);
                     end
                     varargout{i} = e;
 
@@ -431,8 +430,6 @@ classdef LaplaceCurvilinear < scheme.Scheme
                         d = obj.d_s;
                     case 'n'
                         d = obj.d_n;
-                    otherwise
-                        error('No such boundary: boundary = %s',boundary);
                     end
                     varargout{i} = d;
                 end
@@ -444,6 +441,7 @@ classdef LaplaceCurvilinear < scheme.Scheme
         %
         % boundary -- string
         function H_b = getBoundaryQuadrature(obj, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
 
             switch boundary
                 case 'w'
@@ -454,14 +452,14 @@ classdef LaplaceCurvilinear < scheme.Scheme
                     H_b = obj.H_s;
                 case 'n'
                     H_b = obj.H_n;
-                otherwise
-                    error('No such boundary: boundary = %s',boundary);
             end
         end
 
         % Returns the indices of the boundary points in the grid matrix
         % boundary -- string
         function I = getBoundaryIndices(obj, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
+
             ind = grid.funcToMatrix(obj.grid, 1:prod(obj.m));
             switch boundary
                 case 'w'
@@ -472,21 +470,19 @@ classdef LaplaceCurvilinear < scheme.Scheme
                     I = ind(:,1)';
                 case 'n'
                     I = ind(:,end)';
-                otherwise
-                    error('No such boundary: boundary = %s',boundary);
             end
         end
 
         % Returns borrowing constant gamma
         % boundary -- string
         function gamm = getBoundaryBorrowing(obj, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
+
             switch boundary
                 case {'w','e'}
                     gamm = obj.gamm_u;
                 case {'s','n'}
                     gamm = obj.gamm_v;
-                otherwise
-                    error('No such boundary: boundary = %s',boundary);
             end
         end
 
