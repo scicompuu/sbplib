@@ -401,35 +401,10 @@ classdef LaplaceCurvilinear < scheme.Scheme
         % op        -- string
         % boundary  -- string
         function o = getBoundaryOperator(obj, op, boundary)
+            assertIsMember(op, {'e', 'd'})
             assertIsMember(boundary, {'w', 'e', 's', 'n'})
 
-            switch op
-                case 'e'
-                    switch boundary
-                    case 'w'
-                        e = obj.e_w;
-                    case 'e'
-                        e = obj.e_e;
-                    case 's'
-                        e = obj.e_s;
-                    case 'n'
-                        e = obj.e_n;
-                    end
-                    o = e;
-
-                case 'd'
-                    switch boundary
-                    case 'w'
-                        d = obj.d_w;
-                    case 'e'
-                        d = obj.d_e;
-                    case 's'
-                        d = obj.d_s;
-                    case 'n'
-                        d = obj.d_n;
-                    end
-                    o = d;
-            end
+            o = obj.([op, '_', boundary]);
         end
 
         % Returns square boundary quadrature matrix, of dimension
@@ -439,16 +414,7 @@ classdef LaplaceCurvilinear < scheme.Scheme
         function H_b = getBoundaryQuadrature(obj, boundary)
             assertIsMember(boundary, {'w', 'e', 's', 'n'})
 
-            switch boundary
-                case 'w'
-                    H_b = obj.H_w;
-                case 'e'
-                    H_b = obj.H_e;
-                case 's'
-                    H_b = obj.H_s;
-                case 'n'
-                    H_b = obj.H_n;
-            end
+            H_b = obj.('H_', boundary);
         end
 
         % Returns the indices of the boundary points in the grid matrix

@@ -249,47 +249,10 @@ classdef Beam < scheme.Scheme
         % op        -- string
         % boundary  -- string
         function o = getBoundaryOperator(obj, op, boundary)
+            assertIsMember(op, {'e', 'd1', 'd2', 'd3'})
             assertIsMember(boundary, {'l', 'r'})
 
-            switch op
-                case 'e'
-                    switch boundary
-                    case 'l'
-                        e = obj.e_l;
-                    case 'r'
-                        e = obj.e_r;
-                    end
-                    o = e;
-
-                case 'd1'
-                    switch boundary
-                    case 'l'
-                        d1 = obj.d1_l;
-                    case 'r'
-                        d1 = obj.d1_r;
-                    end
-                    o = d1;
-                end
-
-                case 'd2'
-                    switch boundary
-                    case 'l'
-                        d2 = obj.d2_l;
-                    case 'r'
-                        d2 = obj.d2_r;
-                    end
-                    o = d2;
-                end
-
-                case 'd3'
-                    switch boundary
-                    case 'l'
-                        d3 = obj.d3_l;
-                    case 'r'
-                        d3 = obj.d3_r;
-                    end
-                    o = d3;
-            end
+            o = obj.([op, '_', boundary]);
         end
 
         % Returns the boundary sign. The right boundary is considered the positive boundary

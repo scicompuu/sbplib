@@ -118,27 +118,10 @@ classdef Laplace1d < scheme.Scheme
         % op        -- string
         % boundary  -- string
         function o = getBoundaryOperator(obj, op, boundary)
+            assertIsMember(op, {'e', 'd'})
             assertIsMember(boundary, {'l', 'r'})
 
-            switch op
-                case 'e'
-                    switch boundary
-                    case 'l'
-                        e = obj.e_l;
-                    case 'r'
-                        e = obj.e_r;
-                    end
-                    o = e;
-
-                case 'd'
-                    switch boundary
-                    case 'l'
-                        d = obj.d_l;
-                    case 'r'
-                        d = obj.d_r;
-                    end
-                    o = d;
-            end
+            o = obj.([op, '_', boundary])
         end
 
         % Returns the boundary sign. The right boundary is considered the positive boundary
