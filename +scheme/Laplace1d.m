@@ -126,6 +126,17 @@ classdef Laplace1d < scheme.Scheme
             o = obj.([op, '_', boundary])
         end
 
+        % Returns square boundary quadrature matrix, of dimension
+        % corresponding to the number of boundary points
+        %
+        % boundary -- string
+        % Note: for 1d diffOps, the boundary quadrature is the scalar 1.
+        function H_b = getBoundaryQuadrature(obj, boundary)
+            assertIsMember(boundary, {'l', 'r'})
+
+            H_b = 1;
+        end
+
         % Returns the boundary sign. The right boundary is considered the positive boundary
         % boundary -- string
         function s = getBoundarySign(obj, boundary)
