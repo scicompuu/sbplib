@@ -72,6 +72,27 @@ classdef Utux < scheme.Scheme
 
          end
 
+        % Returns the boundary operator op for the boundary specified by the string boundary.
+        % op        -- string
+        % boundary  -- string
+        function o = getBoundaryOperator(obj, op, boundary)
+            assertIsMember(op, {'e'})
+            assertIsMember(boundary, {'l', 'r'})
+
+            o = obj.([op, '_', boundary]);
+        end
+
+        % Returns square boundary quadrature matrix, of dimension
+        % corresponding to the number of boundary points
+        %
+        % boundary -- string
+        % Note: for 1d diffOps, the boundary quadrature is the scalar 1.
+        function H_b = getBoundaryQuadrature(obj, boundary)
+            assertIsMember(boundary, {'l', 'r'})
+
+            H_b = 1;
+        end
+
         function N = size(obj)
             N = obj.m;
         end

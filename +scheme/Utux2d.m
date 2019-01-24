@@ -12,6 +12,7 @@ classdef Utux2d < scheme.Scheme
         H % Discrete norm
         H_x, H_y % Norms in the x and y directions
         Hi, Hx, Hy, Hxi, Hyi % Kroneckered norms
+        H_w, H_e, H_s, H_n % Boundary quadratures
 
         % Derivatives
         Dx, Dy
@@ -59,6 +60,10 @@ classdef Utux2d < scheme.Scheme
             Hxi = ops_x.HI;
             Hyi = ops_y.HI;
 
+            obj.H_w = Hy;
+            obj.H_e = Hy;
+            obj.H_s = Hx;
+            obj.H_n = Hx;
             obj.H_x = Hx;
             obj.H_y = Hy;
             obj.H = kron(Hx,Hy);
@@ -139,16 +144,7 @@ classdef Utux2d < scheme.Scheme
             couplingType = type.couplingType;
 
             % Get neighbour boundary operator
-            switch neighbour_boundary
-             case {'e','E','east','East'}
-                 e_neighbour = neighbour_scheme.e_e;
-             case {'w','W','west','West'}
-                 e_neighbour = neighbour_scheme.e_w;
-             case {'n','N','north','North'}
-                 e_neighbour = neighbour_scheme.e_n;
-             case {'s','S','south','South'}
-                 e_neighbour = neighbour_scheme.e_s;
-            end
+            e_neighbour = neighbour_scheme.getBoundaryOperator('e', neighbour_boundary);
 
             switch couplingType
 
@@ -197,16 +193,7 @@ classdef Utux2d < scheme.Scheme
             interpolationDamping = type.interpolationDamping;
 
             % Get neighbour boundary operator
-            switch neighbour_boundary
-             case {'e','E','east','East'}
-                 e_neighbour = neighbour_scheme.e_e;
-             case {'w','W','west','West'}
-                 e_neighbour = neighbour_scheme.e_w;
-             case {'n','N','north','North'}
-                 e_neighbour = neighbour_scheme.e_n;
-             case {'s','S','south','South'}
-                 e_neighbour = neighbour_scheme.e_s;
-            end
+            e_neighbour = neighbour_scheme.getBoundaryOperator('e', neighbour_boundary);
 
             switch couplingType
 
@@ -289,6 +276,26 @@ classdef Utux2d < scheme.Scheme
 
 
          end
+
+        % Returns the boundary operator op for the boundary specified by the string boundary.
+        % op        -- string
+        % boundary  -- string
+        function o = getBoundaryOperator(obj, op, boundary)
+            assertIsMember(op, {'e'})
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
+
+            o = obj.([op, '_', boundary]);
+        end
+
+        % Returns square boundary quadrature matrix, of dimension
+        % corresponding to the number of boundary points
+        %
+        % boundary -- string
+        function H_b = getBoundaryQuadrature(obj, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
+
+            H_b = obj.(['H_', boundary]);
+        end
 
         function N = size(obj)
             N = obj.m;

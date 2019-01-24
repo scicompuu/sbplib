@@ -186,10 +186,10 @@ classdef Hypsyst2d < scheme.Scheme
             params = obj.params;
             x = obj.x;
             y = obj.y;
+            e_ = obj.getBoundaryOperator('e', boundary);
 
             switch boundary
                 case {'w','W','west'}
-                    e_ = obj.e_w;
                     mat = obj.A;
                     boundPos = 'l';
                     Hi = obj.Hxi;
@@ -197,7 +197,6 @@ classdef Hypsyst2d < scheme.Scheme
                     L = obj.evaluateCoefficientMatrix(L,x(1),y);
                     side = max(length(y));
                 case {'e','E','east'}
-                    e_ = obj.e_e;
                     mat = obj.A;
                     boundPos = 'r';
                     Hi = obj.Hxi;
@@ -205,7 +204,6 @@ classdef Hypsyst2d < scheme.Scheme
                     L = obj.evaluateCoefficientMatrix(L,x(end),y);
                     side = max(length(y));
                 case {'s','S','south'}
-                    e_ = obj.e_s;
                     mat = obj.B;
                     boundPos = 'l';
                     Hi = obj.Hyi;
@@ -213,7 +211,6 @@ classdef Hypsyst2d < scheme.Scheme
                     L = obj.evaluateCoefficientMatrix(L,x,y(1));
                     side = max(length(x));
                 case {'n','N','north'}
-                    e_ = obj.e_n;
                     mat = obj.B;
                     boundPos = 'r';
                     Hi = obj.Hyi;
@@ -295,6 +292,55 @@ classdef Hypsyst2d < scheme.Scheme
             V = [V(:,poseig) V(:,zeroeig) V(:,negeig)];
             Vi = [Vi(poseig,:); Vi(zeroeig,:); Vi(negeig,:)];
             signVec = [sum(poseig),sum(zeroeig),sum(negeig)];
+        end
+
+        % Returns the boundary operator op for the boundary specified by the string boundary.
+        % op        -- string or a cell array of strings
+        % boundary  -- string
+        function varargout = getBoundaryOperator(obj, op, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
+
+            if ~iscell(op)
+                op = {op};
+            end
+
+            for i = 1:numel(op)
+                switch op{i}
+                case 'e'
+                    switch boundary
+                    case 'w'
+                        e = obj.e_w;
+                    case 'e'
+                        e = obj.e_e;
+                    case 's'
+                        e = obj.e_s;
+                    case 'n'
+                        e = obj.e_n;
+                    end
+                    varargout{i} = e;
+                end
+            end
+        end
+
+        % Returns square boundary quadrature matrix, of dimension
+        % corresponding to the number of boundary points
+        %
+        % boundary -- string
+        function H_b = getBoundaryQuadrature(obj, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
+
+            e = obj.getBoundaryOperator('e', boundary);
+
+            switch boundary
+                case 'w'
+                    H_b = inv(e'*obj.Hyi*e);
+                case 'e'
+                    H_b = inv(e'*obj.Hyi*e);
+                case 's'
+                    H_b = inv(e'*obj.Hxi*e);
+                case 'n'
+                    H_b = inv(e'*obj.Hxi*e);
+            end
         end
 
     end

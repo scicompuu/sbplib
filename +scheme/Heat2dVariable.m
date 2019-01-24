@@ -1,9 +1,9 @@
 classdef Heat2dVariable < scheme.Scheme
 
 % Discretizes the Laplacian with variable coefficent,
-% In the Heat equation way (i.e., the discretization matrix is not necessarily 
+% In the Heat equation way (i.e., the discretization matrix is not necessarily
 % symmetric)
-% u_t = div * (kappa * grad u ) 
+% u_t = div * (kappa * grad u )
 % opSet should be cell array of opSets, one per dimension. This
 % is useful if we have periodic BC in one direction.
 
@@ -29,7 +29,7 @@ classdef Heat2dVariable < scheme.Scheme
         e_l, e_r
         d1_l, d1_r % Normal derivatives at the boundary
         alpha % Vector of borrowing constants
-        
+
         H_boundary % Boundary inner products
 
     end
@@ -162,26 +162,18 @@ classdef Heat2dVariable < scheme.Scheme
             default_arg('symmetric', false);
             default_arg('tuning',1.2);
 
-            % j is the coordinate direction of the boundary
-            % nj: outward unit normal component. 
+            % nj: outward unit normal component.
             % nj = -1 for west, south, bottom boundaries
             % nj = 1  for east, north, top boundaries
-            [j, nj] = obj.get_boundary_number(boundary);
-            switch nj
-            case 1
-                e = obj.e_r;
-                d = obj.d1_r;
-            case -1
-                e = obj.e_l;
-                d = obj.d1_l;
-            end
+            nj = obj.getBoundarySign(boundary);
 
             Hi = obj.Hi;
-            H_gamma = obj.H_boundary{j};
+            [e, d] = obj.getBoundaryOperator({'e', 'd'}, boundary);
+            H_gamma = obj.getBoundaryQuadrature(boundary);
+            alpha = obj.getBoundaryBorrowing(boundary);
+
             KAPPA = obj.KAPPA;
-            kappa_gamma = e{j}'*KAPPA*e{j}; 
-            h = obj.h(j);
-            alpha = h*obj.alpha(j);
+            kappa_gamma = e'*KAPPA*e;
 
             switch type
 
@@ -189,19 +181,19 @@ classdef Heat2dVariable < scheme.Scheme
             case {'D','d','dirichlet','Dirichlet'}
 
                 if ~symmetric
-                    closure = -nj*Hi*d{j}*kappa_gamma*H_gamma*(e{j}' ); 
-                    penalty =  nj*Hi*d{j}*kappa_gamma*H_gamma;
+                    closure = -nj*Hi*d*kappa_gamma*H_gamma*(e' );
+                    penalty =  nj*Hi*d*kappa_gamma*H_gamma;
                 else
-                    closure = nj*Hi*d{j}*kappa_gamma*H_gamma*(e{j}' )...
-                              -tuning*2/alpha*Hi*e{j}*kappa_gamma*H_gamma*(e{j}' ) ; 
-                    penalty =  -nj*Hi*d{j}*kappa_gamma*H_gamma ...
-                              +tuning*2/alpha*Hi*e{j}*kappa_gamma*H_gamma;
+                    closure = nj*Hi*d*kappa_gamma*H_gamma*(e' )...
+                              -tuning*2/alpha*Hi*e*kappa_gamma*H_gamma*(e' ) ;
+                    penalty =  -nj*Hi*d*kappa_gamma*H_gamma ...
+                              +tuning*2/alpha*Hi*e*kappa_gamma*H_gamma;
                 end
 
             % Free boundary condition
             case {'N','n','neumann','Neumann'}
-                    closure = -nj*Hi*e{j}*kappa_gamma*H_gamma*(d{j}' ); 
-                    penalty =  Hi*e{j}*kappa_gamma*H_gamma; 
+                    closure = -nj*Hi*e*kappa_gamma*H_gamma*(d' );
+                    penalty =  Hi*e*kappa_gamma*H_gamma;
                     % penalty is for normal derivative and not for derivative, hence the sign.
 
             % Unknown boundary condition
@@ -216,57 +208,90 @@ classdef Heat2dVariable < scheme.Scheme
             error('Interface not implemented');
         end
 
-        % Returns the coordinate number and outward normal component for the boundary specified by the string boundary.
-        function [j, nj] = get_boundary_number(obj, boundary)
+        % Returns the boundary operator op for the boundary specified by the string boundary.
+        % op        -- string or a cell array of strings
+        % boundary  -- string
+        function varargout = getBoundaryOperator(obj, op, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
 
-            switch boundary
-                case {'w','W','west','West', 'e', 'E', 'east', 'East'}
-                    j = 1;
-                case {'s','S','south','South', 'n', 'N', 'north', 'North'}
-                    j = 2;
-                otherwise
-                    error('No such boundary: boundary = %s',boundary);
+            if ~iscell(op)
+                op = {op};
             end
 
-            switch boundary
-                case {'w','W','west','West','s','S','south','South'}
-                    nj = -1;
-                case {'e', 'E', 'east', 'East','n', 'N', 'north', 'North'}
-                    nj = 1;
+            for i = 1:numel(op)
+                switch op{i}
+                case 'e'
+                    switch boundary
+                    case 'w'
+                        e = obj.e_l{1};
+                    case 'e'
+                        e = obj.e_r{1};
+                    case 's'
+                        e = obj.e_l{2};
+                    case 'n'
+                        e = obj.e_r{2};
+                    end
+                    varargout{i} = e;
+
+                case 'd'
+                    switch boundary
+                    case 'w'
+                        d = obj.d1_l{1};
+                    case 'e'
+                        d = obj.d1_r{1};
+                    case 's'
+                        d = obj.d1_l{2};
+                    case 'n'
+                        d = obj.d1_r{2};
+                    end
+                    varargout{i} = d;
+                end
             end
         end
 
-        % Returns the coordinate number and outward normal component for the boundary specified by the string boundary.
-        function [return_op] = get_boundary_operator(obj, op, boundary)
+        % Returns square boundary quadrature matrix, of dimension
+        % corresponding to the number of boundary points
+        %
+        % boundary -- string
+        function H_b = getBoundaryQuadrature(obj, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
 
             switch boundary
-                case {'w','W','west','West', 'e', 'E', 'east', 'East'}
-                    j = 1;
-                case {'s','S','south','South', 'n', 'N', 'north', 'North'}
-                    j = 2;
-                otherwise
-                    error('No such boundary: boundary = %s',boundary);
-            end
-
-            switch op
+                case 'w'
+                    H_b = obj.H_boundary{1};
                 case 'e'
-                    switch boundary
-                        case {'w','W','west','West','s','S','south','South'}
-                            return_op = obj.e_l{j};
-                        case {'e', 'E', 'east', 'East','n', 'N', 'north', 'North'}
-                            return_op = obj.e_r{j};
-                    end
-                case 'd'
-                    switch boundary
-                        case {'w','W','west','West','s','S','south','South'}
-                            return_op = obj.d1_l{j};
-                        case {'e', 'E', 'east', 'East','n', 'N', 'north', 'North'}
-                            return_op = obj.d1_r{j};
-                    end
-                otherwise
-                    error(['No such operator: operatr = ' op]);
+                    H_b = obj.H_boundary{1};
+                case 's'
+                    H_b = obj.H_boundary{2};
+                case 'n'
+                    H_b = obj.H_boundary{2};
             end
+        end
 
+        % Returns the boundary sign. The right boundary is considered the positive boundary
+        % boundary -- string
+        function s = getBoundarySign(obj, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
+
+            switch boundary
+                case {'e','n'}
+                    s = 1;
+                case {'w','s'}
+                    s = -1;
+            end
+        end
+
+        % Returns borrowing constant gamma*h
+        % boundary -- string
+        function gamm = getBoundaryBorrowing(obj, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
+
+            switch boundary
+                case {'w','e'}
+                    gamm = obj.h(1)*obj.alpha(1);
+                case {'s','n'}
+                    gamm = obj.h(2)*obj.alpha(2);
+            end
         end
 
         function N = size(obj)

@@ -201,7 +201,8 @@ classdef Euler1d < scheme.Scheme
         % Enforces the boundary conditions
         %  w+ = R*w- + g(t)
         function closure = boundary_condition(obj,boundary, type, varargin)
-            [e_s,e_S,s] = obj.get_boundary_ops(boundary);
+            [e_s, e_S] = obj.getBoundaryOperator({'e', 'E'}, boundary);
+            s = obj.getBoundarySign(boundary);
 
             % Boundary condition on form
             %   w_in = R*w_out + g,       where g is data
@@ -232,7 +233,8 @@ classdef Euler1d < scheme.Scheme
         %
         % Returns closure(q,g)
         function closure = boundary_condition_L(obj, boundary, L_fun, p_in)
-            [e_s,e_S,s] = obj.get_boundary_ops(boundary);
+            [e_s, e_S] = obj.getBoundaryOperator({'e', 'E'}, boundary);
+            s = obj.getBoundarySign(boundary);
 
             p_ot = 1:3;
             p_ot(p_in) = [];
@@ -273,7 +275,8 @@ classdef Euler1d < scheme.Scheme
 
         % Return closure(q,g)
         function closure = boundary_condition_char(obj,boundary)
-            [e_s,e_S,s] = obj.get_boundary_ops(boundary);
+            [e_s, e_S] = obj.getBoundaryOperator({'e', 'E'}, boundary);
+            s = obj.getBoundarySign(boundary);
 
             function o = closure_fun(q, w_data)
                 q_s = e_S'*q;
@@ -314,7 +317,7 @@ classdef Euler1d < scheme.Scheme
 
         % Return closure(q,[v; p])
         function closure = boundary_condition_inflow(obj, boundary)
-            [~,~,s] = obj.get_boundary_ops(boundary);
+            s = obj.getBoundarySign(boundary);
 
              switch s
                 case -1
@@ -335,7 +338,7 @@ classdef Euler1d < scheme.Scheme
 
         % Return closure(q, p)
         function closure = boundary_condition_outflow(obj, boundary)
-            [~,~,s] = obj.get_boundary_ops(boundary);
+            s = obj.getBoundarySign(boundary);
 
              switch s
                 case -1
@@ -352,7 +355,7 @@ classdef Euler1d < scheme.Scheme
 
         % Return closure(q,[v; rho])
         function closure = boundary_condition_inflow_rho(obj, boundary)
-            [~,~,s] = obj.get_boundary_ops(boundary);
+            s = obj.getBoundarySign(boundary);
 
              switch s
                 case -1
@@ -372,7 +375,7 @@ classdef Euler1d < scheme.Scheme
 
         % Return closure(q,rho)
         function closure = boundary_condition_outflow_rho(obj, boundary)
-            [~,~,s] = obj.get_boundary_ops(boundary);
+            s = obj.getBoundarySign(boundary);
 
              switch s
                 case -1
@@ -388,7 +391,8 @@ classdef Euler1d < scheme.Scheme
 
         % Set wall boundary condition v = 0.
         function closure = boundary_condition_wall(obj,boundary)
-            [e_s,e_S,s] = obj.get_boundary_ops(boundary);
+            [e_s, e_S] = obj.getBoundaryOperator({'e', 'E'}, boundary);
+            s = obj.getBoundarySign(boundary);
 
             % Vill vi sätta penalty på karateristikan som är nära noll också eller vill
             % vi låta den vara fri?
@@ -478,18 +482,61 @@ classdef Euler1d < scheme.Scheme
             penalty = -halfnorm_inv*(tau*e_v' + sig*d1_v' + phi*alpha_v*d2_v' + psi*alpha_v*d3_v');
         end
 
-        % Ruturns the boundary ops and sign for the boundary specified by the string boundary.
-        % The right boundary is considered the positive boundary
-        function [e,E,s] = get_boundary_ops(obj,boundary)
+        % Returns the boundary operator op for the boundary specified by the string boundary.
+        % op        -- string or a cell array of strings
+        % boundary  -- string
+        function varargout = getBoundaryOperator(obj, op, boundary)
+
+            if ~iscell(op)
+                op = {op};
+            end
+
+            for i = 1:numel(op)
+                switch op{i}
+                case 'e'
+                    switch boundary
+                    case 'l'
+                        e = obj.e_l;
+                    case 'r'
+                        e = obj.e_r;
+                    otherwise
+                        error('No such boundary: boundary = %s',boundary);
+                    end
+                    varargout{i} = e;
+
+                case 'E'
+                    switch boundary
+                    case 'l'
+                        E = obj.e_L;
+                    case 'r'
+                        E = obj.e_R;
+                    otherwise
+                        error('No such boundary: boundary = %s',boundary);
+                    end
+                    varargout{i} = E;
+                end
+            end
+        end
+
+        % Returns square boundary quadrature matrix, of dimension
+        % corresponding to the number of boundary points
+        %
+        % boundary -- string
+        % Note: for 1d diffOps, the boundary quadrature is the scalar 1.
+        function H_b = getBoundaryQuadrature(obj, boundary)
+            assertIsMember(boundary, {'l', 'r'})
+
+            H_b = 1;
+        end
+
+        % Returns the boundary sign. The right boundary is considered the positive boundary
+        % boundary -- string
+        function s = getBoundarySign(obj, boundary)
             switch boundary
-                case 'l'
-                    e  = obj.e_l;
-                    E  = obj.e_L;
-                    s = -1;
-                case 'r'
-                    e  = obj.e_r;
-                    E  = obj.e_R;
+                case {'r'}
                     s = 1;
+                case {'l'}
+                    s = -1;
                 otherwise
                     error('No such boundary: boundary = %s',boundary);
             end

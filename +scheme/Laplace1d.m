@@ -56,7 +56,9 @@ classdef Laplace1d < scheme.Scheme
             default_arg('type','neumann');
             default_arg('data',0);
 
-            [e,d,s] = obj.get_boundary_ops(boundary);
+            e = obj.getBoundaryOperator('e', boundary);
+            d = obj.getBoundaryOperator('d', boundary);
+            s = obj.getBoundarySign(boundary);
 
             switch type
                 % Dirichlet boundary condition
@@ -86,10 +88,13 @@ classdef Laplace1d < scheme.Scheme
         function [closure, penalty] = interface(obj, boundary, neighbour_scheme, neighbour_boundary, type)
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
+            e_u = obj.getBoundaryOperator('e', boundary);
+            d_u = obj.getBoundaryOperator('d', boundary);
+            s_u = obj.getBoundarySign(boundary);
 
-            [e_u,d_u,s_u] = obj.get_boundary_ops(boundary);
-            [e_v,d_v,s_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
-
+            e_v = neighbour_scheme.getBoundaryOperator('e', neighbour_boundary);
+            d_v = neighbour_scheme.getBoundaryOperator('d', neighbour_boundary);
+            s_v = neighbour_scheme.getBoundarySign(neighbour_boundary);
 
             a_u = obj.a;
             a_v = neighbour_scheme.a;
@@ -111,20 +116,37 @@ classdef Laplace1d < scheme.Scheme
             penalty = obj.Hi*(-tau*e_v' + sig*a_v*d_v');
         end
 
-        % Ruturns the boundary ops and sign for the boundary specified by the string boundary.
-        % The right boundary is considered the positive boundary
-        function [e,d,s] = get_boundary_ops(obj,boundary)
+        % Returns the boundary operator op for the boundary specified by the string boundary.
+        % op        -- string
+        % boundary  -- string
+        function o = getBoundaryOperator(obj, op, boundary)
+            assertIsMember(op, {'e', 'd'})
+            assertIsMember(boundary, {'l', 'r'})
+
+            o = obj.([op, '_', boundary])
+        end
+
+        % Returns square boundary quadrature matrix, of dimension
+        % corresponding to the number of boundary points
+        %
+        % boundary -- string
+        % Note: for 1d diffOps, the boundary quadrature is the scalar 1.
+        function H_b = getBoundaryQuadrature(obj, boundary)
+            assertIsMember(boundary, {'l', 'r'})
+
+            H_b = 1;
+        end
+
+        % Returns the boundary sign. The right boundary is considered the positive boundary
+        % boundary -- string
+        function s = getBoundarySign(obj, boundary)
+            assertIsMember(boundary, {'l', 'r'})
+
             switch boundary
-                case 'l'
-                    e = obj.e_l;
-                    d = obj.d_l;
-                    s = -1;
-                case 'r'
-                    e = obj.e_r;
-                    d = obj.d_r;
+                case {'r'}
                     s = 1;
-                otherwise
-                    error('No such boundary: boundary = %s',boundary);
+                case {'l'}
+                    s = -1;
             end
         end
 
