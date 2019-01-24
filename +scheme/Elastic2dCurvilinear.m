@@ -3,12 +3,12 @@ classdef Elastic2dCurvilinear < scheme.Scheme
 % Discretizes the elastic wave equation in curvilinear coordinates.
 %
 % Untransformed equation:
-% rho u_{i,tt} = di lambda dj u_j + dj mu di u_j + dj mu dj u_i 
+% rho u_{i,tt} = di lambda dj u_j + dj mu di u_j + dj mu dj u_i
 %
 % Transformed equation:
-% J*rho u_{i,tt} = dk J b_ik lambda b_jl dl u_j 
-%                + dk J b_jk mu b_il dl u_j 
-%                + dk J b_jk mu b_jl dl u_i 
+% J*rho u_{i,tt} = dk J b_ik lambda b_jl dl u_j
+%                + dk J b_jk mu b_il dl u_j
+%                + dk J b_jk mu b_jl dl u_i
 % opSet should be cell array of opSets, one per dimension. This
 % is useful if we have periodic BC in one direction.
 
@@ -49,7 +49,7 @@ classdef Elastic2dCurvilinear < scheme.Scheme
         e_l, e_r
         d1_l, d1_r % Normal derivatives at the boundary
         E % E{i}^T picks out component i
-        
+
         H_boundary_l, H_boundary_r % Boundary inner products
 
         % Kroneckered norms and coefficients
@@ -145,7 +145,7 @@ classdef Elastic2dCurvilinear < scheme.Scheme
             opSetMetric{1} = sbp.D2Variable(m(1), {0, xmax}, order);
             opSetMetric{2} = sbp.D2Variable(m(2), {0, ymax}, order);
             D1Metric{1} = kron(opSetMetric{1}.D1, I{2});
-            D1Metric{2} = kron(I{1}, opSetMetric{2}.D1); 
+            D1Metric{2} = kron(I{1}, opSetMetric{2}.D1);
 
             x_xi = D1Metric{1}*x;
             x_eta = D1Metric{2}*x;
@@ -327,12 +327,12 @@ classdef Elastic2dCurvilinear < scheme.Scheme
 
                         for m = 1:dim
                             for l = 1:dim
-                                T_l{j}{i,k} = T_l{j}{i,k} + ... 
+                                T_l{j}{i,k} = T_l{j}{i,k} + ...
                                 -d(k,l)* J*b{i,j}*b{k,m}*LAMBDA*(d(m,j)*e_l{m}*d1_l{m}' + db(m,j)*D1{m}) ...
                                 -d(k,l)* J*b{k,j}*b{i,m}*MU*(d(m,j)*e_l{m}*d1_l{m}' + db(m,j)*D1{m}) ...
                                 -d(i,k)* J*b{l,j}*b{l,m}*MU*(d(m,j)*e_l{m}*d1_l{m}' + db(m,j)*D1{m});
 
-                                T_r{j}{i,k} = T_r{j}{i,k} + ... 
+                                T_r{j}{i,k} = T_r{j}{i,k} + ...
                                 d(k,l)* J*b{i,j}*b{k,m}*LAMBDA*(d(m,j)*e_r{m}*d1_r{m}' + db(m,j)*D1{m}) + ...
                                 d(k,l)* J*b{k,j}*b{i,m}*MU*(d(m,j)*e_r{m}*d1_r{m}' + db(m,j)*D1{m}) + ...
                                 d(i,k)* J*b{l,j}*b{l,m}*MU*(d(m,j)*e_r{m}*d1_r{m}' + db(m,j)*D1{m});
@@ -340,7 +340,7 @@ classdef Elastic2dCurvilinear < scheme.Scheme
                         end
 
                         T_l{j}{i,k} = inv(beta{j})*T_l{j}{i,k};
-                        T_r{j}{i,k} = inv(beta{j})*T_r{j}{i,k}; 
+                        T_r{j}{i,k} = inv(beta{j})*T_r{j}{i,k};
 
                         tau_l{j}{i} = tau_l{j}{i} + T_l{j}{i,k}*E{k}';
                         tau_r{j}{i} = tau_r{j}{i} + T_r{j}{i,k}*E{k}';
@@ -387,7 +387,7 @@ classdef Elastic2dCurvilinear < scheme.Scheme
 
             % j is the coordinate direction of the boundary
             j = obj.get_boundary_number(boundary);
-            [e, T, tau, H_gamma] = obj.get_boundary_operator({'e','T','tau','H'}, boundary);
+            [e, T, tau, H_gamma] = obj.getBoundaryOperator({'e','T','tau','H'}, boundary);
 
             E = obj.E;
             Hi = obj.Hi;
@@ -423,20 +423,20 @@ classdef Elastic2dCurvilinear < scheme.Scheme
                 db = @(i,j) 1-d(i,j); % Logical not of Kronecker delta
                 alpha = @(i,j) tuning*( d(i,j)* a_lambda*LAMBDA ...
                                       + d(i,j)* a_mu_i*MU ...
-                                      + db(i,j)*a_mu_ij*MU ); 
+                                      + db(i,j)*a_mu_ij*MU );
 
                 % Loop over components that Dirichlet penalties end up on
                 for i = 1:dim
                     C = T{k,i};
                     A = -d(i,k)*alpha(i,j);
                     B = A + C;
-                    closure = closure + E{i}*RHOi*Hi*Ji*B'*e*H_gamma*(e'*E{k}' ); 
+                    closure = closure + E{i}*RHOi*Hi*Ji*B'*e*H_gamma*(e'*E{k}' );
                     penalty = penalty - E{i}*RHOi*Hi*Ji*B'*e*H_gamma;
-                end 
+                end
 
             % Free boundary condition
             case {'F','f','Free','free','traction','Traction','t','T'}
-                    closure = closure - E{k}*RHOi*Ji*Hi*e*H_gamma* (e'*tau{k} ); 
+                    closure = closure - E{k}*RHOi*Ji*Hi*e*H_gamma* (e'*tau{k} );
                     penalty = penalty + E{k}*RHOi*Ji*Hi*e*H_gamma;
 
             % Unknown boundary condition
@@ -457,14 +457,14 @@ classdef Elastic2dCurvilinear < scheme.Scheme
             j_v = neighbour_scheme.get_boundary_number(neighbour_boundary);
 
             % Get boundary operators
-            [e, T, tau, H_gamma] = obj.get_boundary_operator({'e','T','tau','H'}, boundary);
-            [e_v, tau_v] = neighbour_scheme.get_boundary_operator({'e','tau'}, neighbour_boundary);
+            [e, T, tau, H_gamma] = obj.getBoundaryOperator({'e','T','tau','H'}, boundary);
+            [e_v, tau_v] = neighbour_scheme.getBoundaryOperator({'e','tau'}, neighbour_boundary);
 
             % Operators and quantities that correspond to the own domain only
             Hi = obj.Hi;
             RHOi = obj.RHOi;
             dim = obj.dim;
-        
+
             %--- Other operators ----
             m_tot_u = obj.grid.N();
             E = obj.E;
@@ -480,7 +480,7 @@ classdef Elastic2dCurvilinear < scheme.Scheme
             lambda_v = e_v'*LAMBDA_v*e_v;
             mu_v = e_v'*MU_v*e_v;
             %-------------------------
-            
+
             % Borrowing constants
             phi_u = obj.phi{j};
             h_u = obj.h(j);
@@ -493,7 +493,7 @@ classdef Elastic2dCurvilinear < scheme.Scheme
             gamma_v = neighbour_scheme.gamma{j_v};
 
             % E > sum_i 1/(2*alpha_ij)*(tau_i)^2
-            function [alpha_ii, alpha_ij] = computeAlpha(phi,h,h11,gamma,lambda,mu) 
+            function [alpha_ii, alpha_ij] = computeAlpha(phi,h,h11,gamma,lambda,mu)
                 th1 = h11/(2*dim);
                 th2 = h11*phi/2;
                 th3 = h*gamma;
@@ -505,7 +505,7 @@ classdef Elastic2dCurvilinear < scheme.Scheme
             end
 
             [alpha_ii_u, alpha_ij_u] = computeAlpha(phi_u,h_u,h11_u,gamma_u,lambda_u,mu_u);
-            [alpha_ii_v, alpha_ij_v] = computeAlpha(phi_v,h_v,h11_v,gamma_v,lambda_v,mu_v);  
+            [alpha_ii_v, alpha_ij_v] = computeAlpha(phi_v,h_v,h11_v,gamma_v,lambda_v,mu_v);
             sigma_ii = tuning*(alpha_ii_u + alpha_ii_v)/4;
             sigma_ij = tuning*(alpha_ij_u + alpha_ij_v)/4;
 
@@ -527,9 +527,9 @@ classdef Elastic2dCurvilinear < scheme.Scheme
 
                 % Loop over components that we have interface conditions on
                 for k = 1:dim
-                    closure = closure + 1/2*E{i}*RHOi*Hi*T{k,i}'*e*H_gamma*e'*E{k}'; 
-                    penalty = penalty - 1/2*E{i}*RHOi*Hi*T{k,i}'*e*H_gamma*e_v'*E_v{k}'; 
-                end 
+                    closure = closure + 1/2*E{i}*RHOi*Hi*T{k,i}'*e*H_gamma*e'*E{k}';
+                    penalty = penalty - 1/2*E{i}*RHOi*Hi*T{k,i}'*e*H_gamma*e_v'*E_v{k}';
+                end
             end
         end
 
@@ -555,7 +555,7 @@ classdef Elastic2dCurvilinear < scheme.Scheme
 
         % Returns the boundary operator op for the boundary specified by the string boundary.
         % op: may be a cell array of strings
-        function [varargout] = get_boundary_operator(obj, op, boundary)
+        function [varargout] = getBoundaryOperator(obj, op, boundary)
 
             switch boundary
                 case {'w','W','west','West', 'e', 'E', 'east', 'East'}
@@ -587,7 +587,7 @@ classdef Elastic2dCurvilinear < scheme.Scheme
                                 varargout{i} = obj.d1_r{j};
                         end
                     case 'H'
-                        switch boundary 
+                        switch boundary
                             case {'w','W','west','West','s','S','south','South'}
                                     varargout{i} = obj.H_boundary_l{j};
                             case {'e', 'E', 'east', 'East','n', 'N', 'north', 'North'}
@@ -606,12 +606,33 @@ classdef Elastic2dCurvilinear < scheme.Scheme
                                 varargout{i} = obj.tau_l{j};
                             case {'e', 'E', 'east', 'East','n', 'N', 'north', 'North'}
                                 varargout{i} = obj.tau_r{j};
-                        end                        
+                        end
                     otherwise
                         error(['No such operator: operator = ' op{i}]);
                 end
             end
 
+        end
+
+        % Returns square boundary quadrature matrix, of dimension
+        % corresponding to the number of boundary points
+        %
+        % boundary -- string
+        function H = getBoundaryQuadrature(obj, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
+
+            switch boundary
+                case {'w'}
+                    H = H_boundary_l{1};
+                case 'e'
+                    H = H_boundary_r{1};
+                case 's'
+                    H = H_boundary_l{2};
+                case 'n'
+                    H = H_boundary_r{2};
+            end
+            I_dim = speye(obj.dim, obj.dim);
+            H = kron(H, I_dim);
         end
 
         function N = size(obj)
