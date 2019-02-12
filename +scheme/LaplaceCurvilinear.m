@@ -38,6 +38,7 @@ classdef LaplaceCurvilinear < scheme.Scheme
         du_n, dv_n
         gamm_u, gamm_v
         lambda
+
     end
 
     methods
@@ -53,7 +54,11 @@ classdef LaplaceCurvilinear < scheme.Scheme
                 error('Not implemented yet')
             end
 
-            assert(isa(g, 'grid.Curvilinear'))
+            % assert(isa(g, 'grid.Curvilinear'))
+            if isa(a, 'function_handle')
+                a = grid.evalOn(g, a);
+                a = spdiag(a);
+            end
 
             m = g.size();
             m_u = m(1);
@@ -233,7 +238,10 @@ classdef LaplaceCurvilinear < scheme.Scheme
             default_arg('type','neumann');
             default_arg('parameter', []);
 
-            [e, d, gamm, H_b, ~] = obj.get_boundary_ops(boundary);
+            e = obj.getBoundaryOperator('e', boundary);
+            d = obj.getBoundaryOperator('d', boundary);
+            H_b = obj.getBoundaryQuadrature(boundary);
+            gamm = obj.getBoundaryBorrowing(boundary);
             switch type
                 % Dirichlet boundary condition
                 case {'D','d','dirichlet'}
@@ -268,13 +276,42 @@ classdef LaplaceCurvilinear < scheme.Scheme
             end
         end
 
-        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
+        % type     Struct that specifies the interface coupling.
+        %          Fields:
+        %          -- tuning:           penalty strength, defaults to 1.2
+        %          -- interpolation:    type of interpolation, default 'none'
+        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,type)
+
+            defaultType.tuning = 1.2;
+            defaultType.interpolation = 'none';
+            default_struct('type', defaultType);
+
+            switch type.interpolation
+            case {'none', ''}
+                [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary,type);
+            case {'op','OP'}
+                [closure, penalty] = interfaceNonConforming(obj,boundary,neighbour_scheme,neighbour_boundary,type);
+            otherwise
+                error('Unknown type of interpolation: %s ', type.interpolation);
+            end
+        end
+
+        function [closure, penalty] = interfaceStandard(obj,boundary,neighbour_scheme,neighbour_boundary,type)
+            tuning = type.tuning;
+
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
-            tuning = 1.2;
-            % tuning = 20.2;
-            [e_u, d_u, gamm_u, H_b_u, I_u] = obj.get_boundary_ops(boundary);
-            [e_v, d_v, gamm_v, H_b_v, I_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
+            e_u    = obj.getBoundaryOperator('e', boundary);
+            d_u    = obj.getBoundaryOperator('d', boundary);
+            H_b_u = obj.getBoundaryQuadrature(boundary);
+            I_u = obj.getBoundaryIndices(boundary);
+            gamm_u = obj.getBoundaryBorrowing(boundary);
+
+            e_v    = neighbour_scheme.getBoundaryOperator('e', neighbour_boundary);
+            d_v    = neighbour_scheme.getBoundaryOperator('d', neighbour_boundary);
+            H_b_v = neighbour_scheme.getBoundaryQuadrature(neighbour_boundary);
+            I_v = neighbour_scheme.getBoundaryIndices(neighbour_boundary);
+            gamm_v = neighbour_scheme.getBoundaryBorrowing(neighbour_boundary);
 
             u = obj;
             v = neighbour_scheme;
@@ -298,41 +335,113 @@ classdef LaplaceCurvilinear < scheme.Scheme
             penalty = obj.a*obj.Hi*(-tau*e_v' + sig*d_v');
         end
 
-        % Ruturns the boundary ops and sign for the boundary specified by the string boundary.
-        % The right boundary is considered the positive boundary
-        %
-        %  I -- the indecies of the boundary points in the grid matrix
-        function [e, d, gamm, H_b, I] = get_boundary_ops(obj, boundary)
+        function [closure, penalty] = interfaceNonConforming(obj,boundary,neighbour_scheme,neighbour_boundary,type)
 
-            % gridMatrix = zeros(obj.m(2),obj.m(1));
-            % gridMatrix(:) = 1:numel(gridMatrix);
+            % TODO: Make this work for curvilinear grids
+            warning('LaplaceCurvilinear: Non-conforming grid interpolation only works for Cartesian grids.');
+
+            % User can request special interpolation operators by specifying type.interpOpSet
+            default_field(type, 'interpOpSet', @sbp.InterpOpsOP);
+            interpOpSet = type.interpOpSet;
+            tuning = type.tuning;
+
+
+            % u denotes the solution in the own domain
+            % v denotes the solution in the neighbour domain
+            e_u    = obj.getBoundaryOperator('e', boundary);
+            d_u    = obj.getBoundaryOperator('d', boundary);
+            H_b_u  = obj.getBoundaryQuadrature(boundary);
+            I_u    = obj.getBoundaryIndices(boundary);
+            gamm_u = obj.getBoundaryBorrowing(boundary);
+
+            e_v    = neighbour_scheme.getBoundaryOperator('e', neighbour_boundary);
+            d_v    = neighbour_scheme.getBoundaryOperator('d', neighbour_boundary);
+            H_b_v  = neighbour_scheme.getBoundaryQuadrature(neighbour_boundary);
+            I_v    = neighbour_scheme.getBoundaryIndices(neighbour_boundary);
+            gamm_v = neighbour_scheme.getBoundaryBorrowing(neighbour_boundary);
+
+
+            % Find the number of grid points along the interface
+            m_u = size(e_u, 2);
+            m_v = size(e_v, 2);
+
+            Hi = obj.Hi;
+            a = obj.a;
+
+            u = obj;
+            v = neighbour_scheme;
+
+            b1_u = gamm_u*u.lambda(I_u)./u.a11(I_u).^2;
+            b2_u = gamm_u*u.lambda(I_u)./u.a22(I_u).^2;
+            b1_v = gamm_v*v.lambda(I_v)./v.a11(I_v).^2;
+            b2_v = gamm_v*v.lambda(I_v)./v.a22(I_v).^2;
+
+            tau_u = -1./(4*b1_u) -1./(4*b2_u);
+            tau_v = -1./(4*b1_v) -1./(4*b2_v);
+
+            tau_u = tuning * spdiag(tau_u);
+            tau_v = tuning * spdiag(tau_v);
+            beta_u = tau_v;
+
+            % Build interpolation operators
+            intOps = interpOpSet(m_u, m_v, obj.order, neighbour_scheme.order);
+            Iu2v = intOps.Iu2v;
+            Iv2u = intOps.Iv2u;
+
+            closure = a*Hi*e_u*tau_u*H_b_u*e_u' + ...
+                      a*Hi*e_u*H_b_u*Iv2u.bad*beta_u*Iu2v.good*e_u' + ...
+                      a*1/2*Hi*d_u*H_b_u*e_u' + ...
+                      -a*1/2*Hi*e_u*H_b_u*d_u';
+
+            penalty = -a*Hi*e_u*tau_u*H_b_u*Iv2u.good*e_v' + ...
+                      -a*Hi*e_u*H_b_u*Iv2u.bad*beta_u*e_v' + ...
+                      -a*1/2*Hi*d_u*H_b_u*Iv2u.good*e_v' + ...
+                      -a*1/2*Hi*e_u*H_b_u*Iv2u.bad*d_v';
+
+        end
+
+        % Returns the boundary operator op for the boundary specified by the string boundary.
+        % op        -- string
+        % boundary  -- string
+        function o = getBoundaryOperator(obj, op, boundary)
+            assertIsMember(op, {'e', 'd'})
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
+
+            o = obj.([op, '_', boundary]);
+        end
+
+        % Returns square boundary quadrature matrix, of dimension
+        % corresponding to the number of boundary points
+        %
+        % boundary -- string
+        function H_b = getBoundaryQuadrature(obj, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
+
+            H_b = obj.(['H_', boundary]);
+        end
+
+        % Returns the indices of the boundary points in the grid matrix
+        % boundary -- string
+        function I = getBoundaryIndices(obj, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
 
             ind = grid.funcToMatrix(obj.grid, 1:prod(obj.m));
-
             switch boundary
                 case 'w'
-                    e = obj.e_w;
-                    d = obj.d_w;
-                    H_b = obj.H_w;
                     I = ind(1,:);
                 case 'e'
-                    e = obj.e_e;
-                    d = obj.d_e;
-                    H_b = obj.H_e;
                     I = ind(end,:);
                 case 's'
-                    e = obj.e_s;
-                    d = obj.d_s;
-                    H_b = obj.H_s;
                     I = ind(:,1)';
                 case 'n'
-                    e = obj.e_n;
-                    d = obj.d_n;
-                    H_b = obj.H_n;
                     I = ind(:,end)';
-                otherwise
-                    error('No such boundary: boundary = %s',boundary);
             end
+        end
+
+        % Returns borrowing constant gamma
+        % boundary -- string
+        function gamm = getBoundaryBorrowing(obj, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
 
             switch boundary
                 case {'w','e'}

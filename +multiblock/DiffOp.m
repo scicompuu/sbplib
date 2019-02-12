@@ -10,7 +10,7 @@ classdef DiffOp < scheme.Scheme
     end
 
     methods
-        function obj = DiffOp(doHand, g, order, doParam)
+        function obj = DiffOp(doHand, g, order, doParam, intfTypes)
             %  doHand -- may either be a function handle or a cell array of
             %            function handles for each grid. The function handle(s)
             %            should be on the form do = doHand(grid, order, ...)
@@ -24,13 +24,16 @@ classdef DiffOp < scheme.Scheme
             %            corresponding function handle as extra parameters:
             %            doHand(..., doParam{i}{:}) Otherwise doParam is sent as
             %            extra parameters to all doHand: doHand(..., doParam{:})
+            %
+            % intfTypes (optional) -- nBlocks x nBlocks cell array of types for
+            %                                 every interface.
             default_arg('doParam', [])
+            default_arg('intfTypes', cell(g.nBlocks(), g.nBlocks()) );
 
             [getHand, getParam] = parseInput(doHand, g, doParam);
 
-            nBlocks = g.nBlocks();
-
             obj.order = order;
+            nBlocks = g.nBlocks();
 
             % Create the diffOps for each block
             obj.diffOps = cell(1, nBlocks);
@@ -70,12 +73,11 @@ classdef DiffOp < scheme.Scheme
                         continue
                     end
 
-
-                    [ii, ij] = obj.diffOps{i}.interface(intf{1}, obj.diffOps{j}, intf{2});
+                    [ii, ij] = obj.diffOps{i}.interface(intf{1}, obj.diffOps{j}, intf{2}, intfTypes{i,j});
                     D{i,i} = D{i,i} + ii;
                     D{i,j} = D{i,j} + ij;
 
-                    [jj, ji] = obj.diffOps{j}.interface(intf{2}, obj.diffOps{i}, intf{1});
+                    [jj, ji] = obj.diffOps{j}.interface(intf{2}, obj.diffOps{i}, intf{1}, intfTypes{i,j});
                     D{j,j} = D{j,j} + jj;
                     D{j,i} = D{j,i} + ji;
                 end
@@ -127,11 +129,11 @@ classdef DiffOp < scheme.Scheme
 
         % Get a boundary operator specified by opName for the given boundary/BoundaryGroup
         function op = getBoundaryOperator(obj, opName, boundary)
+
             switch class(boundary)
                 case 'cell'
-                    localOpName = [opName '_' boundary{2}];
                     blockId = boundary{1};
-                    localOp = obj.diffOps{blockId}.(localOpName);
+                    localOp = obj.diffOps{blockId}.getBoundaryOperator(opName, boundary{2});
 
                     div = {obj.blockmatrixDiv{1}, size(localOp,2)};
                     blockOp = blockmatrix.zero(div);
@@ -149,13 +151,10 @@ classdef DiffOp < scheme.Scheme
         end
 
         function op = getBoundaryQuadrature(obj, boundary)
-            opName = 'H';
             switch class(boundary)
                 case 'cell'
-                    localOpName = [opName '_' boundary{2}];
                     blockId = boundary{1};
-                    op = obj.diffOps{blockId}.(localOpName);
-
+                    op = obj.diffOps{blockId}.getBoundaryQuadrature(boundary{2});
                     return
                 case 'multiblock.BoundaryGroup'
                     N = length(boundary);
@@ -201,33 +200,8 @@ classdef DiffOp < scheme.Scheme
             [blockClosure, blockPenalty] = obj.diffOps{I}.boundary_condition(name, type);
 
             % Expand to matrix for full domain.
-            div = obj.blockmatrixDiv;
-            if ~iscell(blockClosure)
-                temp = blockmatrix.zero(div);
-                temp{I,I} = blockClosure;
-                closure = blockmatrix.toMatrix(temp);
-            else
-                for i = 1:length(blockClosure)
-                    temp = blockmatrix.zero(div);
-                    temp{I,I} = blockClosure{i};
-                    closure{i} = blockmatrix.toMatrix(temp);
-                end
-            end
-
-            if ~iscell(blockPenalty)
-                div{2} = size(blockPenalty, 2); % Penalty is a column vector
-                p = blockmatrix.zero(div);
-                p{I} = blockPenalty;
-                penalty = blockmatrix.toMatrix(p);
-            else
-                % TODO: used by beam equation, should be eliminated. SHould only set one BC per call
-                for i = 1:length(blockPenalty)
-                    div{2} = size(blockPenalty{i}, 2); % Penalty is a column vector
-                    p = blockmatrix.zero(div);
-                    p{I} = blockPenalty{i};
-                    penalty{i} = blockmatrix.toMatrix(p);
-                end
-            end
+            closure = multiblock.local2globalClosure(blockClosure, obj.blockmatrixDiv, I);
+            penalty = multiblock.local2globalPenalty(blockPenalty, obj.blockmatrixDiv, I);
         end
 
         function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)

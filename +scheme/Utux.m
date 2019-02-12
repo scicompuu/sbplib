@@ -2,7 +2,7 @@ classdef Utux < scheme.Scheme
    properties
         m % Number of points in each direction, possibly a vector
         h % Grid spacing
-        x % Grid
+        grid % Grid
         order % Order accuracy for the approximation
 
         H % Discrete norm
@@ -16,42 +16,30 @@ classdef Utux < scheme.Scheme
     end
 
 
-    methods 
-         function obj = Utux(m,xlim,order,operator)
-             default_arg('a',1);
-           
-           %Old operators  
-           % [x, h] = util.get_grid(xlim{:},m);
-           %ops = sbp.Ordinary(m,h,order);
-           
-           
-           switch operator
-               case 'NonEquidistant'
-              ops = sbp.D1Nonequidistant(m,xlim,order);
-              obj.D1 = ops.D1;
-               case 'Standard'
-              ops = sbp.D2Standard(m,xlim,order);
-              obj.D1 = ops.D1;
-               case 'Upwind'
-              ops = sbp.D1Upwind(m,xlim,order);
-              obj.D1 = ops.Dm;
-               otherwise
-                   error('Unvalid operator')
-           end
-              obj.x=ops.x;
+    methods
+        function obj = Utux(g, order, opSet)
+            default_arg('opSet',@sbp.D2Standard);
 
-            
+            m = g.size();
+            xl = g.getBoundary('l');
+            xr = g.getBoundary('r');
+            xlim = {xl, xr};
+
+            ops = opSet(m, xlim, order);
+            obj.D1 = ops.D1;
+
+            obj.grid = g;
+
             obj.H =  ops.H;
             obj.Hi = ops.HI;
-        
+
             obj.e_l = ops.e_l;
             obj.e_r = ops.e_r;
-            obj.D=obj.D1;
+            obj.D = -obj.D1;
 
             obj.m = m;
             obj.h = ops.h;
             obj.order = order;
-            obj.x = ops.x;
 
         end
         % Closure functions return the opertors applied to the own doamin to close the boundary
@@ -61,32 +49,53 @@ classdef Utux < scheme.Scheme
         %       data                is a function returning the data that should be applied at the boundary.
         %       neighbour_scheme    is an instance of Scheme that should be interfaced to.
         %       neighbour_boundary  is a string specifying which boundary to interface to.
-        function [closure, penalty] = boundary_condition(obj,boundary,type,data)
-            default_arg('type','neumann');
-            default_arg('data',0);
-            tau =-1*obj.e_l;  
-            closure = obj.Hi*tau*obj.e_l';       
-            penalty = 0*obj.e_l;
-                
+        function [closure, penalty] = boundary_condition(obj,boundary,type)
+            default_arg('type','dirichlet');
+            tau =-1*obj.e_l;
+            closure = obj.Hi*tau*obj.e_l';
+            penalty = -obj.Hi*tau;
+
          end
-          
-         function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
-          error('An interface function does not exist yet');
+
+         function [closure, penalty] = interface(obj, boundary, neighbour_scheme, neighbour_boundary, type)
+             switch boundary
+                 % Upwind coupling
+                 case {'l','left'}
+                     tau = -1*obj.e_l;
+                     closure = obj.Hi*tau*obj.e_l';
+                     penalty = -obj.Hi*tau*neighbour_scheme.e_r';
+                 case {'r','right'}
+                     tau = 0*obj.e_r;
+                     closure = obj.Hi*tau*obj.e_r';
+                     penalty = -obj.Hi*tau*neighbour_scheme.e_l';
+             end
+
          end
-      
+
+        % Returns the boundary operator op for the boundary specified by the string boundary.
+        % op        -- string
+        % boundary  -- string
+        function o = getBoundaryOperator(obj, op, boundary)
+            assertIsMember(op, {'e'})
+            assertIsMember(boundary, {'l', 'r'})
+
+            o = obj.([op, '_', boundary]);
+        end
+
+        % Returns square boundary quadrature matrix, of dimension
+        % corresponding to the number of boundary points
+        %
+        % boundary -- string
+        % Note: for 1d diffOps, the boundary quadrature is the scalar 1.
+        function H_b = getBoundaryQuadrature(obj, boundary)
+            assertIsMember(boundary, {'l', 'r'})
+
+            H_b = 1;
+        end
+
         function N = size(obj)
             N = obj.m;
         end
 
-    end
-
-    methods(Static)
-        % Calculates the matrcis need for the inteface coupling between boundary bound_u of scheme schm_u
-        % and bound_v of scheme schm_v.
-        %   [uu, uv, vv, vu] = inteface_couplong(A,'r',B,'l')
-        function [uu, uv, vv, vu] = interface_coupling(schm_u,bound_u,schm_v,bound_v)
-            [uu,uv] = schm_u.interface(bound_u,schm_v,bound_v);
-            [vv,vu] = schm_v.interface(bound_v,schm_u,bound_u);
-        end
     end
 end

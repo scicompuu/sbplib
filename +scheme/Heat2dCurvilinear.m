@@ -1,9 +1,9 @@
 classdef Heat2dCurvilinear < scheme.Scheme
 
 % Discretizes the Laplacian with variable coefficent, curvilinear,
-% in the Heat equation way (i.e., the discretization matrix is not necessarily 
+% in the Heat equation way (i.e., the discretization matrix is not necessarily
 % symmetric)
-% u_t = div * (kappa * grad u ) 
+% u_t = div * (kappa * grad u )
 % opSet should be cell array of opSets, one per dimension. This
 % is useful if we have periodic BC in one direction.
 
@@ -29,9 +29,9 @@ classdef Heat2dCurvilinear < scheme.Scheme
         e_l, e_r
         d1_l, d1_r % Normal derivatives at the boundary
         alpha % Vector of borrowing constants
-        
+
         % Boundary inner products
-        H_boundary_l, H_boundary_r 
+        H_boundary_l, H_boundary_r
 
         % Metric coefficients
         b % Cell matrix of size dim x dim
@@ -109,7 +109,7 @@ classdef Heat2dCurvilinear < scheme.Scheme
             opSetMetric{1} = sbp.D2Variable(m(1), {0, xmax}, order);
             opSetMetric{2} = sbp.D2Variable(m(2), {0, ymax}, order);
             D1Metric{1} = kron(opSetMetric{1}.D1, I{2});
-            D1Metric{2} = kron(I{1}, opSetMetric{2}.D1); 
+            D1Metric{2} = kron(I{1}, opSetMetric{2}.D1);
 
             x_xi = D1Metric{1}*x;
             x_eta = D1Metric{2}*x;
@@ -157,7 +157,7 @@ classdef Heat2dCurvilinear < scheme.Scheme
             % D2 coefficients
             kappa_coeff = cell(dim,dim);
             for j = 1:dim
-                obj.D2_kappa{j} = sparse(m_tot,m_tot); 
+                obj.D2_kappa{j} = sparse(m_tot,m_tot);
                 kappa_coeff{j} = sparse(m_tot,1);
                 for i = 1:dim
                     kappa_coeff{j} = kappa_coeff{j} + b{i,j}*J*b{i,j}*kappa;
@@ -270,28 +270,20 @@ classdef Heat2dCurvilinear < scheme.Scheme
             default_arg('symmetric', false);
             default_arg('tuning',1.2);
 
-            % j is the coordinate direction of the boundary
-            % nj: outward unit normal component. 
+            % nj: outward unit normal component.
             % nj = -1 for west, south, bottom boundaries
             % nj = 1  for east, north, top boundaries
-            [j, nj] = obj.get_boundary_number(boundary);
-            switch nj
-            case 1
-                e = obj.e_r{j};
-                flux = obj.flux_r{j};
-                H_gamma = obj.H_boundary_r{j};
-            case -1
-                e = obj.e_l{j};
-                flux = obj.flux_l{j};
-                H_gamma = obj.H_boundary_l{j};
-            end
+            nj = obj.getBoundarySign(boundary);
+
+            Hi = obj.Hi;
+            [e, flux] = obj.getBoundaryOperator({'e', 'flux'}, boundary);
+            H_gamma = obj.getBoundaryQuadrature(boundary);
+            alpha = obj.getBoundaryBorrowing(boundary);
 
             Hi = obj.Hi;
             Ji = obj.Ji;
             KAPPA = obj.KAPPA;
-            kappa_gamma = e'*KAPPA*e; 
-            h = obj.h(j);
-            alpha = h*obj.alpha(j);
+            kappa_gamma = e'*KAPPA*e;
 
             switch type
 
@@ -299,19 +291,19 @@ classdef Heat2dCurvilinear < scheme.Scheme
             case {'D','d','dirichlet','Dirichlet'}
 
                 if ~symmetric
-                    closure = -Ji*Hi*flux'*e*H_gamma*(e' ); 
+                    closure = -Ji*Hi*flux'*e*H_gamma*(e' );
                     penalty = Ji*Hi*flux'*e*H_gamma;
                 else
                     closure = Ji*Hi*flux'*e*H_gamma*(e' )...
-                              -tuning*2/alpha*Ji*Hi*e*kappa_gamma*H_gamma*(e' ) ; 
+                              -tuning*2/alpha*Ji*Hi*e*kappa_gamma*H_gamma*(e' ) ;
                     penalty =  -Ji*Hi*flux'*e*H_gamma ...
                               +tuning*2/alpha*Ji*Hi*e*kappa_gamma*H_gamma;
                 end
 
             % Normal flux boundary condition
             case {'N','n','neumann','Neumann'}
-                    closure = -Ji*Hi*e*H_gamma*(e'*flux ); 
-                    penalty =  Ji*Hi*e*H_gamma; 
+                    closure = -Ji*Hi*e*H_gamma*(e'*flux );
+                    penalty =  Ji*Hi*e*H_gamma;
 
             % Unknown boundary condition
             otherwise
@@ -325,57 +317,103 @@ classdef Heat2dCurvilinear < scheme.Scheme
             error('Interface not implemented');
         end
 
-        % Returns the coordinate number and outward normal component for the boundary specified by the string boundary.
-        function [j, nj] = get_boundary_number(obj, boundary)
+        % Returns the boundary operator op for the boundary specified by the string boundary.
+        % op        -- string or a cell array of strings
+        % boundary  -- string
+        function varargout = getBoundaryOperator(obj, op, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
 
-            switch boundary
-                case {'w','W','west','West', 'e', 'E', 'east', 'East'}
-                    j = 1;
-                case {'s','S','south','South', 'n', 'N', 'north', 'North'}
-                    j = 2;
-                otherwise
-                    error('No such boundary: boundary = %s',boundary);
+            if ~iscell(op)
+                op = {op};
             end
 
-            switch boundary
-                case {'w','W','west','West','s','S','south','South'}
-                    nj = -1;
-                case {'e', 'E', 'east', 'East','n', 'N', 'north', 'North'}
-                    nj = 1;
+            for i = 1:numel(op)
+                switch op{i}
+                case 'e'
+                    switch boundary
+                    case 'w'
+                        e = obj.e_l{1};
+                    case 'e'
+                        e = obj.e_r{1};
+                    case 's'
+                        e = obj.e_l{2};
+                    case 'n'
+                        e = obj.e_r{2};
+                    end
+                    varargout{i} = e;
+
+                case 'd'
+                    switch boundary
+                    case 'w'
+                        d = obj.d1_l{1};
+                    case 'e'
+                        d = obj.d1_r{1};
+                    case 's'
+                        d = obj.d1_l{2};
+                    case 'n'
+                        d = obj.d1_r{2};
+                    end
+                    varargout{i} = d;
+
+                case 'flux'
+                    switch boundary
+                    case 'w'
+                        flux = obj.flux_l{1};
+                    case 'e'
+                        flux = obj.flux_r{1};
+                    case 's'
+                        flux = obj.flux_l{2};
+                    case 'n'
+                        flux = obj.flux_r{2};
+                    end
+                    varargout{i} = flux;
+                end
             end
         end
 
-        % Returns the coordinate number and outward normal component for the boundary specified by the string boundary.
-        function [return_op] = get_boundary_operator(obj, op, boundary)
+        % Returns square boundary quadrature matrix, of dimension
+        % corresponding to the number of boundary points
+        %
+        % boundary -- string
+        function H_b = getBoundaryQuadrature(obj, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
 
             switch boundary
-                case {'w','W','west','West', 'e', 'E', 'east', 'East'}
-                    j = 1;
-                case {'s','S','south','South', 'n', 'N', 'north', 'North'}
-                    j = 2;
-                otherwise
-                    error('No such boundary: boundary = %s',boundary);
-            end
-
-            switch op
+                case 'w'
+                    H_b = obj.H_boundary_l{1};
                 case 'e'
-                    switch boundary
-                        case {'w','W','west','West','s','S','south','South'}
-                            return_op = obj.e_l{j};
-                        case {'e', 'E', 'east', 'East','n', 'N', 'north', 'North'}
-                            return_op = obj.e_r{j};
-                    end
-                case 'd'
-                    switch boundary
-                        case {'w','W','west','West','s','S','south','South'}
-                            return_op = obj.d1_l{j};
-                        case {'e', 'E', 'east', 'East','n', 'N', 'north', 'North'}
-                            return_op = obj.d1_r{j};
-                    end
-                otherwise
-                    error(['No such operator: operatr = ' op]);
+                    H_b = obj.H_boundary_r{1};
+                case 's'
+                    H_b = obj.H_boundary_l{2};
+                case 'n'
+                    H_b = obj.H_boundary_r{2};
             end
+        end
 
+        % Returns the boundary sign. The right boundary is considered the positive boundary
+        % boundary -- string
+        function s = getBoundarySign(obj, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
+
+            switch boundary
+                case {'e','n'}
+                    s = 1;
+                case {'w','s'}
+                    s = -1;
+            end
+        end
+
+        % Returns borrowing constant gamma*h
+        % boundary -- string
+        function gamm = getBoundaryBorrowing(obj, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
+
+            switch boundary
+                case {'w','e'}
+                    gamm = obj.h(1)*obj.alpha(1);
+                case {'s','n'}
+                    gamm = obj.h(2)*obj.alpha(2);
+            end
         end
 
         function N = size(obj)

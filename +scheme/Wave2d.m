@@ -106,7 +106,10 @@ classdef Wave2d < scheme.Scheme
             default_arg('type','neumann');
             default_arg('data',0);
 
-            [e,d,s,gamm,halfnorm_inv] = obj.get_boundary_ops(boundary);
+            [e, d] = obj.getBoundaryOperator({'e', 'd'}, boundary);
+            gamm = obj.getBoundaryBorrowing(boundary);
+            s = obj.getBoundarySign(boundary);
+            halfnorm_inv = obj.getHalfnormInv(boundary);
 
             switch type
                 % Dirichlet boundary condition
@@ -158,11 +161,20 @@ classdef Wave2d < scheme.Scheme
             end
         end
 
-        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
+        function [closure, penalty] = interface(obj, boundary, neighbour_scheme, neighbour_boundary, type)
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
             [e_u,d_u,s_u,gamm_u, halfnorm_inv] = obj.get_boundary_ops(boundary);
             [e_v,d_v,s_v,gamm_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
+
+            [e_u, d_u] = obj.getBoundaryOperator({'e', 'd'}, boundary);
+            gamm_u = obj.getBoundaryBorrowing(boundary);
+            s_u = obj.getBoundarySign(boundary);
+            halfnorm_inv = obj.getHalfnormInv(boundary);
+
+            [e_v, d_v] = neighbour_scheme.getBoundaryOperator({'e', 'd'}, neighbour_boundary);
+            gamm_v = neighbour_scheme.getBoundaryBorrowing(neighbour_boundary);
+            s_v = neighbour_scheme.getBoundarySign(neighbour_boundary);
 
             tuning = 1.1;
 
@@ -183,36 +195,107 @@ classdef Wave2d < scheme.Scheme
             penalty = halfnorm_inv*(-tau*e_v' - sig*alpha_v*d_v');
         end
 
-        % Ruturns the boundary ops and sign for the boundary specified by the string boundary.
-        % The right boundary is considered the positive boundary
-        function [e,d,s,gamm, halfnorm_inv] = get_boundary_ops(obj,boundary)
+
+        % Returns the boundary operator op for the boundary specified by the string boundary.
+        % op        -- string or a cell array of strings
+        % boundary  -- string
+        function varargout = getBoundaryOperator(obj, op, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
+
+            if ~iscell(op)
+                op = {op};
+            end
+
+            for i = 1:numel(op)
+                switch op{i}
+                case 'e'
+                    switch boundary
+                    case 'w'
+                        e = obj.e_w;
+                    case 'e'
+                        e = obj.e_e;
+                    case 's'
+                        e = obj.e_s;
+                    case 'n'
+                        e = obj.e_n;
+                    end
+                    varargout{i} = e;
+
+                case 'd'
+                    switch boundary
+                    case 'w'
+                        d = obj.d1_w;
+                    case 'e'
+                        d = obj.d1_e;
+                    case 's'
+                        d = obj.d1_s;
+                    case 'n'
+                        d = obj.d1_n;
+                    end
+                    varargout{i} = d;
+                end
+            end
+
+        end
+
+        % Returns square boundary quadrature matrix, of dimension
+        % corresponding to the number of boundary points
+        %
+        % boundary -- string
+        function H_b = getBoundaryQuadrature(obj, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
+
             switch boundary
                 case 'w'
-                    e = obj.e_w;
-                    d = obj.d1_w;
-                    s = -1;
-                    gamm = obj.gamm_x;
-                    halfnorm_inv = obj.Hix;
+                    H_b = obj.H_y;
                 case 'e'
-                    e = obj.e_e;
-                    d = obj.d1_e;
-                    s = 1;
-                    gamm = obj.gamm_x;
-                    halfnorm_inv = obj.Hix;
+                    H_b = obj.H_y;
                 case 's'
-                    e = obj.e_s;
-                    d = obj.d1_s;
-                    s = -1;
-                    gamm = obj.gamm_y;
-                    halfnorm_inv = obj.Hiy;
+                    H_b = obj.H_x;
                 case 'n'
-                    e = obj.e_n;
-                    d = obj.d1_n;
-                    s = 1;
+                    H_b = obj.H_x;
+            end
+        end
+
+        % Returns borrowing constant gamma
+        % boundary -- string
+        function gamm = getBoundaryBorrowing(obj, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
+
+            switch boundary
+                case {'w','e'}
+                    gamm = obj.gamm_x;
+                case {'s','n'}
                     gamm = obj.gamm_y;
-                    halfnorm_inv = obj.Hiy;
-                otherwise
-                    error('No such boundary: boundary = %s',boundary);
+            end
+        end
+
+        % Returns the boundary sign. The right boundary is considered the positive boundary
+        % boundary -- string
+        function s = getBoundarySign(obj, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
+
+            switch boundary
+                case {'e','n'}
+                    s = 1;
+                case {'w','s'}
+                    s = -1;
+            end
+        end
+
+        % Returns the halfnorm_inv used in SATs. TODO: better notation
+        function Hinv = getHalfnormInv(obj, boundary)
+            assertIsMember(boundary, {'w', 'e', 's', 'n'})
+
+            switch boundary
+                case 'w'
+                    Hinv = obj.Hix;
+                case 'e'
+                    Hinv = obj.Hix;
+                case 's'
+                    Hinv = obj.Hiy;
+                case 'n'
+                    Hinv = obj.Hiy;
             end
         end
 
@@ -220,15 +303,5 @@ classdef Wave2d < scheme.Scheme
             N = prod(obj.m);
         end
 
-    end
-
-    methods(Static)
-        % Calculates the matrcis need for the inteface coupling between boundary bound_u of scheme schm_u
-        % and bound_v of scheme schm_v.
-        %   [uu, uv, vv, vu] = inteface_couplong(A,'r',B,'l')
-        function [uu, uv, vv, vu] = interface_coupling(schm_u,bound_u,schm_v,bound_v)
-            [uu,uv] = schm_u.interface(bound_u,schm_v,bound_v);
-            [vv,vu] = schm_v.interface(bound_v,schm_u,bound_u);
-        end
     end
 end

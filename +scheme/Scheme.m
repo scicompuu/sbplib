@@ -26,22 +26,15 @@ classdef Scheme < handle
         %                           interface to.
         %       penalty  may be a cell array if there are several penalties with different weights
         [closure, penalty] = boundary_condition(obj,boundary,type) % TODO: Change name to boundaryCondition
-        [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
 
-        % TODO: op = getBoundaryOperator()??
-        %   makes sense to have it available through a method instead of random properties
+        % type -- sets the type of interface, could be a string or a struct or something else
+        %         depending on the particular scheme implementation
+        [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary,type)
+
+        op = getBoundaryOperator(obj, opName, boundary)
+        H_b= getBoundaryQuadrature(obj, boundary)
 
         % Returns the number of degrees of freedom.
         N = size(obj)
-    end
-
-    methods(Static)
-        % Calculates the matrcis need for the inteface coupling between
-        % boundary bound_u of scheme schm_u and bound_v of scheme schm_v.
-        %   [uu, uv, vv, vu] = inteface_coupling(A,'r',B,'l')
-        function [uu, uv, vv, vu] = interface_coupling(schm_u,bound_u,schm_v,bound_v)
-            [uu,uv] = schm_u.interface(bound_u,schm_v,bound_v);
-            [vv,vu] = schm_v.interface(bound_v,schm_u,bound_u);
-        end
     end
 end

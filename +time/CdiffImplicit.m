@@ -1,7 +1,8 @@
 classdef CdiffImplicit < time.Timestepper
     properties
-        A, B, C, G
+        A, B, C
         AA, BB, CC
+        G
         k
         t
         v, v_prev
@@ -13,59 +14,36 @@ classdef CdiffImplicit < time.Timestepper
 
     methods
         % Solves
-        %   A*u_tt + B*u + C*v_t = G(t)
-        %   u(t0) = f1
-        %   u_t(t0) = f2
-        % starting at time t0 with timestep k
-        function obj = CdiffImplicit(A, B, C, G, f1, f2, k, t0)
-            default_arg('A', []);
-            default_arg('C', []);
-            default_arg('G', []);
-            default_arg('f1', 0);
-            default_arg('f2', 0);
+        %   A*v_tt + B*v_t + C*v = G(t)
+        %   v(t0) = v0
+        %   v_t(t0) = v0t
+        % starting at time t0 with timestep
+        % Using
+        % A*Dp*Dm*v_n + B*D0*v_n + C*I0*v_n = G(t_n)
+        function obj = CdiffImplicit(A, B, C, G, v0, v0t, k, t0)
+            m = length(v0);
+            default_arg('A', speye(m));
+            default_arg('B', sparse(m,m));
+            default_arg('G', @(t) sparse(m,1));
             default_arg('t0', 0);
-
-            m = size(B,1);
-
-            if isempty(A)
-                A = speye(m);
-            end
-
-            if isempty(C)
-                C = sparse(m,m);
-            end
-
-            if isempty(G)
-                G = @(t) sparse(m,1);
-            end
-
-            if isempty(f1)
-                f1 = sparse(m,1);
-            end
-
-            if isempty(f2)
-                f2 = sparse(m,1);
-            end
 
             obj.A = A;
             obj.B = B;
             obj.C = C;
             obj.G = G;
 
-            AA = 1/k^2*A + 1/2*B + 1/(2*k)*C;
-            BB = -2/k^2*A;
-            CC = 1/k^2*A + 1/2*B - 1/(2*k)*C;
-            % AA*v_next + BB*v + CC*v_prev == G(t_n)
+            % Rewrite as AA*v_(n+1) + BB*v_n + CC*v_(n-1) = G(t_n)
+            AA =    A/k^2 + B/(2*k) + C/2;
+            BB = -2*A/k^2;
+            CC =    A/k^2 - B/(2*k) + C/2;
 
             obj.AA = AA;
             obj.BB = BB;
             obj.CC = CC;
 
-            v_prev = f1;
+            v_prev = v0;
             I = speye(m);
-            % v = (1/k^2*A)\((1/k^2*A - 1/2*B)*f1 + (1/k*I - 1/2*C)*f2 + 1/2*G(0));
-            v = f1 + k*f2;
-
+            v = v0 + k*v0t;
 
             if ~issparse(A) || ~issparse(B) || ~issparse(C)
                 error('LU factorization with full pivoting only works for sparse matrices.')
@@ -77,7 +55,6 @@ classdef CdiffImplicit < time.Timestepper
             obj.U = U;
             obj.p = p;
             obj.q = q;
-
 
             obj.k = k;
             obj.t = t0+k;
@@ -92,17 +69,17 @@ classdef CdiffImplicit < time.Timestepper
         end
 
         function [vt,t] = getVt(obj)
-            % Calculate next time step to be able to do centered diff.
-            v_next = zeros(size(obj.v));
-            b = obj.G(obj.t) - obj.BB*obj.v - obj.CC*obj.v_prev;
-
-            y = obj.L\b(obj.p);
-            z = obj.U\y;
-            v_next(obj.q) = z;
-
-
-            vt = (v_next-obj.v_prev)/(2*obj.k);
+            vt = (obj.v-obj.v_prev)/obj.k; % Could be improved using u_tt = f(u))
             t = obj.t;
+        end
+
+        % Calculate the conserved energy (Dm*v_n)^2_A + Im*v_n^2_B
+        function E = getEnergy(obj)
+            v  = obj.v;
+            vp = obj.v_prev;
+            vt = (obj.v - obj.v_prev)/obj.k;
+
+            E = vt'*obj.A*vt + 1/2*(v'*obj.C*v + vp'*obj.C*vp);
         end
 
         function obj = step(obj)
@@ -123,30 +100,3 @@ classdef CdiffImplicit < time.Timestepper
         end
     end
 end
-
-
-
-
-
-%%% Derivation
-% syms A B C G
-% syms n k
-% syms f1 f2
-
-% v = symfun(sym('v(n)'),n);
-
-
-% d = A/k^2 * (v(n+1) - 2*v(n) +v(n-1)) + B/2*(v(n+1)+v(n-1)) + C/(2*k)*(v(n+1) - v(n-1)) == G
-% ic1 = v(0) == f1
-% ic2 = A/k*(v(1)-f1) + k/2*(B*f1 + C*f2 - G) - f2 == 0
-
-% c = collect(d, [v(n) v(n-1) v(n+1)]) % (-(2*A)/k^2)*v(n) + (B/2 + A/k^2 - C/(2*k))*v(n - 1) + (B/2 + A/k^2 + C/(2*k))*v(n + 1) == G
-% syms AA BB CC
-% % AA = B/2 + A/k^2 + C/(2*k)
-% % BB = -(2*A)/k^2
-% % CC = B/2 + A/k^2 - C/(2*k)
-% s = subs(c, [B/2 + A/k^2 + C/(2*k), -(2*A)/k^2, B/2 + A/k^2 - C/(2*k)], [AA, BB, CC])
-
-
-% ic2_a = collect(ic2, [v(1) f1 f2]) % (A/k)*v(1) + ((B*k)/2 - A/k)*f1 + ((C*k)/2 - 1)*f2 - (G*k)/2 == 0
-

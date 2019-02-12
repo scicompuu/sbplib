@@ -19,7 +19,7 @@ classdef Beam < scheme.Scheme
         alphaII
         alphaIII
 
-        opt
+        opt % TODO: Get rid of this and use the interface type instead
     end
 
     methods
@@ -86,7 +86,11 @@ classdef Beam < scheme.Scheme
         function [closure, penalty] = boundary_condition(obj,boundary,type)
             default_arg('type','dn');
 
-            [e, d1, d2, d3, s] = obj.get_boundary_ops(boundary);
+            e  = obj.getBoundaryOperator('e',  boundary);
+            d1 = obj.getBoundaryOperator('d1', boundary);
+            d2 = obj.getBoundaryOperator('d2', boundary);
+            d3 = obj.getBoundaryOperator('d3', boundary);
+            s = obj.getBoundarySign(boundary);
             gamm = obj.gamm;
             delt = obj.delt;
 
@@ -124,7 +128,7 @@ classdef Beam < scheme.Scheme
 
                     closure = obj.Hi*(tau*d2' + sig*d3');
                     penalty{1} = -obj.Hi*tau;
-                    penalty{1} = -obj.Hi*sig;
+                    penalty{2} = -obj.Hi*sig;
 
                 case 'e'
                     alpha = obj.alpha;
@@ -170,16 +174,23 @@ classdef Beam < scheme.Scheme
             end
         end
 
-        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
+        function [closure, penalty] = interface(obj,boundary,neighbour_scheme,neighbour_boundary, type)
             % u denotes the solution in the own domain
             % v denotes the solution in the neighbour domain
-            [e_u,d1_u,d2_u,d3_u,s_u] = obj.get_boundary_ops(boundary);
-            [e_v,d1_v,d2_v,d3_v,s_v] = neighbour_scheme.get_boundary_ops(neighbour_boundary);
+            e_u  = obj.getBoundaryOperator('e',  boundary);
+            d1_u = obj.getBoundaryOperator('d1', boundary);
+            d2_u = obj.getBoundaryOperator('d2', boundary);
+            d3_u = obj.getBoundaryOperator('d3', boundary);
+            s_u = obj.getBoundarySign(boundary);
 
+            e_v  = neighbour_scheme.getBoundaryOperator('e',  neighbour_boundary);
+            d1_v = neighbour_scheme.getBoundaryOperator('d1', neighbour_boundary);
+            d2_v = neighbour_scheme.getBoundaryOperator('d2', neighbour_boundary);
+            d3_v = neighbour_scheme.getBoundaryOperator('d3', neighbour_boundary);
+            s_v = neighbour_scheme.getBoundarySign(neighbour_boundary);
 
             alpha_u = obj.alpha;
             alpha_v = neighbour_scheme.alpha;
-
 
             switch boundary
                 case 'l'
@@ -234,24 +245,37 @@ classdef Beam < scheme.Scheme
             penalty = -obj.Hi*(tau*e_v' + sig*d1_v' + phi*alpha_v*d2_v' + psi*alpha_v*d3_v');
         end
 
-        % Returns the boundary ops and sign for the boundary specified by the string boundary.
-        % The right boundary is considered the positive boundary
-        function [e, d1, d2, d3, s] = get_boundary_ops(obj,boundary)
+        % Returns the boundary operator op for the boundary specified by the string boundary.
+        % op        -- string
+        % boundary  -- string
+        function o = getBoundaryOperator(obj, op, boundary)
+            assertIsMember(op, {'e', 'd1', 'd2', 'd3'})
+            assertIsMember(boundary, {'l', 'r'})
+
+            o = obj.([op, '_', boundary]);
+        end
+
+        % Returns square boundary quadrature matrix, of dimension
+        % corresponding to the number of boundary points
+        %
+        % boundary -- string
+        % Note: for 1d diffOps, the boundary quadrature is the scalar 1.
+        function H_b = getBoundaryQuadrature(obj, boundary)
+            assertIsMember(boundary, {'l', 'r'})
+
+            H_b = 1;
+        end
+
+        % Returns the boundary sign. The right boundary is considered the positive boundary
+        % boundary -- string
+        function s = getBoundarySign(obj, boundary)
+            assertIsMember(boundary, {'l', 'r'})
+
             switch boundary
-                case 'l'
-                    e  = obj.e_l;
-                    d1 = obj.d1_l;
-                    d2 = obj.d2_l;
-                    d3 = obj.d3_l;
-                    s = -1;
-                case 'r'
-                    e  = obj.e_r;
-                    d1 = obj.d1_r;
-                    d2 = obj.d2_r;
-                    d3 = obj.d3_r;
+                case {'r'}
                     s = 1;
-                otherwise
-                    error('No such boundary: boundary = %s',boundary);
+                case {'l'}
+                    s = -1;
             end
         end
 
