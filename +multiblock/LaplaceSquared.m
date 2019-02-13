@@ -87,7 +87,7 @@ classdef LaplaceSquared < scheme.Scheme
                     penalty = -tau;
                 case 'd3'
                     e = obj.getBoundaryOperator('e', boundary);
-                    d3 = obj.getBoundaryOperator('d1', boundary);
+                    d3 = obj.getBoundaryOperator('d3', boundary);
                     H_b = obj.getBoundaryQuadrature(boundary);
 
                     A = spdiag(obj.a);
