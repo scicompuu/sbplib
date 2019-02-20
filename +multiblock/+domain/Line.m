@@ -65,7 +65,7 @@ classdef Line < multiblock.Definition
 
 
         % Returns a multiblock.Grid given some parameters
-        % ms: cell array of m values 
+        % ms: cell array of m values
         % For same m in every block, just input one scalar.
         function g = getGrid(obj, ms, varargin)
 
@@ -82,14 +82,14 @@ classdef Line < multiblock.Definition
 
             grids = cell(1, obj.nBlocks);
             for i = 1:obj.nBlocks
-                grids{i} = grid.equidistant(ms{i}, obj.xlims{i}, obj.ylims{i});
+                grids{i} = grid.equidistant(ms{i}, obj.xlims{i});
             end
 
             g = multiblock.Grid(grids, obj.connections, obj.boundaryGroups);
         end
 
         % Returns a multiblock.Grid given some parameters
-        % ms: cell array of m values 
+        % ms: cell array of m values
         % For same m in every block, just input one scalar.
         function g = getStaggeredGrid(obj, ms, varargin)
 
@@ -124,7 +124,7 @@ classdef Line < multiblock.Definition
                x = linspace(obj.xlims{i}{1}, obj.xlims{i}{2}, m);
                y = 0*x + 0.05* ( (-1)^i + 1 ) ;
                plot(x,y,'+');
-               hold on 
+               hold on
             end
             hold off
 
