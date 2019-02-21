@@ -123,7 +123,7 @@ classdef Laplace1d < scheme.Scheme
             assertIsMember(op, {'e', 'd'})
             assertIsMember(boundary, {'l', 'r'})
 
-            o = obj.([op, '_', boundary])
+            o = obj.([op, '_', boundary]);
         end
 
         % Returns square boundary quadrature matrix, of dimension
