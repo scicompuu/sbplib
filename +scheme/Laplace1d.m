@@ -104,7 +104,7 @@ classdef Laplace1d < scheme.Scheme
 
             tuning = 1.1;
 
-            tau1 = -(a_u/gamm_u + a_v/gamm_v) * tuning;
+            tau1 = -1/4*(a_u/gamm_u + a_v/gamm_v) * tuning;
             tau2 = 1/2*a_u;
             sig1 = -1/2;
             sig2 = 0;
