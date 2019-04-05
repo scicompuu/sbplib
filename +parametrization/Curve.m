@@ -103,7 +103,7 @@ classdef Curve
             % Construct arcLength function using splines
             tvec = linspace(0,1,N);
             arcVec = obj.arcLength(0,tvec);
-            tFunc = spline(arcVec,tvec); % t as a function of arcLength
+            tFunc = parametrization.Curve.spline(arcVec,tvec); % t as a function of arcLength
             L = obj.arcLength(0,1);
             arcPar = @(s) tFunc(s*L);
 
@@ -259,8 +259,8 @@ classdef Curve
             gVec = g(t)';
             gpVec = (D1*gVec)';
 
-            gp1_fun = spline(t,gpVec(1,:));
-            gp2_fun = spline(t,gpVec(2,:));
+            gp1_fun = parametrization.Curve.spline(t,gpVec(1,:));
+            gp2_fun = parametrization.Curve.spline(t,gpVec(2,:));
             gp_out = @(t) [gp1_fun(t);gp2_fun(t)];
         end
 
@@ -277,6 +277,16 @@ classdef Curve
             end
 
             obj = parametrization.Curve(@g_fun, @g_fun_deriv);
+        end
+
+        % Returns a function handle to the spline.
+        function f = spline(tval,fval,spline_order)
+            default_arg('spline_order',4);
+            [m,~] = size(tval);
+            assert(m==1,'Need row vectors.');
+
+            f_spline = spapi( optknt(tval,spline_order), tval, fval );
+            f = @(t) fnval(f_spline,t);
         end
 
         function obj = circle(c,r,phi)
@@ -385,12 +395,3 @@ function I = integral_vec(f,a,b)
     end
 end
 
-% Returns a function handle to the spline.
-function f = spline(tval,fval,spline_order)
-    default_arg('spline_order',4);
-    [m,~] = size(tval);
-    assert(m==1,'Need row vectors.');
-
-    f_spline = spapi( optknt(tval,spline_order), tval, fval );
-    f = @(t) fnval(f_spline,t);
-end
