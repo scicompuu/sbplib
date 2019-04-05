@@ -359,8 +359,6 @@ classdef Curve
     end
 end
 
-
-
 function g_norm = normalize(g0)
     g1 = g0(1,:);
     g2 = g0(2,:);
@@ -394,4 +392,3 @@ function I = integral_vec(f,a,b)
         end
     end
 end
-
