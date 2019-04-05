@@ -13,14 +13,18 @@ function C = dataSpline(t_data, f_data)
 
 	pp_g = spapi(4, t_data, f_data); % equivalent to g = spapi(aptknt(t_data, 4), t_data, f_data)
 	% or  (not sure what the difference is?!)
-	% g = spapi(optknt(t_data, 4), t_data, f_data)
-	pp_gp = fnder(g);
+	% pp_g = spapi(optknt(t_data, 4), t_data, f_data)
+	pp_gp = fnder(pp_g);
 
-	g = @(t)fnval(pp_g, t);
-	pp_gp = @(t)fnval(pp_gp, t);
+	% Reparametrize with parameter s from 0 to 1 to use Curve class
+    tmin = min(t_data);
+    tmax = max(t_data);
+    t = @(s) tmin + s*(tmax-tmin);
+    dt_ds = @(s) 0*s + (tmax-tmin);
+	g = @(s) [t(s); fnval(pp_g, t(s))];
+	gp = @(s) [dt_ds(s); fnval(pp_gp, t(s)).*dt_ds(s)];
 
+	% Create Curve object and reparametrize with arclength parametrization
 	C = parametrization.Curve(g, gp);
-
-	% Reparametrize with arclength parametrization
 	C = C.arcLengthParametrization(m_data);
 end
