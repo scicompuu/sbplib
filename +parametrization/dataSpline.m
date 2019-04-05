@@ -11,32 +11,16 @@ function C = dataSpline(t_data, f_data)
 	assert(length(t_data)==length(f_data),'Vectors must be same length');
 	m_data = length(t_data);
 
-	% Create spline interpolant
-	f = parametrization.Curve.spline(t_data, f_data);
+	pp_g = spapi(4, t_data, f_data); % equivalent to g = spapi(aptknt(t_data, 4), t_data, f_data)
+	% or  (not sure what the difference is?!)
+	% g = spapi(optknt(t_data, 4), t_data, f_data)
+	pp_gp = fnder(g);
 
-	% Reparametrize with a parameter s in [0, 1]
-	tmin = min(t_data);
-	tmax = max(t_data);
-	t = @(s) tmin + s*(tmax-tmin);
+	g = @(t)fnval(pp_g, t);
+	pp_gp = @(t)fnval(pp_gp, t);
 
-	% Create parameterized curve
-	g = @(s) [t(s); f(t(s))];
-
-	% Compute numerical derivative of curve using twice as many points as in data set
-	m = 2*m_data;
-	ops = sbp.D2Standard(m, {0, 1}, 6);
-	gp = parametrization.Curve.numericalDerivative(g, ops.D1);
-
-	% Create curve object
 	C = parametrization.Curve(g, gp);
 
 	% Reparametrize with arclength parametrization
 	C = C.arcLengthParametrization(m_data);
-
-	% To avoid nested function calls, evaluate curve and compute final spline.
-	tv = linspace(0, 1, m_data);
-	gv = C.g(tv);
-	g = parametrization.Curve.spline(tv, gv);
-	C = parametrization.Curve(g);
-
 end
