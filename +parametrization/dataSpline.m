@@ -11,9 +11,7 @@ function C = dataSpline(t_data, f_data)
 	assert(length(t_data)==length(f_data),'Vectors must be same length');
 	m_data = length(t_data);
 
-	pp_g = spapi(4, t_data, f_data); % equivalent to g = spapi(aptknt(t_data, 4), t_data, f_data)
-	% or  (not sure what the difference is?!)
-	% pp_g = spapi(optknt(t_data, 4), t_data, f_data)
+	pp_g = spapi(4, t_data, f_data);
 	pp_gp = fnder(pp_g);
 
 	% Reparametrize with parameter s from 0 to 1 to use Curve class
