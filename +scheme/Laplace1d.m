@@ -62,7 +62,7 @@ classdef Laplace1d < scheme.Scheme
 
             switch type
                 % Dirichlet boundary condition
-                case {'D','dirichlet'}
+                case {'D','d','dirichlet'}
                     tuning = 1.1;
                     tau1 = -tuning/obj.gamm;
                     tau2 =  1;
@@ -73,7 +73,7 @@ classdef Laplace1d < scheme.Scheme
                     penalty = obj.a*obj.Hi*tau;
 
                 % Neumann boundary condition
-                case {'N','neumann'}
+                case {'N','n','neumann'}
                     tau = -e;
 
                     closure = obj.a*obj.Hi*tau*d';
@@ -104,7 +104,7 @@ classdef Laplace1d < scheme.Scheme
 
             tuning = 1.1;
 
-            tau1 = -(a_u/gamm_u + a_v/gamm_v) * tuning;
+            tau1 = -1/4*(a_u/gamm_u + a_v/gamm_v) * tuning;
             tau2 = 1/2*a_u;
             sig1 = -1/2;
             sig2 = 0;
