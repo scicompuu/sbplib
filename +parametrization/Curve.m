@@ -103,7 +103,10 @@ classdef Curve
             % Construct arcLength function using splines
             tvec = linspace(0,1,N);
             arcVec = obj.arcLength(0,tvec);
-            tFunc = spline(arcVec,tvec); % t as a function of arcLength
+
+            % t as a function of arcLength. Monotonicity-preserving cubic splines.
+            tFunc = @(arcLen) pchip(arcVec,tvec,arcLen);
+
             L = obj.arcLength(0,1);
             arcPar = @(s) tFunc(s*L);
 
@@ -348,8 +351,6 @@ classdef Curve
 
     end
 end
-
-
 
 function g_norm = normalize(g0)
     g1 = g0(1,:);
