@@ -103,7 +103,10 @@ classdef Curve
             % Construct arcLength function using splines
             tvec = linspace(0,1,N);
             arcVec = obj.arcLength(0,tvec);
-            tFunc = spline(arcVec,tvec); % t as a function of arcLength
+
+            % t as a function of arcLength. Use linear interpolation to preserve monotonicity.
+            tFunc = @(arcLen)interp1(arcVec,tvec,arcLen, 'linear', 'extrap');
+
             L = obj.arcLength(0,1);
             arcPar = @(s) tFunc(s*L);
 

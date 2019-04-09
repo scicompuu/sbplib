@@ -1,28 +1,19 @@
-% Accepts data points (t_i, f_i) and returns a Curve object,
-% using spline interpolation.
+% dataSpline calculates a Curve through the points f_i using cubic spline interpolation.
 % The spline curve is parametrized with the arc length parametrization
 % to facilitate better grids.
 %
-% t_data 	- vector
-% f_data 	- vector
-% C 	- curve object
-function C = dataSpline(t_data, f_data)
+% f 	- m x D matrix of m points in D dimensions
+function C = dataSpline(f)
+	m = size(f, 1);
 
-	assert(length(t_data)==length(f_data),'Vectors must be same length');
-	m_data = length(t_data);
+	t = linspace(0,1,m);
 
-	pp_g = spapi(4, t_data, f_data);
+	pp_g = spapi(4, t, f');
 	pp_gp = fnder(pp_g);
 
-	% Reparametrize with parameter s from 0 to 1 to use Curve class
-    tmin = min(t_data);
-    tmax = max(t_data);
-    t = @(s) tmin + s*(tmax-tmin);
-    dt_ds = @(s) 0*s + (tmax-tmin);
-	g = @(s) [t(s); fnval(pp_g, t(s))];
-	gp = @(s) [dt_ds(s); fnval(pp_gp, t(s)).*dt_ds(s)];
+	g  = @(t) fnval(pp_g, t);
+	gp = @(t) fnval(pp_gp, t);
 
-	% Create Curve object and reparametrize with arclength parametrization
 	C = parametrization.Curve(g, gp);
-	C = C.arcLengthParametrization(m_data);
+	C = C.arcLengthParametrization();
 end
