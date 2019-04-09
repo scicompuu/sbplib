@@ -104,8 +104,8 @@ classdef Curve
             tvec = linspace(0,1,N);
             arcVec = obj.arcLength(0,tvec);
 
-            % t as a function of arcLength. Use linear interpolation to preserve monotonicity.
-            tFunc = @(arcLen)interp1(arcVec,tvec,arcLen, 'linear', 'extrap');
+            % t as a function of arcLength. Monotonicity-preserving cubic splines.
+            tFunc = @(arcLen) pchip(arcVec,tvec,arcLen);
 
             L = obj.arcLength(0,1);
             arcPar = @(s) tFunc(s*L);
