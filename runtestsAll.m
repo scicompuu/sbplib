@@ -15,7 +15,7 @@ function res = runtestsAll()
     rootSuite = matlab.unittest.TestSuite.fromFolder(pwd);
     packageSuites = {};
     for i = 1:length(packages)
-        packageSuites{i} = matlab.unittest.TestSuite.fromPackage(packages{i});
+        packageSuites{i} = matlab.unittest.TestSuite.fromPackage(packages{i}, 'IncludingSubpackages', true);
     end
 
     ts = [rootSuite, packageSuites{:}];
