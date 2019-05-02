@@ -70,7 +70,7 @@ classdef Laplace1d < scheme.Scheme
                     tau = tau1*e + tau2*d;
 
                     closure = obj.a*obj.Hi*tau*e';
-                    penalty = obj.a*obj.Hi*tau;
+                    penalty = -obj.a*obj.Hi*tau;
 
                 % Neumann boundary condition
                 case {'N','n','neumann'}
