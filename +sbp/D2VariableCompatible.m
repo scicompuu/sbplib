@@ -48,11 +48,10 @@ classdef D2VariableCompatible < sbp.OpSet
             end
             obj.borrowing.H11 = obj.H(1,1)/obj.h; % First element in H/h,
             obj.borrowing.M.d1 = obj.H(1,1)/obj.h; % First element in H/h is borrowing also for M
-            obj.borrowing.R.delta_D = inf; % Because delta_D is zero, one can borrow infinitely much.
-                                           % This sets penalties of the form 1/borrowing to 0, which is
-                                           % the desired behaviour.
+            obj.borrowing.R.delta_D = inf;
             obj.m = m;
             obj.M = [];
+
 
             D1 = obj.D1;
             e_r = obj.e_r;
@@ -60,8 +59,10 @@ classdef D2VariableCompatible < sbp.OpSet
 
             % D2 = Hinv * (-M + br*er*d1r^T - bl*el*d1l^T);
             % Replace d1' by e'*D1 in D2.
-            D2_compatible = @(b) D2(b) - obj.HI*(b(m)*e_r*d1_r' - b(m)*e_r*e_r'*D1) ...
-                                       + obj.HI*(b(1)*e_l*d1_l' - b(1)*e_l*e_l'*D1);
+            correction_l = obj.HI*(e_l*d1_l' - e_l*e_l'*D1);
+            correction_r = - obj.HI*(e_r*d1_r' - e_r*e_r'*D1);
+
+            D2_compatible = @(b) D2(b) + b(1)*correction_l + b(m)*correction_r;
 
             obj.D2 = D2_compatible;
             obj.d1_l = (e_l'*D1)';
@@ -72,6 +73,7 @@ classdef D2VariableCompatible < sbp.OpSet
             str = [class(obj) '_' num2str(obj.order)];
         end
     end
+
 
 end
 
