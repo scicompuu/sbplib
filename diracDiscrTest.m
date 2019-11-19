@@ -2,72 +2,22 @@ function tests = diracDiscrTest()
 	    tests = functiontests(localfunctions);
 end
 
-function testLeftGP(testCase)
-
-    orders = [2, 4, 6];
-    mom_conds = orders;
-
-    for o = 1:length(orders)
-        order = orders(o);
-        mom_cond = mom_conds(o);
-        [xl, xr, m, h, x, H, fs] = setup1D(order, mom_cond);
-
-        % Test left boundary grid points
-        x0s = xl + [0, h, 2*h];
-
-        for j = 1:length(fs)
-                f = fs{j};
-                fx = f(x);
-            for i = 1:length(x0s)
-                x0 = x0s(i);
-                delta = diracDiscr(x0, x, mom_cond, 0, H);
-                integral = delta'*H*fx;
-                err = abs(integral - f(x0));
-                testCase.verifyLessThan(err, 1e-12);
-            end
-        end
-    end
-end
+%TODO: Test discretizing with smoothness conditions.
+%      Only discretization with moment conditions currently tested.
 
 function testLeftRandom(testCase)
 
     orders = [2, 4, 6];
     mom_conds = orders;
+    rng(0xDABBAD00) % Set seed. Jabba-dabba-doooo!
 
     for o = 1:length(orders)
         order = orders(o);
         mom_cond = mom_conds(o);
-        [xl, xr, m, h, x, H, fs] = setup1D(order, mom_cond);
+        [xl, ~, h, x, H, fs] = setup1D(order, mom_cond);
 
         % Test random points near left boundary
         x0s = xl + 2*h*rand(1,10);
-
-        for j = 1:length(fs)
-                f = fs{j};
-                fx = f(x);
-            for i = 1:length(x0s)
-                x0 = x0s(i);
-                delta = diracDiscr(x0, x, mom_cond, 0, H);
-                integral = delta'*H*fx;
-                err = abs(integral - f(x0));
-                testCase.verifyLessThan(err, 1e-12);
-            end
-        end
-    end
-end
-
-function testRightGP(testCase)
-
-    orders = [2, 4, 6];
-    mom_conds = orders;
-
-    for o = 1:length(orders)
-        order = orders(o);
-        mom_cond = mom_conds(o);
-        [xl, xr, m, h, x, H, fs] = setup1D(order, mom_cond);
-
-        % Test right boundary grid points
-        x0s = xr-[0, h, 2*h];
 
         for j = 1:length(fs)
                 f = fs{j};
@@ -87,42 +37,15 @@ function testRightRandom(testCase)
 
     orders = [2, 4, 6];
     mom_conds = orders;
+    rng(0xDABBAD00) % Set seed. Jabba-dabba-doooo!
 
     for o = 1:length(orders)
         order = orders(o);
         mom_cond = mom_conds(o);
-        [xl, xr, m, h, x, H, fs] = setup1D(order, mom_cond);
+        [~, xr, h, x, H, fs] = setup1D(order, mom_cond);
 
         % Test random points near right boundary
         x0s = xr - 2*h*rand(1,10);
-
-        for j = 1:length(fs)
-                f = fs{j};
-                fx = f(x);
-            for i = 1:length(x0s)
-                x0 = x0s(i);
-                delta = diracDiscr(x0, x, mom_cond, 0, H);
-                integral = delta'*H*fx;
-                err = abs(integral - f(x0));
-                testCase.verifyLessThan(err, 1e-12);
-            end
-        end
-    end
-end
-
-function testInteriorGP(testCase)
-
-    orders = [2, 4, 6];
-    mom_conds = orders;
-
-    for o = 1:length(orders)
-        order = orders(o);
-        mom_cond = mom_conds(o);
-        [xl, xr, m, h, x, H, fs] = setup1D(order, mom_cond);
-
-        % Test interior grid points
-        m_half = round(m/2);
-        x0s = xl + (m_half-1:m_half+1)*h;
 
         for j = 1:length(fs)
                 f = fs{j};
@@ -142,11 +65,12 @@ function testInteriorRandom(testCase)
 
     orders = [2, 4, 6];
     mom_conds = orders;
+    rng(0xDABBAD00) % Set seed. Jabba-dabba-doooo!
 
     for o = 1:length(orders)
         order = orders(o);
         mom_cond = mom_conds(o);
-        [xl, xr, m, h, x, H, fs] = setup1D(order, mom_cond);
+        [xl, xr, h, x, H, fs] = setup1D(order, mom_cond);
 
         % Test random points in interior
         x0s = (xl+2*h) + (xr-xl-4*h)*rand(1,20);
@@ -174,7 +98,7 @@ function testX0OutsideGrid(testCase)
     for o = 1:length(orders)
         order = orders(o);
         mom_cond = mom_conds(o);
-        [xl, xr, m, h, x, H, fs] = setup1D(order, mom_cond);
+        [xl, xr, h, x, H, fs] = setup1D(order, mom_cond);
 
         % Test points outisde grid
         x0s = [xl-1.1*h, xr+1.1*h];
@@ -201,7 +125,7 @@ function testAllGP(testCase)
     for o = 1:length(orders)
         order = orders(o);
         mom_cond = mom_conds(o);
-        [xl, xr, m, h, x, H, fs] = setup1D(order, mom_cond);
+        [~, ~, ~, x, H, fs] = setup1D(order, mom_cond);
 
         % Test all grid points
         x0s = x;
@@ -228,7 +152,7 @@ function testHalfGP(testCase)
     for o = 1:length(orders)
         order = orders(o);
         mom_cond = mom_conds(o);
-        [xl, xr, m, h, x, H, fs] = setup1D(order, mom_cond);
+        [~, ~, ~, x, H, fs] = setup1D(order, mom_cond);
 
         % Test halfway between all grid points
         x0s = 1/2*( x(2:end)+x(1:end-1) );
@@ -247,87 +171,6 @@ function testHalfGP(testCase)
     end
 end
 
-% function testAllGPStaggered(testCase)
-
-%     orders = [2, 4, 6];
-%     mom_conds = orders;
-
-%     for o = 1:length(orders)
-%         order = orders(o);
-%         mom_cond = mom_conds(o);
-%         [xl, xr, m, h, x, H, fs] = setupStaggered(order, mom_cond);
-
-%         % Test all grid points
-%         x0s = x;
-
-%         for j = 1:length(fs)
-%                 f = fs{j};
-%                 fx = f(x);
-%             for i = 1:length(x0s)
-%                 x0 = x0s(i);
-%                 delta = diracDiscr(x0, x, mom_cond, 0, H);
-%                 integral = delta'*H*fx;
-%                 err = abs(integral - f(x0));
-%                 testCase.verifyLessThan(err, 1e-12);
-%             end
-%         end
-%     end
-% end
-
-% function testHalfGPStaggered(testCase)
-
-%     orders = [2, 4, 6];
-%     mom_conds = orders;
-
-%     for o = 1:length(orders)
-%         order = orders(o);
-%         mom_cond = mom_conds(o);
-%         [xl, xr, m, h, x, H, fs] = setupStaggered(order, mom_cond);
-
-%         % Test halfway between all grid points
-%         x0s = 1/2*( x(2:end)+x(1:end-1) );
-
-%         for j = 1:length(fs)
-%                 f = fs{j};
-%                 fx = f(x);
-%             for i = 1:length(x0s)
-%                 x0 = x0s(i);
-%                 delta = diracDiscr(x0, x, mom_cond, 0, H);
-%                 integral = delta'*H*fx;
-%                 err = abs(integral - f(x0));
-%                 testCase.verifyLessThan(err, 1e-12);
-%             end
-%         end
-%     end
-% end
-
-% function testRandomStaggered(testCase)
-
-%     orders = [2, 4, 6];
-%     mom_conds = orders;
-
-%     for o = 1:length(orders)
-%         order = orders(o);
-%         mom_cond = mom_conds(o);
-%         [xl, xr, m, h, x, H, fs] = setupStaggered(order, mom_cond);
-
-%         % Test random points within grid boundaries
-%         x0s = xl + (xr-xl)*rand(1,300);
-
-%         for j = 1:length(fs)
-%                 f = fs{j};
-%                 fx = f(x);
-%             for i = 1:length(x0s)
-%                 x0 = x0s(i);
-%                 delta = diracDiscr(x0, x, mom_cond, 0, H);
-%                 integral = delta'*H*fx;
-%                 err = abs(integral - f(x0));
-%                 testCase.verifyLessThan(err, 1e-12);
-%             end
-%         end
-%     end
-% end
-
 %=============== 2D tests ==============================
 function testAllGP2D(testCase)
 
@@ -337,7 +180,7 @@ function testAllGP2D(testCase)
     for o = 1:length(orders)
         order = orders(o);
         mom_cond = mom_conds(o);
-        [xlims, ylims, m, x, X, ~, H, fs] = setup2D(order, mom_cond);
+        [~, ~, x, X, ~, H, fs] = setup2D(order, mom_cond);
         H_global = kron(H{1}, H{2});
 
         % Test all grid points
@@ -361,11 +204,12 @@ function testAllRandom2D(testCase)
 
     orders = [2, 4, 6];
     mom_conds = orders;
+    rng(0xDABBAD00) % Set seed. Jabba-dabba-doooo!
 
     for o = 1:length(orders)
         order = orders(o);
         mom_cond = mom_conds(o);
-        [xlims, ylims, m, x, X, h, H, fs] = setup2D(order, mom_cond);
+        [xlims, ylims, x, X, h, H, fs] = setup2D(order, mom_cond);
         H_global = kron(H{1}, H{2});
 
         xl = xlims{1};
@@ -407,7 +251,7 @@ function testAllGP3D(testCase)
     for o = 1:length(orders)
         order = orders(o);
         mom_cond = mom_conds(o);
-        [xlims, ylims, zlims, m, x, X, h, H, fs] = setup3D(order, mom_cond);
+        [~, ~, ~, x, X, ~, H, fs] = setup3D(order, mom_cond);
         H_global = kron(kron(H{1}, H{2}), H{3});
 
         % Test all grid points
@@ -431,11 +275,12 @@ function testAllRandom3D(testCase)
 
     orders = [2, 4, 6];
     mom_conds = orders;
+    rng(0xDABBAD00) % Set seed. Jabba-dabba-doooo!
 
     for o = 1:length(orders)
         order = orders(o);
         mom_cond = mom_conds(o);
-        [xlims, ylims, zlims, m, x, X, h, H, fs] = setup3D(order, mom_cond);
+        [xlims, ylims, zlims, x, X, h, H, fs] = setup3D(order, mom_cond);
         H_global = kron(kron(H{1}, H{2}), H{3});
 
         xl = xlims{1};
@@ -475,7 +320,7 @@ end
 % ======================================================
 % ============== Setup functions =======================
 % ======================================================
-function [xl, xr, m, h, x, H, fs] = setup1D(order, mom_cond)
+function [xl, xr, h, x, H, fs] = setup1D(order, mom_cond)
 
     % Grid
     xl = -3;
@@ -498,7 +343,7 @@ function [xl, xr, m, h, x, H, fs] = setup1D(order, mom_cond)
 
 end
 
-function [xlims, ylims, m, x, X, h, H, fs] = setup2D(order, mom_cond)
+function [xlims, ylims, x, X, h, H, fs] = setup2D(order, mom_cond)
 
     % Grid
     xlims = {-3, 20};
@@ -532,7 +377,7 @@ function [xlims, ylims, m, x, X, h, H, fs] = setup2D(order, mom_cond)
 
 end
 
-function [xlims, ylims, zlims, m, x, X, h, H, fs] = setup3D(order, mom_cond)
+function [xlims, ylims, zlims, x, X, h, H, fs] = setup3D(order, mom_cond)
 
     % Grid
     xlims = {-3, 20};
@@ -568,28 +413,5 @@ function [xlims, ylims, zlims, m, x, X, h, H, fs] = setup3D(order, mom_cond)
     hy = x{2}(mm(2)+1) - x{2}(mm(2));
     hz = x{3}(mm(3)+1) - x{3}(mm(3));
     h = {hx, hy, hz};
-
-end
-
-function [xl, xr, m, h, x, H, fs] = setupStaggered(order, mom_cond)
-
-    % Grid
-    xl = -3;
-    xr = 900;
-    L = xr-xl;
-    m = 101;
-    [~, g_dual] = grid.primalDual1D(m, {xl, xr});
-    x = g_dual.points();
-    h = g_dual.h;
-
-    % Quadrature
-    ops = sbp.D1Staggered(m, {xl, xr}, order);
-    H = ops.H_dual;
-
-    % Moment conditions
-    fs = cell(mom_cond,1);
-    for p = 0:mom_cond-1
-        fs{p+1} = @(x) (x/L).^p;
-    end
 
 end
