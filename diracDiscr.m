@@ -1,30 +1,29 @@
 
-function d = diracDiscr(x_s, x, m_order, s_order, H)
+function d = diracDiscr(g, x_s, m_order, s_order, H)
     % n-dimensional delta function
+    % g: cartesian grid
     % x_s: source point coordinate vector, e.g. [x, y] or [x, y, z].
-    % x: cell array of grid point column vectors for each dimension.
     % m_order: Number of moment conditions
     % s_order: Number of smoothness conditions
     % H: cell array of 1D norm matrices
-
-    dim = length(x_s);
+    assertType(g, 'grid.Cartesian');
+    dim = g.d;
     d_1D = cell(dim,1);
 
-    % If 1D, non-cell input is accepted
-    if dim == 1 && ~iscell(x)
-        d = diracDiscr1D(x_s, x, m_order, s_order, H);
+    % Allow for non-cell input in 1D
+    if dim == 1
+        H = {H};
+    end
+    % Create 1D dirac discr for each coordinate dir.
+    for i = 1:dim
+        d_1D{i} = diracDiscr1D(x_s(i), g.x{i}, m_order, s_order, H{i});
+    end
 
-    else
-        for i = 1:dim
-            d_1D{i} = diracDiscr1D(x_s(i), x{i}, m_order, s_order, H{i});
-        end
-
-        d = d_1D{dim};
-        for i = dim-1: -1: 1
-            % Perform outer product, transpose, and then turn into column vector
-            d = (d_1D{i}*d')';
-            d = d(:);
-        end
+    d = d_1D{dim};
+    for i = dim-1: -1: 1
+        % Perform outer product, transpose, and then turn into column vector
+        d = (d_1D{i}*d')';
+        d = d(:);
     end
 
 end
@@ -36,10 +35,9 @@ function ret = diracDiscr1D(x_s , x , m_order, s_order, H)
     m = length(x);
 
     % Return zeros if x0 is outside grid
-    if(x_s < x(1) || x_s > x(end) )
-
+    if x_s < x(1) || x_s > x(end)
         ret = zeros(size(x));
-
+        return
     else
 
         fnorm = diag(H);
@@ -49,7 +47,7 @@ function ret = diracDiscr1D(x_s , x , m_order, s_order, H)
 
         % Get interior grid spacing
         middle = floor(m/2);
-        h = x(middle+1) - x(middle);
+        h = x(middle+1) - x(middle); % Use middle point to allow for staggerd grids.
 
         % Find the indices that are within range of of the point source location
         ind_delta = find(tot_order*h/2 >= abs(x-x_s));
@@ -62,14 +60,14 @@ function ret = diracDiscr1D(x_s , x , m_order, s_order, H)
         end
 
         % Use first tot_order grid points
-        if length(ind_delta)<tot_order && x_s < x(1) + ceil(tot_order/2)*h;
+        if length(ind_delta)<tot_order && x_s < x(1) + ceil(tot_order/2)*h
             index=1:tot_order;
             polynomial=(x(1:tot_order)-x(1))/(x(tot_order)-x(1));
             x_0=(x_s-x(1))/(x(tot_order)-x(1));
             norm=fnorm(1:tot_order)/h;
 
         % Use last tot_order grid points
-        elseif length(ind_delta)<tot_order && x_s > x(end) - ceil(tot_order/2)*h;
+        elseif length(ind_delta)<tot_order && x_s > x(end) - ceil(tot_order/2)*h
             index = length(x)-tot_order+1:length(x);
             polynomial = (x(end-tot_order+1:end)-x(end-tot_order+1))/(x(end)-x(end-tot_order+1));
             norm = fnorm(end-tot_order+1:end)/h;
@@ -122,9 +120,3 @@ function ret = diracDiscr1D(x_s , x , m_order, s_order, H)
     end
 
 end
-
-
-
-
-
-
