@@ -41,7 +41,6 @@ function ret = diracDiscr1D(x_s , x , m_order, s_order, H)
         ret = zeros(size(x));
 
     else
-        fnorm = diag(H);
         tot_order = m_order+s_order; %This is equiv. to the number of equations solved for
         S = [];
         M = [];
@@ -54,7 +53,9 @@ function ret = diracDiscr1D(x_s , x , m_order, s_order, H)
 
         polynomial = (x(index)-x(index(1)))/(x(index(end))-x(index(1)));
         x_0 = (x_s-x(index(1)))/(x(index(end))-x(index(1)));
-        norm = fnorm(index)/h;
+        
+        quadrature = diag(H);
+        quadrature_weights = quadrature(index)/h;
 
         h_polynomial = polynomial(2)-polynomial(1);
         b = zeros(tot_order,1);
@@ -65,7 +66,7 @@ function ret = diracDiscr1D(x_s , x , m_order, s_order, H)
 
         for i = 1:tot_order
             for j = 1:m_order
-                M(j,i) = polynomial(i)^(j-1)*h_polynomial*norm(i);
+                M(j,i) = polynomial(i)^(j-1)*h_polynomial*quadrature_weights(i);
             end
         end
 
