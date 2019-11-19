@@ -82,17 +82,18 @@ function ret = diracDiscr1D(x_s , x , m_order, s_order, H)
             else
                 ind_delta = [ind_delta(1)-1; ind_delta];
             end
+            
+            index = ind_delta;
             polynomial = (x(ind_delta)-x(ind_delta(1)))/(x(ind_delta(end))-x(ind_delta(1)));
             x_0 = (x_s-x(ind_delta(1)))/(x(ind_delta(end))-x(ind_delta(1)));
             norm = fnorm(ind_delta)/h;
-            index = ind_delta;
 
         % Interior
         else
+            index = ind_delta;
             polynomial = (x(ind_delta)-x(ind_delta(1)))/(x(ind_delta(end))-x(ind_delta(1)));
             x_0 = (x_s-x(ind_delta(1)))/(x(ind_delta(end))-x(ind_delta(1)));
             norm = fnorm(ind_delta)/h;
-            index = ind_delta;
         end
 
         h_polynomial = polynomial(2)-polynomial(1);
