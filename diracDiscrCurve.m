@@ -1,12 +1,11 @@
+% 2-dimensional delta function for single-block curvilinear grid
+% x_s:      source point coordinate vector, e.g. [x; y] or [x; y; z].
+% g:        single-block grid containing the source
+% m_order:  Number of moment conditions
+% s_order:  Number of smoothness conditions
+% order:    Order of SBP derivative approximations
+% opSet:    Cell array of function handle to opSet generator
 function d = diracDiscrCurve(x_s, g, m_order, s_order, order, opSet)
-    % 2-dimensional delta function for single-block curvilinear grid
-    % x_s:      source point coordinate vector, e.g. [x; y] or [x; y; z].
-    % g:        single-block grid containing the source
-    % m_order:  Number of moment conditions
-    % s_order:  Number of smoothness conditions
-    % order:    Order of SBP derivative approximations
-    % opSet:    Cell array of function handle to opSet generator
-
     default_arg('order', m_order);
     default_arg('opSet', {@sbp.D2Variable, @sbp.D2Variable});
 
@@ -34,7 +33,6 @@ function d = diracDiscrCurve(x_s, g, m_order, s_order, order, opSet)
 
     % Get delta function for logical grid and scale by Jacobian
     d = (1./J).*diracDiscr(g, [uS; vS], m_order, s_order, {H_u, H_v});
-
 end
 
 function J = jacobian(g, opSet, order)

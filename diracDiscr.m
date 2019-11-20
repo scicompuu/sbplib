@@ -1,12 +1,12 @@
-
+% n-dimensional delta function
+% g: cartesian grid
+% x_s: source point coordinate vector, e.g. [x; y] or [x; y; z].
+% m_order: Number of moment conditions
+% s_order: Number of smoothness conditions
+% H: cell array of 1D norm matrices
 function d = diracDiscr(g, x_s, m_order, s_order, H)
-    % n-dimensional delta function
-    % g: cartesian grid
-    % x_s: source point coordinate vector, e.g. [x; y] or [x; y; z].
-    % m_order: Number of moment conditions
-    % s_order: Number of smoothness conditions
-    % H: cell array of 1D norm matrices
     assertType(g, 'grid.Cartesian');
+    
     dim = g.d;
     d_1D = cell(dim,1);
 
@@ -25,7 +25,6 @@ function d = diracDiscr(g, x_s, m_order, s_order, H)
         d = (d_1D{i}*d')';
         d = d(:);
     end
-
 end
 
 
