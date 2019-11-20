@@ -36,49 +36,48 @@ function ret = diracDiscr1D(x_s, x, m_order, s_order, H)
     if x_s < x(1) || x_s > x(end)
         ret = zeros(size(x));
         return
-    else
-        tot_order = m_order+s_order; %This is equiv. to the number of equations solved for
-        S = [];
-        M = [];
+    end
+       
+    tot_order = m_order+s_order; %This is equiv. to the number of equations solved for
+    S = [];
+    M = [];
 
-        % Get interior grid spacing
-        middle = floor(length(x)/2);
-        h = x(middle+1) - x(middle); % Use middle point to allow for staggered grids.
+    % Get interior grid spacing
+    middle = floor(length(x)/2);
+    h = x(middle+1) - x(middle); % Use middle point to allow for staggered grids.
 
-        index = sourceIndices(x_s, x, tot_order, h);
+    index = sourceIndices(x_s, x, tot_order, h);
 
-        polynomial = (x(index)-x(index(1)))/(x(index(end))-x(index(1)));
-        x_0 = (x_s-x(index(1)))/(x(index(end))-x(index(1)));
+    polynomial = (x(index)-x(index(1)))/(x(index(end))-x(index(1)));
+    x_0 = (x_s-x(index(1)))/(x(index(end))-x(index(1)));
 
-        quadrature = diag(H);
-        quadrature_weights = quadrature(index)/h;
+    quadrature = diag(H);
+    quadrature_weights = quadrature(index)/h;
 
-        h_polynomial = polynomial(2)-polynomial(1);
-        b = zeros(tot_order,1);
+    h_polynomial = polynomial(2)-polynomial(1);
+    b = zeros(tot_order,1);
 
-        for i = 1:m_order
-            b(i,1) = x_0^(i-1);
-        end
-
-        for i = 1:tot_order
-            for j = 1:m_order
-                M(j,i) = polynomial(i)^(j-1)*h_polynomial*quadrature_weights(i);
-            end
-        end
-
-        for i = 1:tot_order
-            for j = 1:s_order
-                S(j,i) = (-1)^(i-1)*polynomial(i)^(j-1);
-            end
-        end
-
-        A = [M;S];
-
-        d = A\b;
-        ret = x*0;
-        ret(index) = d/h*h_polynomial;
+    for i = 1:m_order
+        b(i,1) = x_0^(i-1);
     end
 
+    for i = 1:tot_order
+        for j = 1:m_order
+            M(j,i) = polynomial(i)^(j-1)*h_polynomial*quadrature_weights(i);
+        end
+    end
+
+    for i = 1:tot_order
+        for j = 1:s_order
+            S(j,i) = (-1)^(i-1)*polynomial(i)^(j-1);
+        end
+    end
+
+    A = [M;S];
+
+    d = A\b;
+    ret = x*0;
+    ret(index) = d/h*h_polynomial;
 end
 
 
