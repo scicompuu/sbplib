@@ -2,7 +2,7 @@
 function d = diracDiscr(g, x_s, m_order, s_order, H)
     % n-dimensional delta function
     % g: cartesian grid
-    % x_s: source point coordinate vector, e.g. [x, y] or [x, y, z].
+    % x_s: source point coordinate vector, e.g. [x; y] or [x; y; z].
     % m_order: Number of moment conditions
     % s_order: Number of smoothness conditions
     % H: cell array of 1D norm matrices
@@ -30,7 +30,7 @@ end
 
 
 % Helper function for 1D delta functions
-function ret = diracDiscr1D(x_s , x , m_order, s_order, H)
+function ret = diracDiscr1D(x_s, x, m_order, s_order, H)
 
     m = length(x);
 
@@ -51,7 +51,7 @@ function ret = diracDiscr1D(x_s , x , m_order, s_order, H)
 
         polynomial = (x(index)-x(index(1)))/(x(index(end))-x(index(1)));
         x_0 = (x_s-x(index(1)))/(x(index(end))-x(index(1)));
-        
+
         quadrature = diag(H);
         quadrature_weights = quadrature(index)/h;
 
