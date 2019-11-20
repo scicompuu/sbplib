@@ -32,8 +32,6 @@ end
 % Helper function for 1D delta functions
 function ret = diracDiscr1D(x_s , x , m_order, s_order, H)
 
-    m = length(x);
-
     % Return zeros if x0 is outside grid
     if x_s < x(1) || x_s > x(end)
         ret = zeros(size(x));
@@ -44,7 +42,7 @@ function ret = diracDiscr1D(x_s , x , m_order, s_order, H)
         M = [];
 
         % Get interior grid spacing
-        middle = floor(m/2);
+        middle = floor(length(x)/2);
         h = x(middle+1) - x(middle); % Use middle point to allow for staggered grids.
 
         index = sourceIndices(x_s, x, tot_order, h);
