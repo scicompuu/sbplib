@@ -12,7 +12,7 @@ function d = diracDiscrCurve(x_s, g, m_order, s_order, order, opSet)
 
     dim = length(x_s);
     assert(dim == 2, 'diracDiscrCurve: Only implemented for 2d.');
-    assert(isa(g, 'grid.Curvilinear'));
+    assertType(g, 'grid.Curvilinear');
 
     % Compute Jacobian
     J = jacobian(g, opSet, order);
