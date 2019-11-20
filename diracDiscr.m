@@ -39,74 +39,36 @@ function ret = diracDiscr1D(x_s , x , m_order, s_order, H)
         ret = zeros(size(x));
         return
     else
-
-        fnorm = diag(H);
         tot_order = m_order+s_order; %This is equiv. to the number of equations solved for
         S = [];
         M = [];
 
         % Get interior grid spacing
         middle = floor(m/2);
-        h = x(middle+1) - x(middle); % Use middle point to allow for staggerd grids.
+        h = x(middle+1) - x(middle); % Use middle point to allow for staggered grids.
 
-        % Find the indices that are within range of of the point source location
-        ind_delta = find(tot_order*h/2 >= abs(x-x_s));
+        index = sourceIndices(x_s, x, tot_order, h);
 
-        % Ensure that ind_delta is not too long
-        if length(ind_delta) == (tot_order + 2)
-            ind_delta = ind_delta(2:end-1);
-        elseif length(ind_delta) == (tot_order + 1)
-            ind_delta = ind_delta(1:end-1);
-        end
-
-        % Use first tot_order grid points
-        if length(ind_delta)<tot_order && x_s < x(1) + ceil(tot_order/2)*h
-            index=1:tot_order;
-            polynomial=(x(1:tot_order)-x(1))/(x(tot_order)-x(1));
-            x_0=(x_s-x(1))/(x(tot_order)-x(1));
-            norm=fnorm(1:tot_order)/h;
-
-        % Use last tot_order grid points
-        elseif length(ind_delta)<tot_order && x_s > x(end) - ceil(tot_order/2)*h
-            index = length(x)-tot_order+1:length(x);
-            polynomial = (x(end-tot_order+1:end)-x(end-tot_order+1))/(x(end)-x(end-tot_order+1));
-            norm = fnorm(end-tot_order+1:end)/h;
-            x_0 = (x_s-x(end-tot_order+1))/(x(end)-x(end-tot_order+1));
-
-        % Interior, compensate for round-off errors.
-        elseif length(ind_delta) < tot_order
-            if ind_delta(end)<m
-                ind_delta = [ind_delta; ind_delta(end)+1];
-            else
-                ind_delta = [ind_delta(1)-1; ind_delta];
-            end
-            polynomial = (x(ind_delta)-x(ind_delta(1)))/(x(ind_delta(end))-x(ind_delta(1)));
-            x_0 = (x_s-x(ind_delta(1)))/(x(ind_delta(end))-x(ind_delta(1)));
-            norm = fnorm(ind_delta)/h;
-            index = ind_delta;
-
-        % Interior
-        else
-            polynomial = (x(ind_delta)-x(ind_delta(1)))/(x(ind_delta(end))-x(ind_delta(1)));
-            x_0 = (x_s-x(ind_delta(1)))/(x(ind_delta(end))-x(ind_delta(1)));
-            norm = fnorm(ind_delta)/h;
-            index = ind_delta;
-        end
+        polynomial = (x(index)-x(index(1)))/(x(index(end))-x(index(1)));
+        x_0 = (x_s-x(index(1)))/(x(index(end))-x(index(1)));
+        
+        quadrature = diag(H);
+        quadrature_weights = quadrature(index)/h;
 
         h_polynomial = polynomial(2)-polynomial(1);
-        b = zeros(m_order+s_order,1);
+        b = zeros(tot_order,1);
 
         for i = 1:m_order
             b(i,1) = x_0^(i-1);
         end
 
-        for i = 1:(m_order+s_order)
+        for i = 1:tot_order
             for j = 1:m_order
-                M(j,i) = polynomial(i)^(j-1)*h_polynomial*norm(i);
+                M(j,i) = polynomial(i)^(j-1)*h_polynomial*quadrature_weights(i);
             end
         end
 
-        for i = 1:(m_order+s_order)
+        for i = 1:tot_order
             for j = 1:s_order
                 S(j,i) = (-1)^(i-1)*polynomial(i)^(j-1);
             end
@@ -119,4 +81,30 @@ function ret = diracDiscr1D(x_s , x , m_order, s_order, H)
         ret(index) = d/h*h_polynomial;
     end
 
+end
+
+
+function I = sourceIndices(x_s, x, tot_order, h)
+    % Find the indices that are within range of of the point source location
+    I = find(tot_order*h/2 >= abs(x-x_s));
+
+    if length(I) > tot_order
+        if length(I) == tot_order + 2
+            I = I(2:end-1);
+        elseif length(I) == tot_order + 1
+            I = I(1:end-1);
+        end
+    elseif length(I) < tot_order
+        if x_s < x(1) + ceil(tot_order/2)*h
+            I = 1:tot_order;
+        elseif x_s > x(end) - ceil(tot_order/2)*h
+            I = length(x)-tot_order+1:length(x);
+        else
+            if I(end) < length(x)
+                I = [I; I(end)+1];
+            else
+                I = [I(1)-1; I];
+            end
+        end
+    end
 end
