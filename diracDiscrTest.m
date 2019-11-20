@@ -2,7 +2,7 @@ function tests = diracDiscrTest()
 	    tests = functiontests(localfunctions);
 end
 
-%TODO: 
+%TODO:
 %   1.  Test discretizing with smoothness conditions.
 %       Only discretization with moment conditions currently tested.
 %   2.  Test using other types of grids. Only equidistant grids currently used.
@@ -11,7 +11,7 @@ function testLeftRandom(testCase)
 
     orders = [2, 4, 6];
     mom_conds = orders;
-    rng(0xDABBAD00) % Set seed. Jabba-dabba-doooo!
+    rng(1) % Set seed
 
     for o = 1:length(orders)
         order = orders(o);
@@ -42,7 +42,7 @@ function testRightRandom(testCase)
 
     orders = [2, 4, 6];
     mom_conds = orders;
-    rng(0xDABBAD00) % Set seed. Jabba-dabba-doooo!
+    rng(1) % Set seed
 
     for o = 1:length(orders)
         order = orders(o);
@@ -73,7 +73,7 @@ function testInteriorRandom(testCase)
 
     orders = [2, 4, 6];
     mom_conds = orders;
-    rng(0xDABBAD00) % Set seed. Jabba-dabba-doooo!
+    rng(1) % Set seed
 
     for o = 1:length(orders)
         order = orders(o);
@@ -222,7 +222,7 @@ function testAllRandom2D(testCase)
 
     orders = [2, 4, 6];
     mom_conds = orders;
-    rng(0xDABBAD00) % Set seed. Jabba-dabba-doooo!
+    rng(1) % Set seed
 
     for o = 1:length(orders)
         order = orders(o);
@@ -235,7 +235,7 @@ function testAllRandom2D(testCase)
         yl = g.lim{2}{1};
         yr = g.lim{2}{2};
         h = g.scaling();
-        
+
 
         % Test random points, even outside grid
         Npoints = 100;
@@ -295,7 +295,7 @@ function testAllRandom3D(testCase)
 
     orders = [2, 4, 6];
     mom_conds = orders;
-    rng(0xDABBAD00) % Set seed. Jabba-dabba-doooo!
+    rng(1) % Set seed
 
     for o = 1:length(orders)
         order = orders(o);
