@@ -1,6 +1,7 @@
 function [x,h] = accurateBoundaryOptimizedGrid(lim,N,order)
+    assert(iscell(lim) && numel(lim) == 2,'The limits should be cell arrays with 2 elements.');
     L = lim{2} - lim{1};
-    assert(L>0,'Limits must be given in increasing order.')
+    assert(L>0,'Limits must be given in increasing order.');
     %%%% Non-equidistant grid points %%%%%
     xb = boundaryPoints(order);
     m = length(xb)-1; % Number of non-equidistant points
