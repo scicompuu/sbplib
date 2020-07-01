@@ -1,48 +1,12 @@
-function [D1,H,x,h] = d1_noneq_10(N,L)
+function [D1,H] = d1_noneq_10(N,h)
 
-% L: Domain length
 % N: Number of grid points
-if(nargin < 2)
-    L = 1;
-end
-
 if(N<20)
     error('Operator requires at least 20 grid points');
 end
 
 % BP: Number of boundary points
-% m:  Number of nonequidistant spacings
-% order: Accuracy of interior stencil
 BP = 10;
-m = 5;
-order = 10;
-
-%%%% Non-equidistant grid points %%%%%
-x0 =  0.0000000000000e+00;
-x1 =  3.5902433622052e-01;
-x2 =  1.1436659188355e+00;
-x3 =  2.2144895894456e+00;
-x4 =  3.3682742337736e+00;
-x5 =  4.4309689056870e+00;
-x6 =  5.4309689056870e+00;
-x7 =  6.4309689056870e+00;
-x8 =  7.4309689056870e+00;
-x9 =  8.4309689056870e+00;
-x10 =  9.4309689056870e+00;
-
-xb = sparse(m+1,1);
-for i = 0:m
-    xb(i+1) = eval(['x' num2str(i)]);
-end
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%% Compute h %%%%%%%%%%
-h = L/(2*xb(end) + N-1-2*m);
-%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%% Define grid %%%%%%%%
-x = h*[xb; linspace(xb(end)+1,L/h-xb(end)-1,N-2*(m+1))'; L/h-flip(xb) ];
-%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%% Norm matrix %%%%%%%%
 P = sparse(BP,1);
@@ -69,22 +33,9 @@ H = spdiags(h*H,0,N,N);
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%% Q matrix %%%%%%%%%%%
-
 % interior stencil
-switch order
-    case 2
-        d = [-1/2,0,1/2];
-    case 4
-        d = [1/12,-2/3,0,2/3,-1/12];
-    case 6
-        d = [-1/60,3/20,-3/4,0,3/4,-3/20,1/60];
-    case 8
-        d = [1/280,-4/105,1/5,-4/5,0,4/5,-1/5,4/105,-1/280];
-    case 10
-        d = [-1/1260,5/504,-5/84,5/21,-5/6,0,5/6,-5/21,5/84,-5/504,1/1260];
-    case 12
-        d = [1/5544,-1/385,1/56,-5/63,15/56,-6/7,0,6/7,-15/56,5/63,-1/56,1/385,-1/5544];
-end
+order = 10;
+d = [-1/1260,5/504,-5/84,5/21,-5/6,0,5/6,-5/21,5/84,-5/504,1/1260];
 d = repmat(d,N,1);
 Q = spdiags(d,-order/2:order/2,N,N);
 
