@@ -19,15 +19,10 @@ classdef D1Nonequidistant < sbp.OpSet
             % 'Accurate' operators are optimized for accuracy
             % 'Minimal' operators have the smallest possible boundary
             %  closure
-
-            x_l = lim{1};
-            x_r = lim{2};
-            L = x_r-x_l;
-
             switch option
 
                 case {'Accurate','accurate','A'}
-                    [x,h] = sbp.util.accurateBoundaryOptimizedGrid(L,m,order);
+                    [x,h] = sbp.util.accurateBoundaryOptimizedGrid(lim,m,order);
                     if order == 4
                         [obj.D1,obj.H] = ...
                             sbp.implementations.d1_noneq_4(m,h);
@@ -48,7 +43,7 @@ classdef D1Nonequidistant < sbp.OpSet
                     end
 
                 case {'Minimal','minimal','M'}
-                    [x,h] = sbp.util.minimalBoundaryOptimizedGrid(L,m,order);
+                    [x,h] = sbp.util.minimalBoundaryOptimizedGrid(lim,m,order);
                     if order == 4
                         [obj.D1,obj.H] = ...
                             sbp.implementations.d1_noneq_minimal_4(m,h);
@@ -70,7 +65,7 @@ classdef D1Nonequidistant < sbp.OpSet
 
             end
             obj.h = h;
-            obj.x = x + x_l;
+            obj.x = x;
 
             obj.e_l = sparse(m,1);
             obj.e_r = sparse(m,1);

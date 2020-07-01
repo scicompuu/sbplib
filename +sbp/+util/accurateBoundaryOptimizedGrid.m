@@ -1,4 +1,6 @@
-function [x,h] = accurateBoundaryOptimizedGrid(L,N,order)
+function [x,h] = accurateBoundaryOptimizedGrid(lim,N,order)
+    L = lim{2} - lim{1};
+    assert(L>0,'Limits must be given in increasing order.')
     %%%% Non-equidistant grid points %%%%%
     xb = boundaryPoints(order);
     m = length(xb)-1; % Number of non-equidistant points
@@ -11,6 +13,7 @@ function [x,h] = accurateBoundaryOptimizedGrid(L,N,order)
 
     %%%% Define grid %%%%%%%%
     x = h*[xb; linspace(xb(end)+1,L/h-xb(end)-1,N-2*(m+1))'; L/h-flip(xb) ];
+    x = x + lim{1};
     %%%%%%%%%%%%%%%%%%%%%%%%%
 end
 function xb = boundaryPoints(order)
