@@ -1,5 +1,12 @@
+% Computes the grid points x and grid spacing h used by the boundary optimized SBP operators 
+% with improved boundary accuracy, presented in 
+% 'Boundary optimized diagonal-norm SBP operators - Mattsson, Almquist, van der Weide 2018'.
+%
+% lim - cell array with domain limits
+% N - Number of grid points
+% order - order of accuracy of sbp operator.
 function [x,h] = accurateBoundaryOptimizedGrid(lim,N,order)
-    assert(iscell(lim) && numel(lim) == 2,'The limits should be cell arrays with 2 elements.');
+    assert(iscell(lim) && numel(lim) == 2,'The limit should be cell array with 2 elements.');
     L = lim{2} - lim{1};
     assert(L>0,'Limits must be given in increasing order.');
     %%%% Non-equidistant grid points %%%%%

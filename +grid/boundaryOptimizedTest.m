@@ -50,8 +50,7 @@ end
 % Tests that the expected grid points are obtained for a boundary optimized grid with a 4th order
 % accurate stencil and 8th order minimal stencil.
 % The boundary grid point distance weights are taken from the D1Nonequidistant operators and
-% grid spacing is calculated according to Mattsson et al 2018. The test uses minimal number of grid
-% points required by the operators.
+% grid spacing is calculated according to Mattsson et al 2018.
 function testCompiles(testCase)
     
     %% 1D 4th order accurate stencil
