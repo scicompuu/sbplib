@@ -148,7 +148,7 @@ classdef Rectangle < multiblock.Definition
             elseif strcmp(varargin{1},'boundaryopt')
                 order = varargin{2};
                 stenciloption = varargin{3};
-                gridgenerator = @(m,xlim,ylim)grid.boundaryoptimized(m,xlim,ylim,...
+                gridgenerator = @(m,xlim,ylim)grid.boundaryOptimized(m,xlim,ylim,...
                     order,stenciloption);
             else
                 error('No grid type supplied!');

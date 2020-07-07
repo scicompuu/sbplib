@@ -1,4 +1,4 @@
-function tests = boundaryoptimizedTest()
+function tests = boundaryOptimizedTest()
     tests = functiontests(localfunctions);
 end
 
@@ -19,7 +19,7 @@ function testErrorInvalidParam(testCase)
     };
 
     for i = 1:length(in)
-        testCase.verifyError(@()grid.boundaryoptimized(in{i}{:}),'grid:boundaryoptimized:InvalidParameter',sprintf('in(%d) = %s',i,toString(in{i})));
+        testCase.verifyError(@()grid.boundaryOptimized(in{i}{:}),'grid:boundaryOptimized:InvalidParameter',sprintf('in(%d) = %s',i,toString(in{i})));
     end
 end
 
@@ -29,7 +29,7 @@ function testErrorInvalidOption(testCase)
     };
 
     for i = 1:length(in)
-        testCase.verifyError(@()grid.boundaryoptimized(in{i}{:}),'grid:boundaryoptimized:InvalidOption',sprintf('in(%d) = %s',i,toString(in{i})));
+        testCase.verifyError(@()grid.boundaryOptimized(in{i}{:}),'grid:boundaryOptimized:InvalidOption',sprintf('in(%d) = %s',i,toString(in{i})));
     end
 end
 
@@ -43,7 +43,7 @@ function testErrorNonMatchingParam(testCase)
     };
 
     for i = 1:length(in)
-        testCase.verifyError(@()grid.boundaryoptimized(in{i}{:}),'grid:boundaryoptimized:NonMatchingParameters',sprintf('in(%d) = %s',i,toString(in{i})));
+        testCase.verifyError(@()grid.boundaryOptimized(in{i}{:}),'grid:boundaryOptimized:NonMatchingParameters',sprintf('in(%d) = %s',i,toString(in{i})));
     end
 end
 
@@ -105,7 +105,7 @@ function testCompiles(testCase)
     };
 
     for i = 1:length(in)
-        g = grid.boundaryoptimized(in{i}{:});
+        g = grid.boundaryOptimized(in{i}{:});
         testCase.verifyEqual(g.points(),out{i}{1},'AbsTol', 1e-14, 'RelTol', 1e-14);
         testCase.verifyEqual(g.scaling(),out{i}{2},'AbsTol', 1e-14, 'RelTol', 1e-14);
     end
