@@ -22,7 +22,7 @@ classdef D1Nonequidistant < sbp.OpSet
             switch option
 
                 case {'Accurate','accurate','A'}
-                    [x,h] = sbp.util.accurateBoundaryOptimizedGrid(lim,m,order);
+                    [x,h] = sbp.grid.accurateBoundaryOptimizedGrid(lim,m,order);
                     if order == 4
                         [obj.D1,obj.H] = ...
                             sbp.implementations.d1_noneq_4(m,h);
@@ -43,7 +43,7 @@ classdef D1Nonequidistant < sbp.OpSet
                     end
 
                 case {'Minimal','minimal','M'}
-                    [x,h] = sbp.util.minimalBoundaryOptimizedGrid(lim,m,order);
+                    [x,h] = sbp.grid.minimalBoundaryOptimizedGrid(lim,m,order);
                     if order == 4
                         [obj.D1,obj.H] = ...
                             sbp.implementations.d1_noneq_minimal_4(m,h);
