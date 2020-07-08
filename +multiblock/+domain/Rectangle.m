@@ -93,7 +93,7 @@ classdef Rectangle < multiblock.Definition
                 N_id = flat_index(m,j,1);
                 S{j} = {S_id,'s'};
                 N{j} = {N_id,'n'};
-            end  
+            end
             boundaryGroups.E = multiblock.BoundaryGroup(E);
             boundaryGroups.W = multiblock.BoundaryGroup(W);
             boundaryGroups.S = multiblock.BoundaryGroup(S);
@@ -117,6 +117,20 @@ classdef Rectangle < multiblock.Definition
         % Returns a multiblock.Grid given some parameters
         % ms: cell array of [mx, my] vectors
         % For same [mx, my] in every block, just input one vector.
+        % Currently defaults to equidistant grid if varargin is empty.
+        % If varargin is non-empty, the first argument should supply the grid type, followed by
+        % additional arguments required to construct the grid.
+        % Grid types:
+        %          'equidist' - equidistant grid
+        %                       Additional argumets: none
+        %          'boundaryopt' - boundary optimized grid based on boundary
+        %                          optimized SBP operators
+        %                          Additional arguments: order, stencil option
+        % Example: g = getGrid() - the local blocks are 21x21 equidistant grids.
+        %          g = getGrid(ms,) - block i is an equidistant grid with size given by ms{i}.
+        %          g = getGrid(ms,'equidist') - block i is an equidistant grid with size given by ms{i}.
+        %          g = getGrid(ms,'boundaryopt',4,'minimal') - block i is a Cartesian grid with size given by ms{i}
+        %              and nodes placed according to the boundary optimized minimal 4th order SBP operator.
         function g = getGrid(obj, ms, varargin)
 
             default_arg('ms',[21,21])
@@ -129,10 +143,19 @@ classdef Rectangle < multiblock.Definition
                     ms{i} = m;
                 end
             end
-
+            if isempty(varargin) || strcmp(varargin{1},'equidist')
+               gridgenerator = @(m,xlim,ylim)grid.equidistant(m,xlim,ylim);
+            elseif strcmp(varargin{1},'boundaryopt')
+                order = varargin{2};
+                stenciloption = varargin{3};
+                gridgenerator = @(m,xlim,ylim)grid.boundaryOptimized(m,xlim,ylim,...
+                    order,stenciloption);
+            else
+                error('No grid type supplied!');
+            end
             grids = cell(1, obj.nBlocks);
             for i = 1:obj.nBlocks
-                grids{i} = grid.equidistant(ms{i}, obj.xlims{i}, obj.ylims{i});
+                grids{i} = gridgenerator(ms{i}, obj.xlims{i}, obj.ylims{i});
             end
 
             g = multiblock.Grid(grids, obj.connections, obj.boundaryGroups);

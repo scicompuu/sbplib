@@ -19,58 +19,53 @@ classdef D1Nonequidistant < sbp.OpSet
             % 'Accurate' operators are optimized for accuracy
             % 'Minimal' operators have the smallest possible boundary
             %  closure
-
-            x_l = lim{1};
-            x_r = lim{2};
-            L = x_r-x_l;
-
             switch option
 
                 case {'Accurate','accurate','A'}
-
+                    [x,h] = sbp.util.accurateBoundaryOptimizedGrid(lim,m,order);
                     if order == 4
-                        [obj.D1,obj.H,obj.x,obj.h] = ...
-                            sbp.implementations.d1_noneq_4(m,L);
+                        [obj.D1,obj.H] = ...
+                            sbp.implementations.d1_noneq_4(m,h);
                     elseif order == 6
-                        [obj.D1,obj.H,obj.x,obj.h] = ...
-                            sbp.implementations.d1_noneq_6(m,L);
+                        [obj.D1,obj.H] = ...
+                            sbp.implementations.d1_noneq_6(m,h);
                     elseif order == 8
-                        [obj.D1,obj.H,obj.x,obj.h] = ...
-                            sbp.implementations.d1_noneq_8(m,L);
+                        [obj.D1,obj.H] = ...
+                            sbp.implementations.d1_noneq_8(m,h);
                     elseif order == 10
-                        [obj.D1,obj.H,obj.x,obj.h] = ...
-                            sbp.implementations.d1_noneq_10(m,L);
+                        [obj.D1,obj.H] = ...
+                            sbp.implementations.d1_noneq_10(m,h);
                     elseif order == 12
-                        [obj.D1,obj.H,obj.x,obj.h] = ...
-                            sbp.implementations.d1_noneq_12(m,L);
+                        [obj.D1,obj.H] = ...
+                            sbp.implementations.d1_noneq_12(m,h);
                     else
                         error('Invalid operator order %d.',order);
                     end
 
                 case {'Minimal','minimal','M'}
-
+                    [x,h] = sbp.util.minimalBoundaryOptimizedGrid(lim,m,order);
                     if order == 4
-                        [obj.D1,obj.H,obj.x,obj.h] = ...
-                            sbp.implementations.d1_noneq_minimal_4(m,L);
+                        [obj.D1,obj.H] = ...
+                            sbp.implementations.d1_noneq_minimal_4(m,h);
                     elseif order == 6
-                        [obj.D1,obj.H,obj.x,obj.h] = ...
-                            sbp.implementations.d1_noneq_minimal_6(m,L);
+                        [obj.D1,obj.H] = ...
+                            sbp.implementations.d1_noneq_minimal_6(m,h);
                     elseif order == 8
-                        [obj.D1,obj.H,obj.x,obj.h] = ...
-                            sbp.implementations.d1_noneq_minimal_8(m,L);
+                        [obj.D1,obj.H] = ...
+                            sbp.implementations.d1_noneq_minimal_8(m,h);
                     elseif order == 10
-                        [obj.D1,obj.H,obj.x,obj.h] = ...
-                            sbp.implementations.d1_noneq_minimal_10(m,L);
+                        [obj.D1,obj.H] = ...
+                            sbp.implementations.d1_noneq_minimal_10(m,h);
                     elseif order == 12
-                        [obj.D1,obj.H,obj.x,obj.h] = ...
-                            sbp.implementations.d1_noneq_minimal_12(m,L);
+                        [obj.D1,obj.H] = ...
+                            sbp.implementations.d1_noneq_minimal_12(m,h);
                     else
                         error('Invalid operator order %d.',order);
                     end
 
             end
-
-            obj.x = obj.x + x_l;
+            obj.h = h;
+            obj.x = x;
 
             obj.e_l = sparse(m,1);
             obj.e_r = sparse(m,1);
